@@ -1,0 +1,260 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Lessons | LearnSpace</title>
+</head>
+<body>
+
+    <header>
+        <h1>LearnSpace Admin Portal</h1>
+
+        <nav>
+            <a href="admin-dashboard.html">Dashboard</a> |
+            <a href="manage-courses.html">Manage Courses</a> |
+            <a href="manage-students.html">Manage Students</a> |
+            <a href="manage-modules.html">Manage Modules</a> |
+            <a href="manage-lessons.html">Manage Lessons</a> |
+            <a href="manage-quizzes.html">Manage Quizzes</a> |
+            <a href="manage-assessments.html">Manage Assessments</a> |
+            <a href="../index.html">Logout</a>
+        </nav>
+    </header>
+
+    <main>
+
+        <section>
+            <h1>Manage Lessons</h1>
+
+            <p>
+                Create and organize lessons inside course modules.
+                Add learning content to help students understand
+                each topic step by step.
+            </p>
+        </section>
+
+        <hr>
+
+        <section>
+            <h2>Add New Lesson</h2>
+
+            <form action="#" method="post">
+
+                <div>
+                    <label for="lesson-course">Select Course</label><br>
+                    <select id="lesson-course" name="courseId" required>
+                        <option value="">Choose a Course</option>
+                        <option value="web-development">Web Development</option>
+                        <option value="python">Python Programming</option>
+                        <option value="java">Java Programming</option>
+                        <option value="c">C Programming</option>
+                        <option value="cpp">C++ Programming</option>
+                        <option value="javascript">JavaScript Programming</option>
+                        <option value="react">React Development</option>
+                        <option value="nodejs">Node.js Development</option>
+                        <option value="php">PHP Programming</option>
+                        <option value="sql">SQL Programming</option>
+                        <option value="dbms">Database Management Systems</option>
+                        <option value="mongodb">MongoDB</option>
+                        <option value="dsa">Data Structures and Algorithms</option>
+                        <option value="os">Operating Systems</option>
+                        <option value="networks">Computer Networks</option>
+                        <option value="cybersecurity">Cybersecurity Fundamentals</option>
+                        <option value="cloud">Cloud Computing</option>
+                        <option value="aws">AWS Cloud Fundamentals</option>
+                        <option value="devops">DevOps Fundamentals</option>
+                        <option value="git">Git and GitHub</option>
+                        <option value="uiux">UI/UX Design</option>
+                        <option value="figma">Figma Design</option>
+                        <option value="analytics">Data Analytics</option>
+                        <option value="datascience">Data Science</option>
+                        <option value="ml">Machine Learning</option>
+                        <option value="ai">Artificial Intelligence</option>
+                        <option value="excel">Microsoft Excel</option>
+                        <option value="powerbi">Power BI</option>
+                        <option value="android">Android App Development</option>
+                        <option value="testing">Software Testing</option>
+                    </select>
+                </div>
+
+                <br>
+
+                <div>
+                    <label for="lesson-module">Select Module</label><br>
+                    <select id="lesson-module" name="moduleId" required>
+                        <option value="">Choose a Module</option>
+                    </select>
+                </div>
+
+                <br>
+
+                <div>
+                    <label for="lesson-number">Lesson Number</label><br>
+                    <input
+                        type="number"
+                        id="lesson-number"
+                        name="lessonNumber"
+                        min="1"
+                        placeholder="Example: 1"
+                        required
+                    >
+                </div>
+
+                <br>
+
+                <div>
+                    <label for="lesson-title">Lesson Title</label><br>
+                    <input
+                        type="text"
+                        id="lesson-title"
+                        name="lessonTitle"
+                        placeholder="Enter lesson title"
+                        required
+                    >
+                </div>
+
+                <br>
+
+                <div>
+                    <label for="lesson-objectives">Learning Objectives</label><br>
+                    <textarea
+                        id="lesson-objectives"
+                        name="objectives"
+                        rows="3"
+                        placeholder="What will students learn from this lesson?"
+                        required
+                    ></textarea>
+                </div>
+
+                <br>
+
+                <div>
+                    <label for="lesson-content">Lesson Content</label><br>
+                    <textarea
+                        id="lesson-content"
+                        name="content"
+                        rows="10"
+                        placeholder="Enter detailed lesson content, explanations and examples"
+                        required
+                    ></textarea>
+                </div>
+
+                <br>
+
+                <div>
+                    <label for="lesson-duration">Estimated Duration</label><br>
+                    <input
+                        type="text"
+                        id="lesson-duration"
+                        name="duration"
+                        placeholder="Example: 30 minutes"
+                        required
+                    >
+                </div>
+
+                <br>
+
+                <div>
+                    <label for="lesson-status">Lesson Status</label><br>
+                    <select id="lesson-status" name="status" required>
+                        <option value="draft">Draft</option>
+                        <option value="published">Published</option>
+                    </select>
+                </div>
+
+                <br>
+
+                <button type="submit">Add Lesson</button>
+                <button type="reset">Clear Form</button>
+
+            </form>
+        </section>
+
+        <hr>
+
+        <section>
+            <h2>Existing Lessons</h2>
+
+            <form action="#" method="get">
+
+                <label for="filter-course">Filter by Course</label><br>
+                <select id="filter-course" name="courseId">
+                    <option value="">All Courses</option>
+                    <option value="web-development">Web Development</option>
+                    <option value="python">Python Programming</option>
+                    <option value="java">Java Programming</option>
+                    <option value="javascript">JavaScript Programming</option>
+                    <option value="react">React Development</option>
+                </select>
+
+                <br><br>
+
+                <label for="filter-module">Filter by Module</label><br>
+                <select id="filter-module" name="moduleId">
+                    <option value="">All Modules</option>
+                </select>
+
+                <br><br>
+
+                <button type="submit">Apply Filter</button>
+
+            </form>
+
+            <br>
+
+            <table border="1" cellpadding="10">
+                <thead>
+                    <tr>
+                        <th>Lesson ID</th>
+                        <th>Course Name</th>
+                        <th>Module Name</th>
+                        <th>Lesson Number</th>
+                        <th>Lesson Title</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr>
+                        <td colspan="8">
+                            Lesson records will be loaded from MongoDB.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <hr>
+
+        <section>
+            <h2>Lesson Management Rules</h2>
+
+            <ul>
+                <li>Every lesson must belong to an existing course and module.</li>
+                <li>Lessons must follow the correct learning sequence.</li>
+                <li>Each lesson should contain relevant subject content.</li>
+                <li>Learning objectives must be clearly defined.</li>
+                <li>Only published lessons should be visible to eligible students.</li>
+                <li>Student lesson completion must be tracked.</li>
+                <li>Lesson progress must be saved in MongoDB.</li>
+            </ul>
+        </section>
+
+        <section>
+            <a href="admin-dashboard.html">Back to Admin Dashboard</a>
+            <br><br>
+            <a href="manage-modules.html">Back to Manage Modules</a>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>&copy; 2026 LearnSpace. Keep growing.</p>
+    </footer>
+
+</body>
+</html>

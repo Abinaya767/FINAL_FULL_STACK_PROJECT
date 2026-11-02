@@ -1,0 +1,182 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Courses | LearnSpace</title>
+</head>
+<body>
+
+    <header>
+        <h1>LearnSpace Admin Portal</h1>
+
+        <nav>
+            <a href="admin-dashboard.html">Dashboard</a> |
+            <a href="manage-courses.html">Manage Courses</a> |
+            <a href="manage-students.html">Manage Students</a> |
+            <a href="manage-modules.html">Manage Modules</a> |
+            <a href="manage-lessons.html">Manage Lessons</a> |
+            <a href="manage-quizzes.html">Manage Quizzes</a> |
+            <a href="manage-assessments.html">Manage Assessments</a> |
+            <a href="../index.html">Logout</a>
+        </nav>
+    </header>
+
+    <main>
+
+        <section>
+            <h1>Manage Courses</h1>
+
+            <p>
+                Create, update, view and manage all courses
+                available on the LearnSpace platform.
+            </p>
+        </section>
+
+        <section>
+            <h2>Add New Course</h2>
+
+            <form action="#" method="post">
+
+                <div>
+                    <label for="course-name">Course Name</label><br>
+                    <input
+                        type="text"
+                        id="course-name"
+                        name="courseName"
+                        placeholder="Enter course name"
+                        required
+                    >
+                </div>
+
+                <br>
+
+                <div>
+                    <label for="course-description">Course Description</label><br>
+                    <textarea
+                        id="course-description"
+                        name="description"
+                        rows="4"
+                        placeholder="Enter course description"
+                        required
+                    ></textarea>
+                </div>
+
+                <br>
+
+                <div>
+                    <label for="course-category">Course Category</label><br>
+                    <select id="course-category" name="category" required>
+                        <option value="">Select Category</option>
+                        <option value="programming">Programming</option>
+                        <option value="web-development">Web Development</option>
+                        <option value="database">Database Management</option>
+                        <option value="design">Design</option>
+                        <option value="data-science">Data Science</option>
+                        <option value="cybersecurity">Cybersecurity</option>
+                        <option value="cloud-computing">Cloud Computing</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <br>
+
+                <div>
+                    <label for="course-duration">Course Duration</label><br>
+                    <input
+                        type="text"
+                        id="course-duration"
+                        name="duration"
+                        placeholder="Example: 8 weeks"
+                        required
+                    >
+                </div>
+
+                <br>
+
+                <div>
+                    <label for="course-level">Course Level</label><br>
+                    <select id="course-level" name="level" required>
+                        <option value="">Select Level</option>
+                        <option value="beginner">Beginner</option>
+                        <option value="intermediate">Intermediate</option>
+                        <option value="advanced">Advanced</option>
+                    </select>
+                </div>
+
+                <br>
+
+                <div>
+                    <label for="course-status">Course Status</label><br>
+                    <select id="course-status" name="status" required>
+                        <option value="draft">Draft</option>
+                        <option value="published">Published</option>
+                        <option value="unpublished">Unpublished</option>
+                    </select>
+                </div>
+
+                <br>
+
+                <button type="submit">Add Course</button>
+
+            </form>
+        </section>
+
+        <hr>
+
+        <section>
+            <h2>Existing Courses</h2>
+
+            <p>
+                All courses stored in the LearnSpace database
+                will be displayed in this section.
+            </p>
+
+            <table border="1" cellpadding="10">
+                <thead>
+                    <tr>
+                        <th>Course ID</th>
+                        <th>Course Name</th>
+                        <th>Category</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr>
+                        <td colspan="6">
+                            Course records will be loaded from the database.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>Course Management Actions</h2>
+
+            <ul>
+                <li>Add new courses.</li>
+                <li>View existing course details.</li>
+                <li>Edit course information.</li>
+                <li>Publish or unpublish courses.</li>
+                <li>Delete courses when permitted.</li>
+                <li>Manage course modules and lessons.</li>
+            </ul>
+        </section>
+
+        <section>
+            <a href="admin-dashboard.html">Back to Admin Dashboard</a>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>&copy; 2026 LearnSpace. Keep growing.</p>
+    </footer>
+
+</body>
+</html>

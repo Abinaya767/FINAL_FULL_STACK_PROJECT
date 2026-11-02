@@ -1,0 +1,127 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Students | LearnSpace</title>
+</head>
+<body>
+
+    <header>
+        <h1>LearnSpace Admin Portal</h1>
+
+        <nav>
+            <a href="admin-dashboard.html">Dashboard</a> |
+            <a href="manage-courses.html">Manage Courses</a> |
+            <a href="manage-students.html">Manage Students</a> |
+            <a href="manage-modules.html">Manage Modules</a> |
+            <a href="manage-lessons.html">Manage Lessons</a> |
+            <a href="manage-quizzes.html">Manage Quizzes</a> |
+            <a href="manage-assessments.html">Manage Assessments</a> |
+            <a href="../index.html">Logout</a>
+        </nav>
+    </header>
+
+    <main>
+
+        <section>
+            <h1>Manage Students</h1>
+
+            <p>
+                View and manage registered student accounts
+                and their learning information.
+            </p>
+
+            <a href="add-student.html">Add New Student</a>
+        </section>
+
+        <hr>
+
+        <section>
+            <h2>Search Students</h2>
+
+            <form action="#" method="get">
+
+                <label for="search-student">Search by Name or Email</label>
+                <br>
+
+                <input
+                    type="search"
+                    id="search-student"
+                    name="search"
+                    placeholder="Enter student name or email"
+                >
+
+                <button type="submit">Search</button>
+
+            </form>
+        </section>
+
+        <hr>
+
+        <section>
+            <h2>Registered Student Records</h2>
+
+            <p>
+                Registered student details will be retrieved
+                from the LearnSpace database.
+            </p>
+
+            <table border="1" cellpadding="10">
+
+                <thead>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Full Name</th>
+                        <th>Email</th>
+                        <th>College</th>
+                        <th>Department</th>
+                        <th>Year of Study</th>
+                        <th>Account Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr>
+                        <td colspan="8">
+                            Student records will be displayed here
+                            after database integration.
+                        </td>
+                    </tr>
+                </tbody>
+
+            </table>
+        </section>
+
+        <hr>
+
+        <section>
+            <h2>Student Management Features</h2>
+
+            <ul>
+                <li>View all registered students.</li>
+                <li>Search students by name or email.</li>
+                <li>View individual student information.</li>
+                <li>Edit student profile details.</li>
+                <li>Activate or deactivate student accounts.</li>
+                <li>View student course enrollments.</li>
+                <li>Monitor module completion and course progress.</li>
+                <li>View quiz and final assessment results.</li>
+                <li>View completed courses and certificates.</li>
+            </ul>
+        </section>
+
+        <section>
+            <a href="admin-dashboard.html">Back to Admin Dashboard</a>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>&copy; 2026 LearnSpace. Keep growing.</p>
+    </footer>
+
+</body>
+</html>

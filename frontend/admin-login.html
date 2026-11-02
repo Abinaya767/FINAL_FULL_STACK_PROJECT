@@ -1,0 +1,81 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login | LearnSpace</title>
+</head>
+<body>
+
+    <header>
+        <h1>LearnSpace</h1>
+
+        <nav>
+            <a href="../index.html">Home</a>
+            <a href="../login.html">Student Login</a>
+        </nav>
+    </header>
+
+    <main>
+
+        <section>
+            <h1>Administrator Login</h1>
+
+            <p>
+                Welcome to the LearnSpace Administration Portal.
+                Sign in using your authorized administrator credentials.
+            </p>
+
+            <form action="admin-dashboard.html" method="get">
+
+                <div>
+                    <label for="admin-email">Admin Email</label>
+                    <br>
+                    <input
+                        type="email"
+                        id="admin-email"
+                        name="email"
+                        placeholder="Enter admin email"
+                        required
+                    >
+                </div>
+
+                <br>
+
+                <div>
+                    <label for="admin-password">Password</label>
+                    <br>
+                    <input
+                        type="password"
+                        id="admin-password"
+                        name="password"
+                        placeholder="Enter admin password"
+                        required
+                    >
+                </div>
+
+                <br>
+
+                <button type="submit">Login as Admin</button>
+
+            </form>
+
+            <p>
+                This portal is restricted to authorized administrators only.
+            </p>
+
+            <p>
+                <a href="../index.html">Back to Home</a>
+            </p>
+
+        </section>
+
+    </main>
+
+    <footer>
+        <p>&copy; 2026 LearnSpace. Keep growing.</p>
+    </footer>
+
+</body>
+</html>

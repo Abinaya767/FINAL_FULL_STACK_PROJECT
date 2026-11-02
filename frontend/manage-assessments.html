@@ -1,0 +1,287 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Final Assessments | LearnSpace</title>
+</head>
+<body>
+
+    <header>
+        <h1>LearnSpace Admin Portal</h1>
+
+        <nav>
+            <a href="admin-dashboard.html">Dashboard</a> |
+            <a href="manage-courses.html">Manage Courses</a> |
+            <a href="manage-students.html">Manage Students</a> |
+            <a href="manage-modules.html">Manage Modules</a> |
+            <a href="manage-lessons.html">Manage Lessons</a> |
+            <a href="manage-quizzes.html">Manage Quizzes</a> |
+            <a href="manage-assessments.html">Manage Assessments</a> |
+            <a href="../index.html">Logout</a>
+        </nav>
+    </header>
+
+    <main>
+
+        <section>
+            <h1>Manage Final Assessments</h1>
+
+            <p>
+                Create and manage final assessments for all courses.
+                Students can access the final assessment only after
+                completing all required course modules.
+            </p>
+        </section>
+
+        <hr>
+
+        <section>
+            <h2>Create Final Assessment</h2>
+
+            <form action="#" method="post">
+
+                <div>
+                    <label for="assessment-course">Select Course</label><br>
+
+                    <select id="assessment-course" name="courseId" required>
+                        <option value="">Choose Course</option>
+                        <option value="web-development">Web Development</option>
+                        <option value="python">Python Programming</option>
+                        <option value="java">Java Programming</option>
+                        <option value="c">C Programming</option>
+                        <option value="cpp">C++ Programming</option>
+                        <option value="javascript">JavaScript Programming</option>
+                        <option value="react">React Development</option>
+                        <option value="nodejs">Node.js Development</option>
+                        <option value="php">PHP Programming</option>
+                        <option value="sql">SQL Programming</option>
+                        <option value="dbms">Database Management Systems</option>
+                        <option value="mongodb">MongoDB</option>
+                        <option value="dsa">Data Structures and Algorithms</option>
+                        <option value="os">Operating Systems</option>
+                        <option value="networks">Computer Networks</option>
+                        <option value="cybersecurity">Cybersecurity Fundamentals</option>
+                        <option value="cloud">Cloud Computing</option>
+                        <option value="aws">AWS Cloud Fundamentals</option>
+                        <option value="devops">DevOps Fundamentals</option>
+                        <option value="git">Git and GitHub</option>
+                        <option value="uiux">UI/UX Design</option>
+                        <option value="figma">Figma Design</option>
+                        <option value="analytics">Data Analytics</option>
+                        <option value="datascience">Data Science</option>
+                        <option value="ml">Machine Learning</option>
+                        <option value="ai">Artificial Intelligence</option>
+                        <option value="excel">Microsoft Excel</option>
+                        <option value="powerbi">Power BI</option>
+                        <option value="android">Android App Development</option>
+                        <option value="testing">Software Testing</option>
+                    </select>
+                </div>
+
+                <br>
+
+                <div>
+                    <label for="assessment-title">Assessment Title</label><br>
+                    <input
+                        type="text"
+                        id="assessment-title"
+                        name="title"
+                        placeholder="Enter assessment title"
+                        required
+                    >
+                </div>
+
+                <br>
+
+                <div>
+                    <label for="assessment-description">Description</label><br>
+                    <textarea
+                        id="assessment-description"
+                        name="description"
+                        rows="4"
+                        placeholder="Enter assessment instructions"
+                        required
+                    ></textarea>
+                </div>
+
+                <br>
+
+                <div>
+                    <label for="total-marks">Total Marks</label><br>
+                    <input
+                        type="number"
+                        id="total-marks"
+                        name="totalMarks"
+                        min="1"
+                        placeholder="Enter total marks"
+                        required
+                    >
+                </div>
+
+                <br>
+
+                <div>
+                    <label for="passing-marks">Passing Marks</label><br>
+                    <input
+                        type="number"
+                        id="passing-marks"
+                        name="passingMarks"
+                        min="1"
+                        placeholder="Enter passing marks"
+                        required
+                    >
+                </div>
+
+                <br>
+
+                <div>
+                    <label for="passing-percentage">Passing Percentage</label><br>
+                    <input
+                        type="number"
+                        id="passing-percentage"
+                        name="passingPercentage"
+                        min="1"
+                        max="100"
+                        placeholder="Enter passing percentage"
+                        required
+                    >
+                </div>
+
+                <br>
+
+                <div>
+                    <label for="attempt-limit">Maximum Attempts</label><br>
+                    <input
+                        type="number"
+                        id="attempt-limit"
+                        name="attemptLimit"
+                        value="2"
+                        min="2"
+                        max="2"
+                        readonly
+                    >
+                </div>
+
+                <br>
+
+                <div>
+                    <label for="assessment-duration">Duration (Minutes)</label><br>
+                    <input
+                        type="number"
+                        id="assessment-duration"
+                        name="duration"
+                        min="1"
+                        placeholder="Enter duration in minutes"
+                        required
+                    >
+                </div>
+
+                <br>
+
+                <div>
+                    <label for="assessment-status">Assessment Status</label><br>
+                    <select
+                        id="assessment-status"
+                        name="status"
+                        required
+                    >
+                        <option value="draft">Draft</option>
+                        <option value="published">Published</option>
+                    </select>
+                </div>
+
+                <br>
+
+                <button type="submit">Create Assessment</button>
+                <button type="reset">Clear Form</button>
+
+            </form>
+        </section>
+
+        <hr>
+
+        <section>
+            <h2>Assessment Questions</h2>
+
+            <p>
+                Add final assessment questions through the question
+                management interface after creating the assessment.
+                Each question must have its marks and correct answer
+                configured by the administrator.
+            </p>
+
+            <a href="manage-assessments.html">
+                Manage Assessment Questions
+            </a>
+        </section>
+
+        <hr>
+
+        <section>
+            <h2>Existing Final Assessments</h2>
+
+            <p>
+                Assessment records will be retrieved from MongoDB.
+            </p>
+
+            <table border="1" cellpadding="10">
+
+                <thead>
+                    <tr>
+                        <th>Assessment ID</th>
+                        <th>Course Name</th>
+                        <th>Assessment Title</th>
+                        <th>Total Marks</th>
+                        <th>Passing Marks</th>
+                        <th>Maximum Attempts</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr>
+                        <td colspan="8">
+                            Final assessment records will appear here
+                            after database integration.
+                        </td>
+                    </tr>
+                </tbody>
+
+            </table>
+        </section>
+
+        <hr>
+
+        <section>
+            <h2>Assessment Management Rules</h2>
+
+            <ul>
+                <li>Each course can have its own final assessment.</li>
+                <li>Students must complete all course modules before accessing the final assessment.</li>
+                <li>The administrator configures total marks and passing criteria.</li>
+                <li>Students are allowed a maximum of two attempts.</li>
+                <li>Attempt limits must be enforced on the server.</li>
+                <li>Assessment answers must be graded securely on the server.</li>
+                <li>Student marks and results must be stored in MongoDB.</li>
+                <li>Students who pass become eligible for a course completion certificate.</li>
+                <li>Certificate generation must happen only after successful verification of the result.</li>
+            </ul>
+        </section>
+
+        <section>
+            <a href="admin-dashboard.html">Back to Admin Dashboard</a>
+            <br><br>
+            <a href="manage-quizzes.html">Back to Manage Quizzes</a>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>&copy; 2026 LearnSpace. Keep growing.</p>
+    </footer>
+
+</body>
+</html>
