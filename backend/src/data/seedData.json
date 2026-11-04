@@ -1,0 +1,255 @@
+{
+  "students": [
+    {
+      "id": "student-demo-001",
+      "name": "Demo Student",
+      "email": "demo.student@learnspace.test",
+      "phone": "000-000-0000",
+      "college": "Sample College",
+      "department": "Computer Science",
+      "yearOfStudy": 2
+    }
+  ],
+  "courses": [
+    {
+      "id": "web-development",
+      "title": "Web Development",
+      "description": "Learn to build responsive websites using HTML, CSS, JavaScript and modern web technologies.",
+      "category": "Web Design",
+      "duration": "4 weeks",
+      "demo": true
+    },
+    {
+      "id": "python-programming",
+      "title": "Python Programming",
+      "description": "Build a strong Python foundation through syntax, problem solving and practical projects.",
+      "category": "Programming",
+      "duration": "5 weeks",
+      "demo": true
+    },
+    {
+      "id": "java-programming",
+      "title": "Java Programming",
+      "description": "Learn object-oriented programming and application development with Java.",
+      "category": "Programming",
+      "duration": "6 weeks",
+      "demo": true
+    },
+    {
+      "id": "c-programming",
+      "title": "C Programming",
+      "description": "Understand procedural programming, memory and core computer science concepts in C.",
+      "category": "Programming",
+      "duration": "7 weeks",
+      "demo": true
+    },
+    {
+      "id": "cpp-programming",
+      "title": "C++ Programming",
+      "description": "Explore C++ syntax, object-oriented design and core standard-library patterns.",
+      "category": "Programming",
+      "duration": "8 weeks",
+      "demo": true
+    },
+    {
+      "id": "javascript-programming",
+      "title": "JavaScript Programming",
+      "description": "Create interactive web experiences with modern JavaScript language features.",
+      "category": "Programming",
+      "duration": "4 weeks",
+      "demo": true
+    },
+    {
+      "id": "react-development",
+      "title": "React Development",
+      "description": "Build reusable user interfaces and single-page apps using React.",
+      "category": "Web Development",
+      "duration": "5 weeks",
+      "demo": true
+    },
+    {
+      "id": "nodejs-development",
+      "title": "Node.js Development",
+      "description": "Create server-side JavaScript applications and APIs with Node.js.",
+      "category": "Web Development",
+      "duration": "6 weeks",
+      "demo": true
+    },
+    {
+      "id": "php-programming",
+      "title": "PHP Programming",
+      "description": "Build dynamic web applications with PHP fundamentals and practical patterns.",
+      "category": "Programming",
+      "duration": "7 weeks",
+      "demo": true
+    },
+    {
+      "id": "sql-programming",
+      "title": "SQL Programming",
+      "description": "Query, organize and update relational data using SQL.",
+      "category": "Data and Databases",
+      "duration": "8 weeks",
+      "demo": true
+    },
+    {
+      "id": "dbms",
+      "title": "Database Management Systems",
+      "description": "Learn relational database design, transactions and data management principles.",
+      "category": "Data and Databases",
+      "duration": "4 weeks",
+      "demo": true
+    },
+    {
+      "id": "mongodb",
+      "title": "MongoDB",
+      "description": "Model and query document-oriented data with MongoDB fundamentals.",
+      "category": "Data and Databases",
+      "duration": "5 weeks",
+      "demo": true
+    },
+    {
+      "id": "dsa",
+      "title": "Data Structures and Algorithms",
+      "description": "Develop problem-solving skills with foundational data structures and algorithms.",
+      "category": "Computer Science",
+      "duration": "6 weeks",
+      "demo": true
+    },
+    {
+      "id": "operating-systems",
+      "title": "Operating Systems",
+      "description": "Explore processes, memory, files and operating system fundamentals.",
+      "category": "Computer Science",
+      "duration": "7 weeks",
+      "demo": true
+    },
+    {
+      "id": "computer-networks",
+      "title": "Computer Networks",
+      "description": "Understand network architecture, protocols and data communication.",
+      "category": "Computer Science",
+      "duration": "8 weeks",
+      "demo": true
+    },
+    {
+      "id": "cybersecurity",
+      "title": "Cybersecurity Fundamentals",
+      "description": "Learn security concepts, threat awareness and responsible defensive practices.",
+      "category": "Cybersecurity",
+      "duration": "4 weeks",
+      "demo": true
+    },
+    {
+      "id": "cloud-computing",
+      "title": "Cloud Computing",
+      "description": "Understand cloud services, deployment models and core architecture.",
+      "category": "Cloud and DevOps",
+      "duration": "5 weeks",
+      "demo": true
+    },
+    {
+      "id": "aws-fundamentals",
+      "title": "AWS Cloud Fundamentals",
+      "description": "Discover essential AWS services, cloud concepts and responsible operations.",
+      "category": "Cloud and DevOps",
+      "duration": "6 weeks",
+      "demo": true
+    },
+    {
+      "id": "devops",
+      "title": "DevOps Fundamentals",
+      "description": "Learn collaborative development, automation and continuous delivery concepts.",
+      "category": "Cloud and DevOps",
+      "duration": "7 weeks",
+      "demo": true
+    },
+    {
+      "id": "git-github",
+      "title": "Git and GitHub",
+      "description": "Manage source code and collaborate effectively using Git and GitHub.",
+      "category": "Developer Tools",
+      "duration": "8 weeks",
+      "demo": true
+    },
+    {
+      "id": "ui-ux-design",
+      "title": "UI/UX Design",
+      "description": "Practice user-centered design, interface patterns and usability fundamentals.",
+      "category": "Design",
+      "duration": "4 weeks",
+      "demo": true
+    },
+    {
+      "id": "figma-design",
+      "title": "Figma Design",
+      "description": "Create interface concepts and collaborative prototypes in Figma.",
+      "category": "Design",
+      "duration": "5 weeks",
+      "demo": true
+    },
+    {
+      "id": "data-analytics",
+      "title": "Data Analytics",
+      "description": "Turn data into useful insights through analysis and visualization methods.",
+      "category": "Data and Analytics",
+      "duration": "6 weeks",
+      "demo": true
+    },
+    {
+      "id": "data-science",
+      "title": "Data Science",
+      "description": "Explore data preparation, analysis and introductory modeling techniques.",
+      "category": "Data and Analytics",
+      "duration": "7 weeks",
+      "demo": true
+    },
+    {
+      "id": "machine-learning",
+      "title": "Machine Learning",
+      "description": "Learn core machine-learning concepts and responsible model evaluation.",
+      "category": "Data and Analytics",
+      "duration": "8 weeks",
+      "demo": true
+    },
+    {
+      "id": "artificial-intelligence",
+      "title": "Artificial Intelligence",
+      "description": "Explore foundational AI concepts, applications and responsible use.",
+      "category": "Data and Analytics",
+      "duration": "4 weeks",
+      "demo": true
+    },
+    {
+      "id": "microsoft-excel",
+      "title": "Microsoft Excel",
+      "description": "Organize data, use formulas and create useful spreadsheet reports.",
+      "category": "Data and Analytics",
+      "duration": "5 weeks",
+      "demo": true
+    },
+    {
+      "id": "power-bi",
+      "title": "Power BI",
+      "description": "Build clear reports and dashboards from data using Power BI concepts.",
+      "category": "Data and Analytics",
+      "duration": "6 weeks",
+      "demo": true
+    },
+    {
+      "id": "android-development",
+      "title": "Android App Development",
+      "description": "Learn mobile application concepts and Android development workflows.",
+      "category": "Mobile Development",
+      "duration": "7 weeks",
+      "demo": true
+    },
+    {
+      "id": "software-testing",
+      "title": "Software Testing",
+      "description": "Explore test design, quality principles and practical software testing.",
+      "category": "Software Quality",
+      "duration": "8 weeks",
+      "demo": true
+    }
+  ]
+}
