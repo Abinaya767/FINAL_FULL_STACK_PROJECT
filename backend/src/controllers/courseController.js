@@ -1,7 +1,7 @@
 import { apiResponse } from "../utils/apiResponse.js";
 import { courseStore } from "../data/inMemoryStore.js";
 
-const courseFields = new Set(["title", "description", "category", "duration", "level"]);
+const courseFields = new Set(["id", "title", "description", "category", "duration", "level"]);
 
 function validationError(message) {
   return Object.assign(new Error(message), { status: 400 });
@@ -24,6 +24,13 @@ function normalizeCourse(body, { partial = false } = {}) {
   }
 
   const fields = {};
+  if (body.id !== undefined) {
+    if (typeof body.id !== "string" || !/^[A-Za-z0-9_-]{1,128}$/.test(body.id)) {
+      throw validationError("Course ID must contain 1 to 128 letters, numbers, underscores, or hyphens.");
+    }
+    fields.id = body.id;
+  }
+
   for (const field of ["title", "description", "category", "duration"]) {
     if (body[field] === undefined) {
       if (!partial) throw validationError(`Course ${field} is required.`);
@@ -40,6 +47,8 @@ function normalizeCourse(body, { partial = false } = {}) {
       throw validationError("Course level must be a non-empty string of at most 80 characters.");
     }
     fields.level = body.level.trim();
+  } else if (!partial) {
+    throw validationError("Course level is required.");
   }
 
   if (partial && Object.keys(fields).length === 0) {
@@ -61,6 +70,12 @@ function ensureUniqueTitle(title, excludedId) {
   }
 }
 
+function ensureUniqueId(id) {
+  if (id && courseStore.findById(id)) {
+    throw Object.assign(new Error("A course with this ID already exists."), { status: 409 });
+  }
+}
+
 export function getCourses(_request, response) {
   response.status(200).json(apiResponse("Courses retrieved successfully.", {
     courses: courseStore.list(),
@@ -79,6 +94,7 @@ export function getCourse(request, response) {
 
 export function createCourse(request, response) {
   const fields = normalizeCourse(request.body);
+  ensureUniqueId(fields.id);
   ensureUniqueTitle(fields.title);
   const course = courseStore.create(fields);
 
@@ -91,7 +107,26 @@ export function updateCourse(request, response) {
     throw Object.assign(new Error("Course not found."), { status: 404 });
   }
 
+  const fields = normalizeCourse(request.body);
+  if (fields.id !== undefined) {
+    throw validationError("Course ID cannot be changed.");
+  }
+  ensureUniqueTitle(fields.title, request.params.id);
+  const course = courseStore.replace(request.params.id, fields);
+
+  response.status(200).json(apiResponse("Course updated successfully.", { course }));
+}
+
+export function patchCourse(request, response) {
+  validateId(request.params.id);
+  if (!courseStore.findById(request.params.id)) {
+    throw Object.assign(new Error("Course not found."), { status: 404 });
+  }
+
   const fields = normalizeCourse(request.body, { partial: true });
+  if (fields.id !== undefined) {
+    throw validationError("Course ID cannot be changed.");
+  }
   ensureUniqueTitle(fields.title, request.params.id);
   const course = courseStore.update(request.params.id, fields);
 

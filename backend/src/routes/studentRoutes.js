@@ -4,6 +4,7 @@ import {
   deleteStudent,
   getStudent,
   getStudents,
+  patchStudent,
   updateStudent,
 } from "../controllers/studentController.js";
 
@@ -15,6 +16,7 @@ router.route("/")
 router.route("/:id")
   .get(getStudent)
   .put(updateStudent)
+  .patch(patchStudent)
   .delete(deleteStudent);
 
 export default router;

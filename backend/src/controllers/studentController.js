@@ -2,11 +2,13 @@ import { apiResponse } from "../utils/apiResponse.js";
 import { studentStore } from "../data/inMemoryStore.js";
 
 const studentFields = new Set([
+  "id",
   "name",
   "fullName",
   "email",
   "phone",
   "course",
+  "enrolledCourses",
   "college",
   "department",
   "yearOfStudy",
@@ -33,6 +35,13 @@ function normalizeStudent(body, { partial = false } = {}) {
   }
 
   const fields = {};
+  if (body.id !== undefined) {
+    if (typeof body.id !== "string" || !/^[A-Za-z0-9_-]{1,128}$/.test(body.id)) {
+      throw validationError("Student ID must contain 1 to 128 letters, numbers, underscores, or hyphens.");
+    }
+    fields.id = body.id;
+  }
+
   const name = body.name ?? body.fullName;
   if (name !== undefined) {
     if (typeof name !== "string" || !name.trim() || name.trim().length > 120) {
@@ -65,6 +74,18 @@ function normalizeStudent(body, { partial = false } = {}) {
     }
   }
 
+  if (body.enrolledCourses !== undefined) {
+    if (
+      !Array.isArray(body.enrolledCourses)
+      || body.enrolledCourses.some(
+        (course) => typeof course !== "string" || !course.trim() || course.length > 200,
+      )
+    ) {
+      throw validationError("enrolledCourses must be an array of non-empty strings.");
+    }
+    fields.enrolledCourses = [...new Set(body.enrolledCourses.map((course) => course.trim()))];
+  }
+
   if (body.yearOfStudy !== undefined) {
     if (!Number.isInteger(body.yearOfStudy) || body.yearOfStudy < 1) {
       throw validationError("yearOfStudy must be a positive integer.");
@@ -90,6 +111,12 @@ function ensureUniqueEmail(email, excludedId) {
   }
 }
 
+function ensureUniqueId(id) {
+  if (id && studentStore.findById(id)) {
+    throw Object.assign(new Error("A student with this ID already exists."), { status: 409 });
+  }
+}
+
 export function getStudents(_request, response) {
   response.status(200).json(apiResponse("Students retrieved successfully.", {
     students: studentStore.list(),
@@ -106,11 +133,15 @@ export function getStudent(request, response) {
   response.status(200).json(apiResponse("Student retrieved successfully.", { student }));
 }
 
-export function createStudent(request, response) {
-  const fields = normalizeStudent(request.body);
+export function createStudentRecord(body) {
+  const fields = normalizeStudent(body);
+  ensureUniqueId(fields.id);
   ensureUniqueEmail(fields.email);
-  const student = studentStore.create(fields);
+  return studentStore.create(fields);
+}
 
+export function createStudent(request, response) {
+  const student = createStudentRecord(request.body);
   response.status(201).json(apiResponse("Student created successfully.", { student }));
 }
 
@@ -120,7 +151,26 @@ export function updateStudent(request, response) {
     throw Object.assign(new Error("Student not found."), { status: 404 });
   }
 
+  const fields = normalizeStudent(request.body);
+  if (fields.id !== undefined) {
+    throw validationError("Student ID cannot be changed.");
+  }
+  ensureUniqueEmail(fields.email, request.params.id);
+  const student = studentStore.replace(request.params.id, fields);
+
+  response.status(200).json(apiResponse("Student updated successfully.", { student }));
+}
+
+export function patchStudent(request, response) {
+  validateId(request.params.id);
+  if (!studentStore.findById(request.params.id)) {
+    throw Object.assign(new Error("Student not found."), { status: 404 });
+  }
+
   const fields = normalizeStudent(request.body, { partial: true });
+  if (fields.id !== undefined) {
+    throw validationError("Student ID cannot be changed.");
+  }
   ensureUniqueEmail(fields.email, request.params.id);
   const student = studentStore.update(request.params.id, fields);
 

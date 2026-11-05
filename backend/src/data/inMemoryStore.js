@@ -26,6 +26,13 @@ function createCollection(initialItems) {
       items[index] = { ...items[index], ...fields, id };
       return structuredClone(items[index]);
     },
+    replace(id, fields) {
+      const index = items.findIndex((entry) => entry.id === id);
+      if (index === -1) return null;
+
+      items[index] = { ...fields, id };
+      return structuredClone(items[index]);
+    },
     delete(id) {
       const index = items.findIndex((entry) => entry.id === id);
       if (index === -1) return null;
@@ -36,10 +43,27 @@ function createCollection(initialItems) {
 }
 
 export const studentStore = createCollection(
-  mockApiData.students.map(({ fullName, ...student }) => ({
+  mockApiData.students.map(({ fullName, course, ...student }) => ({
     ...student,
     name: student.name ?? fullName,
+    enrolledCourses: student.enrolledCourses ?? (course ? [course] : []),
   })),
 );
 
-export const courseStore = createCollection(mockApiData.courses);
+export const courseStore = createCollection(
+  mockApiData.courses.map((course) => ({
+    ...course,
+    level: course.level ?? "Not specified",
+  })),
+);
+
+const developmentCredentials = new Map();
+
+export const credentialStore = {
+  set(email, password) {
+    developmentCredentials.set(email, password);
+  },
+  matches(email, password) {
+    return developmentCredentials.get(email) === password;
+  },
+};
