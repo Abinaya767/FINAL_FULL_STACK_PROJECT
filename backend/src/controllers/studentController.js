@@ -137,7 +137,7 @@ export function createStudentRecord(body) {
   const fields = normalizeStudent(body);
   ensureUniqueId(fields.id);
   ensureUniqueEmail(fields.email);
-  return studentStore.create(fields);
+  return studentStore.create({ ...fields, role: "student" });
 }
 
 export function createStudent(request, response) {
@@ -156,7 +156,7 @@ export function updateStudent(request, response) {
     throw validationError("Student ID cannot be changed.");
   }
   ensureUniqueEmail(fields.email, request.params.id);
-  const student = studentStore.replace(request.params.id, fields);
+  const student = studentStore.replace(request.params.id, { ...fields, role: "student" });
 
   response.status(200).json(apiResponse("Student updated successfully.", { student }));
 }
@@ -170,6 +170,12 @@ export function patchStudent(request, response) {
   const fields = normalizeStudent(request.body, { partial: true });
   if (fields.id !== undefined) {
     throw validationError("Student ID cannot be changed.");
+  }
+  if (
+    request.user.role === "student"
+    && Object.keys(fields).some((field) => !["name", "phone"].includes(field))
+  ) {
+    throw Object.assign(new Error("Students may update only their own name and phone number."), { status: 403 });
   }
   ensureUniqueEmail(fields.email, request.params.id);
   const student = studentStore.update(request.params.id, fields);

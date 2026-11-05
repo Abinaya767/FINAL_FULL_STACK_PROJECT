@@ -7,16 +7,18 @@ import {
   patchCourse,
   updateCourse,
 } from "../controllers/courseController.js";
+import { authenticate } from "../middleware/authenticate.js";
+import { authorizeRoles } from "../middleware/authorize.js";
 
 const router = Router();
 
 router.route("/")
   .get(getCourses)
-  .post(createCourse);
+  .post(authenticate, authorizeRoles("admin"), createCourse);
 router.route("/:id")
   .get(getCourse)
-  .put(updateCourse)
-  .patch(patchCourse)
-  .delete(deleteCourse);
+  .put(authenticate, authorizeRoles("admin"), updateCourse)
+  .patch(authenticate, authorizeRoles("admin"), patchCourse)
+  .delete(authenticate, authorizeRoles("admin"), deleteCourse);
 
 export default router;

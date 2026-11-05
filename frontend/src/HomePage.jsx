@@ -1,7 +1,8 @@
+import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useEffect } from "react";
-import Footer from "../components/Footer.jsx";
-import Navbar from "../components/Navbar.jsx";
+import Footer from "./Footer.jsx";
+import Navbar from "./Navbar.jsx";
 
 export default function HomePage() {
   const location = useLocation();

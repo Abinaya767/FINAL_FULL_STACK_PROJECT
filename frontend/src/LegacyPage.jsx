@@ -1,6 +1,8 @@
+import React from "react";
 import { useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { clearDemoState } from "../../js/storage.js";
+import { clearDemoState } from "../js/storage.js";
+import { clearAuthSession } from "./api/authSession.js";
 
 const legacyPathByRoute = {
   "/login": "/login.html",
@@ -14,15 +16,15 @@ const legacyPathByRoute = {
   "/final-assessment": "/final-assessment.html",
   "/certificate": "/certificate.html",
   "/notifications": "/notifications.html",
-  "/admin/login": "/admin/admin-login.html",
-  "/admin/dashboard": "/admin/admin-dashboard.html",
-  "/admin/manage-courses": "/admin/manage-courses.html",
-  "/admin/manage-students": "/admin/manage-students.html",
-  "/admin/add-student": "/admin/add-student.html",
-  "/admin/manage-modules": "/admin/manage-modules.html",
-  "/admin/manage-lessons": "/admin/manage-lessons.html",
-  "/admin/manage-quizzes": "/admin/manage-quizzes.html",
-  "/admin/manage-assessments": "/admin/manage-assessments.html",
+  "/admin/login": "/admin-login.html",
+  "/admin/dashboard": "/admin-dashboard.html",
+  "/admin/manage-courses": "/manage-courses.html",
+  "/admin/manage-students": "/manage-students.html",
+  "/admin/add-student": "/add-student.html",
+  "/admin/manage-modules": "/manage-modules.html",
+  "/admin/manage-lessons": "/manage-lessons.html",
+  "/admin/manage-quizzes": "/manage-quizzes.html",
+  "/admin/manage-assessments": "/manage-assessments.html",
 };
 
 const routeByLegacyPath = Object.fromEntries(
@@ -80,6 +82,7 @@ export default function LegacyPage({ title }) {
         event.preventDefault();
         if (link.textContent.trim().toLowerCase() === "logout") {
           clearDemoState();
+          clearAuthSession();
         }
         navigate(route);
       };
@@ -89,7 +92,10 @@ export default function LegacyPage({ title }) {
     };
 
     frame.addEventListener("load", handleLoad);
-    frame.src = `${legacyPath}${location.search}`;
+    const frameUrl = new URL(legacyPath, window.location.origin);
+    frameUrl.search = location.search;
+    frameUrl.searchParams.set("embed", "1");
+    frame.src = `${frameUrl.pathname}${frameUrl.search}`;
     return () => {
       frame.removeEventListener("load", handleLoad);
       if (frame.contentDocument && frame.__learnSpaceLinkHandler) {

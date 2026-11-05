@@ -112,7 +112,11 @@ export function updateCourse(request, response) {
     throw validationError("Course ID cannot be changed.");
   }
   ensureUniqueTitle(fields.title, request.params.id);
-  const course = courseStore.replace(request.params.id, fields);
+  const currentCourse = courseStore.findById(request.params.id);
+  const course = courseStore.replace(request.params.id, {
+    ...fields,
+    ...(currentCourse.demo === undefined ? {} : { demo: currentCourse.demo }),
+  });
 
   response.status(200).json(apiResponse("Course updated successfully.", { course }));
 }

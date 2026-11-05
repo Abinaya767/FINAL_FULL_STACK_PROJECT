@@ -7,16 +7,17 @@ import {
   patchStudent,
   updateStudent,
 } from "../controllers/studentController.js";
+import { authorizeRoles, authorizeSelfOrAdmin } from "../middleware/authorize.js";
 
 const router = Router();
 
 router.route("/")
-  .get(getStudents)
-  .post(createStudent);
+  .get(authorizeRoles("admin"), getStudents)
+  .post(authorizeRoles("admin"), createStudent);
 router.route("/:id")
-  .get(getStudent)
-  .put(updateStudent)
-  .patch(patchStudent)
-  .delete(deleteStudent);
+  .get(authorizeSelfOrAdmin, getStudent)
+  .put(authorizeRoles("admin"), updateStudent)
+  .patch(authorizeSelfOrAdmin, patchStudent)
+  .delete(authorizeRoles("admin"), deleteStudent);
 
 export default router;

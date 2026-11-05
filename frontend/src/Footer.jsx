@@ -5,3 +5,4 @@ export default function Footer() {
     </footer>
   );
 }
+import React from "react";

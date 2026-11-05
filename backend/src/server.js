@@ -1,5 +1,8 @@
 import "dotenv/config";
 import app from "./app.js";
+import { validateJwtConfiguration } from "./utils/jwt.js";
+
+validateJwtConfiguration();
 
 const port = Number.parseInt(process.env.PORT || "5000", 10);
 

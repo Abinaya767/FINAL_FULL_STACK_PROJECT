@@ -47,6 +47,7 @@ export const studentStore = createCollection(
     ...student,
     name: student.name ?? fullName,
     enrolledCourses: student.enrolledCourses ?? (course ? [course] : []),
+    role: "student",
   })),
 );
 
