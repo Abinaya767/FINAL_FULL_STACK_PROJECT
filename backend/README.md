@@ -42,3 +42,7 @@ Copy `.env.example` to `.env` and set a random `JWT_SECRET` of at least 32 chara
 Send protected API requests with `Authorization: Bearer <token>`. Invalid or expired tokens return `401`; an authenticated user without permission receives `403`. Students can read and update only their own profile (name and phone); administrator-only student management and course mutations are restricted to `admin`. Course browsing and the health check remain public.
 
 The React app stores its JWT session in tab-scoped `sessionStorage`, attaches the token to its Express API requests, clears the session on `401` or logout, and guards student and administrator routes. Existing Task 7 mock API clients remain separate and continue using their mock API.
+
+## Task 11 database schema
+
+MongoDB with Mongoose is the planned database technology. Mongoose models and the collection relationship diagram are documented in [`docs/DATABASE_SCHEMA.md`](./docs/DATABASE_SCHEMA.md) and [`docs/ER_DIAGRAM.md`](./docs/ER_DIAGRAM.md). The models are schema definitions only: the API still uses temporary in-memory storage, and no database connection or data migration is configured until Task 12.
