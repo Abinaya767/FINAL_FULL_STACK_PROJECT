@@ -219,6 +219,7 @@ model and REST API, with new records delivered live to the target student's
 socket room. See [TASK_13.md](TASK_13.md) for installation, API details, socket
 events, and manual verification steps.
 
-Install the new backend dependency by running `npm install` inside
-`backend/` before starting the server. The existing Task 12 module-quiz
+Install/update dependencies by running `npm install` inside both
+`backend/` and `frontend/src/` before starting the servers. This refreshes the
+package lock files for the newly added Socket.IO packages. The existing Task 12 module-quiz
 attempt/cooldown rules and final-assessment policy are unchanged.
