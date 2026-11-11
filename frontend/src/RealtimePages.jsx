@@ -121,7 +121,7 @@ export function ChatPage() {
     setSending(true); setError("");
     try {
       const result = await expressRequest(`/messages/${selectedId}`, { method: "POST", body: { content: draft } });
-      setMessages((current) => current.some((item) => item.id === result.data?.message?.id) ? current : [...current, result.message]);
+      setMessages((current) => current.some((item) => item.id === result.data?.message?.id) ? current : [...current, result.data.message]);
       setDraft("");
     } catch (err) { setError(err.message); }
     finally { setSending(false); }
