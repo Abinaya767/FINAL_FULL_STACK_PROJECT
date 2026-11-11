@@ -9,6 +9,7 @@ import authRoutes from "./routes/authRoutes.js";
 import courseRoutes from "./routes/courseRoutes.js";
 import studentRoutes from "./routes/studentRoutes.js";
 import learningRoutes from "./routes/learningRoutes.js";
+import messageRoutes from "./routes/messageRoutes.js";
 import { authenticate } from "./middleware/authenticate.js";
 
 const app = express();
@@ -26,6 +27,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/students", authenticate, studentRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api", learningRoutes);
+app.use("/api/messages", authenticate, messageRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
