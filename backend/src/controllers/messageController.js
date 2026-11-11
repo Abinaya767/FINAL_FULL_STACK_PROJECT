@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import Message from "../models/Message.js";
-import Student from "../models/Student.js";
 import User from "../models/User.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiResponse } from "../utils/apiResponse.js";
