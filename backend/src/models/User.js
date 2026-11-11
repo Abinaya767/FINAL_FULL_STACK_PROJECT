@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema({
   role: { type: String, enum: ["student", "admin"], default: "student", required: true },
 }, { timestamps: true });
 userSchema.pre("save", async function hashChangedPassword() {
-  if (this.isModified("passwordHash") && !this.passwordHash.startsWith("scrypt$")) {
+  if (this.isModified("passwordHash") && typeof this.passwordHash === "string" && !this.passwordHash.startsWith("scrypt$")) {
     this.passwordHash = await hashPassword(this.passwordHash);
   }
 });
