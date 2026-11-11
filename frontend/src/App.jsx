@@ -17,6 +17,7 @@ import {
 } from "./StudentPages.jsx";
 import LegacyPage from "./LegacyPage.jsx";
 import NotFoundPage from "./NotFoundPage.jsx";
+import { ChatPage, RealtimeNotificationsPage } from "./RealtimePages.jsx";
 import { useAuth } from "./AuthContext.jsx";
 
 function ProtectedRoute({ role, children }) {
@@ -66,7 +67,8 @@ export default function App() {
       <Route path="/module-quiz" element={protectedStudentPage(<ModuleQuizPage />)} />
       <Route path="/final-assessment" element={protectedStudentPage(<FinalAssessmentPage />)} />
       <Route path="/certificate" element={protectedStudentPage(<CertificatePage />)} />
-      <Route path="/notifications" element={protectedStudentPage(<NotificationsPage />)} />
+      <Route path="/notifications" element={protectedStudentPage(<RealtimeNotificationsPage />)} />
+      <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
       <Route path="/admin/login" element={<AdminLoginPage />} />
       <Route path="/admin/dashboard" element={protectedAdminPage("Admin Dashboard")} />
       <Route path="/admin/manage-courses" element={protectedAdminPage("Manage Courses")} />
