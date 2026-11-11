@@ -235,3 +235,25 @@ filtering. Configure private values in `backend/.env` using
 `backend/.env.example`; never commit secrets. See [TASK_14.md](TASK_14.md) for
 security details and verification steps. Run `cd backend && npm install && npm test`
 to execute the password utility tests.
+
+
+## Task 15 — Deployment and testing
+
+Deployment configuration is provided in `render.yaml` (Render backend) and
+`frontend/vercel.json` (Vercel React Router fallback). The Vite app root is
+`frontend/`; configure Vercel Root Directory as `frontend`, build command
+`npm run build`, and output directory `dist`. Set
+`VITE_EXPRESS_API_URL` to the deployed backend base URL ending in `/api`.
+
+Render uses `backend/` as its root directory and `/api/health` as its health
+check. Configure `MONGODB_URI`, a random `JWT_SECRET` (32+ characters),
+`ADMIN_EMAIL`, `ADMIN_PASSWORD` (16+ characters), and `FRONTEND_URL` in the
+Render dashboard. Never commit real credentials. Use a production MongoDB
+Atlas database and configure its network access for the hosted backend.
+
+GitHub Actions in `.github/workflows/ci.yml` installs and tests the backend,
+then builds the frontend. Check the Actions run for pass/fail status. See
+[TASK_15.md](TASK_15.md) for deployment steps, the manual API/browser test
+checklist, and known verification limits. Deployment configuration alone does
+not mean the app is live; add verified live URLs only after successful hosting
+and end-to-end tests.
