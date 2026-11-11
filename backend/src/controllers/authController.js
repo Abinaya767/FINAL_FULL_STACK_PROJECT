@@ -1,4 +1,5 @@
 import { randomUUID, timingSafeEqual } from "node:crypto";
+import { hashPassword, verifyPassword } from "../utils/password.js";
 import Student from "../models/Student.js";
 import User from "../models/User.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -96,7 +97,7 @@ export const register = asyncHandler(async (request, response) => {
     user = await User.create({
       name,
       email,
-      passwordHash: request.body.password,
+      passwordHash: await hashPassword(request.body.password),
       role: "student",
     });
     const student = await Student.create({
@@ -148,21 +149,33 @@ export const login = asyncHandler(async (request, response) => {
     if (!safeEqual(password, adminPassword)) {
       throw Object.assign(new Error("Invalid email or password."), { status: 401 });
     }
-    user = await User.findOneAndUpdate(
-      { email: adminEmail },
-      {
-        $set: {
-          name: "LearnSpace Administrator",
-          passwordHash: adminPassword,
-          role: "admin",
-        },
-      },
-      { returnDocument: "after", upsert: true, runValidators: true, setDefaultsOnInsert: true },
-    ).select("+passwordHash");
+    user = await User.findOne({ email: adminEmail }).select("+passwordHash");
+    if (!user) {
+      user = await User.create({
+        name: "LearnSpace Administrator",
+        email: adminEmail,
+        passwordHash: await hashPassword(adminPassword),
+        role: "admin",
+      });
+    } else if (user.role !== "admin" || !await verifyPassword(adminPassword, user.passwordHash)) {
+      user.name = "LearnSpace Administrator";
+      user.role = "admin";
+      user.passwordHash = await hashPassword(adminPassword);
+      await user.save();
+    }
   } else {
     user = await User.findOne({ email: normalizedEmail }).select("+passwordHash");
-    if (!user || !safeEqual(password, user.passwordHash)) {
+    if (!user) {
       throw Object.assign(new Error("Invalid email or password."), { status: 401 });
+    }
+    const validPassword = await verifyPassword(password, user.passwordHash)
+      || safeEqual(password, user.passwordHash); // Upgrade older plain-text records after successful login.
+    if (!validPassword) {
+      throw Object.assign(new Error("Invalid email or password."), { status: 401 });
+    }
+    if (!user.passwordHash.startsWith("scrypt$")) {
+      user.passwordHash = await hashPassword(password);
+      await user.save();
     }
   }
 
