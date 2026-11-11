@@ -223,3 +223,15 @@ Install/update dependencies by running `npm install` inside both
 `backend/` and `frontend/src/` before starting the servers. This refreshes the
 package lock files for the newly added Socket.IO packages. The existing Task 12 module-quiz
 attempt/cooldown rules and final-assessment policy are unchanged.
+
+
+## Task 14 — Security, optimization, and error handling
+
+Task 14 adds salted scrypt password hashing, legacy password upgrade after a
+successful login, strict configured CORS origins, input-key/depth validation,
+security response headers, JWT-protected REST and Socket.IO access, centralized
+JSON error responses, safe request logging, and database-side student email
+filtering. Configure private values in `backend/.env` using
+`backend/.env.example`; never commit secrets. See [TASK_14.md](TASK_14.md) for
+security details and verification steps. Run `cd backend && npm install && npm test`
+to execute the password utility tests.

@@ -11,13 +11,18 @@ import studentRoutes from "./routes/studentRoutes.js";
 import learningRoutes from "./routes/learningRoutes.js";
 import messageRoutes from "./routes/messageRoutes.js";
 import { authenticate } from "./middleware/authenticate.js";
+import sanitizeInput from "./middleware/sanitizeInput.js";
+import securityHeaders from "./middleware/securityHeaders.js";
 
 const app = express();
 
+app.disable("x-powered-by");
+app.use(securityHeaders);
 app.use(requestLogger);
 app.use(cors(corsOptions));
 app.use(express.json({ limit: "1mb" }));
-app.use(express.urlencoded({ extended: true, limit: "1mb" }));
+app.use(express.urlencoded({ extended: false, limit: "1mb", parameterLimit: 100 }));
+app.use(sanitizeInput);
 app.use("/api", (_request, response, next) => {
   response.set("Cache-Control", "no-store");
   next();

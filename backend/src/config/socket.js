@@ -2,11 +2,9 @@ import { Server } from "socket.io";
 import { verifyToken } from "../utils/jwt.js";
 
 export function attachSocketServer(httpServer, app) {
-  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-  const allowedOrigins = [
-    frontendUrl,
-    frontendUrl.replace("://localhost", "://127.0.0.1"),
-  ];
+  const allowedOrigins = (process.env.FRONTEND_URL || "http://localhost:5173")
+    .split(",").map((origin) => origin.trim()).filter(Boolean)
+    .flatMap((origin) => [origin, origin.replace("://localhost", "://127.0.0.1")]);
   const io = new Server(httpServer, {
     cors: { origin: allowedOrigins, methods: ["GET", "POST"] },
     transports: ["websocket", "polling"],
