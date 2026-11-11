@@ -1,0 +1,38 @@
+name: LearnSpace CI
+
+on:
+  push:
+    branches: [main, task-15-deployment]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm install --no-audit --no-fund
+      - name: Run backend tests
+        working-directory: backend
+        run: npm test
+
+  frontend:
+    name: Frontend production build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm install --no-audit --no-fund
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
