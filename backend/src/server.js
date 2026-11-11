@@ -1,5 +1,7 @@
 import "dotenv/config";
 import app from "./app.js";
+import { createServer } from "node:http";
+import { attachSocketServer } from "./config/socket.js";
 import { connectDatabase, disconnectDatabase } from "./config/database.js";
 import { validateJwtConfiguration } from "./utils/jwt.js";
 
@@ -12,7 +14,10 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
   throw new Error("PORT must be a valid TCP port between 1 and 65535.");
 }
 
-const server = app.listen(port, () => {
+const server = createServer(app);
+attachSocketServer(server, app);
+
+server.listen(port, () => {
   console.info(`LearnSpace backend is running at http://localhost:${port}`);
 });
 
