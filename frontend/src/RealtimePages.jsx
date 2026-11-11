@@ -35,7 +35,7 @@ export function RealtimeNotificationsPage() {
   useEffect(() => {
     let active = true;
     expressRequest("/notifications")
-      .then((result) => { if (active) setNotifications(result.notifications || []); })
+      .then((result) => { if (active) setNotifications(result.data?.notifications || []); })
       .catch((err) => { if (active) setError(err.message); })
       .finally(() => { if (active) setLoading(false); });
     const socket = io(SOCKET_URL, { auth: { token: getAuthSession()?.token }, transports: ["websocket", "polling"] });
@@ -48,7 +48,7 @@ export function RealtimeNotificationsPage() {
   async function markRead(id) {
     try {
       const result = await expressRequest(`/notifications/${id}/read`, { method: "PATCH" });
-      setNotifications((current) => current.map((item) => item._id === id ? result.notification : item));
+      setNotifications((current) => current.map((item) => item._id === id ? result.data?.notification || item : item));
     } catch (err) { setError(err.message); }
   }
 
@@ -89,7 +89,7 @@ export function ChatPage() {
     let active = true;
     expressRequest("/messages/contacts").then((result) => {
       if (!active) return;
-      const list = result.contacts || [];
+      const list = result.data?.contacts || [];
       setContacts(list);
       if (list.length) setSelectedId(list[0].id);
     }).catch((err) => { if (active) setError(err.message); });
@@ -100,7 +100,7 @@ export function ChatPage() {
     if (!selectedId) { setMessages([]); return undefined; }
     let active = true;
     expressRequest(`/messages/${selectedId}`).then((result) => {
-      if (active) setMessages(result.messages || []);
+      if (active) setMessages(result.data?.messages || []);
     }).catch((err) => { if (active) setError(err.message); });
     return () => { active = false; };
   }, [selectedId]);
@@ -121,7 +121,7 @@ export function ChatPage() {
     setSending(true); setError("");
     try {
       const result = await expressRequest(`/messages/${selectedId}`, { method: "POST", body: { content: draft } });
-      setMessages((current) => current.some((item) => item.id === result.message.id) ? current : [...current, result.message]);
+      setMessages((current) => current.some((item) => item.id === result.data?.message?.id) ? current : [...current, result.message]);
       setDraft("");
     } catch (err) { setError(err.message); }
     finally { setSending(false); }
