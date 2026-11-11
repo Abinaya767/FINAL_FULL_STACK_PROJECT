@@ -207,3 +207,18 @@ can also be exercised with Postman by sending the JWT in the `Authorization:
 Bearer <token>` header. Database availability, validation errors, missing
 records, duplicate records, and authorization failures are reported through
 HTTP error responses; secrets are never returned by API endpoints.
+
+
+## Task 13 — Real-time chat and notifications
+
+Task 13 adds JWT-authenticated Socket.IO connections, private per-user rooms,
+MongoDB-persisted one-to-one messages, conversation history, and live student
+notifications. Students can chat with administrators; administrators can chat
+with students. Notification records continue to use the existing Notification
+model and REST API, with new records delivered live to the target student's
+socket room. See [TASK_13.md](TASK_13.md) for installation, API details, socket
+events, and manual verification steps.
+
+Install the new backend dependency by running `npm install` inside
+`backend/` before starting the server. The existing Task 12 module-quiz
+attempt/cooldown rules and final-assessment policy are unchanged.
