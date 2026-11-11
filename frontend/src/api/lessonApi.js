@@ -1,6 +1,6 @@
-import api from "./axios.js";
+import { expressRequest } from "./expressApi.js";
 
 export async function getModuleLessons(moduleId) {
-  const { data } = await api.get("/lessons", { params: { moduleId, _sort: "order" } });
-  return data;
+  const result = await expressRequest(`/modules/${encodeURIComponent(moduleId)}/lessons`);
+  return result.data.lessons;
 }

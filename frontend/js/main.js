@@ -1,39 +1,74 @@
-import { initializeDashboard, initializeCoursePage, initializeMyCourses, enrollFromForm } from "./course.js";
+import { initializeDashboard, initializeCoursePage, initializeMyCourses } from "./course.js";
 import { initializeNavigation } from "./navigation.js";
+import { initializeStudentProfile } from "./account.js";
+import { initializeAddStudent, initializeAdminCourses, initializeAdminStudents } from "./admin.js";
 import {
+  initializeCertificate,
   initializeFinalAssessment,
   initializeLearningProgress,
   initializeModuleQuiz,
+  initializeNotifications,
 } from "./progress.js";
-import {
-  saveDemoProfile,
-  startDemoSession,
-} from "./storage.js";
+import { expressRequest } from "../src/api/expressApi.js";
+import { saveAuthSession } from "../src/api/authSession.js";
 import { initializeFormValidation } from "./validation.js";
 
 function initializeLearnSpace() {
   initializeFormValidation({
-    onRegistrationValid(form) {
-      const name = form.querySelector("#fullname").value.trim();
-      saveDemoProfile(name);
-      return "Demo profile saved in this tab only. No account was created and your password was not stored.";
+    async onRegistrationValid(form) {
+      const result = await expressRequest("/auth/register", {
+        method: "POST",
+        body: {
+          name: form.querySelector("#fullname").value.trim(),
+          email: form.querySelector("#email").value.trim(),
+          password: form.querySelector("#password").value,
+          phone: form.querySelector("#phone").value.trim(),
+          college: form.querySelector("#college").value.trim(),
+          department: form.querySelector("#department").value.trim(),
+          yearOfStudy: Number(form.querySelector("#year").value),
+        },
+      });
+      return result.message;
     },
-    onLoginValid() {
-      startDemoSession();
-      return "Demo session started in this tab. Credentials were not verified; this is not authentication.";
+    async onLoginValid(form) {
+      const result = await expressRequest("/auth/login", {
+        method: "POST",
+        body: {
+          email: form.querySelector("#email").value.trim(),
+          password: form.querySelector("#password").value,
+        },
+      });
+      if (result.user.role !== "student") throw new Error("Use the administrator login page for this account.");
+      saveAuthSession(result.token, result.user);
+      return "Login successful.";
     },
-    onEnrollmentValid(form) {
-      return enrollFromForm(form);
+    async onAdminLoginValid(form) {
+      const result = await expressRequest("/auth/login", {
+        method: "POST",
+        body: {
+          email: form.querySelector("#admin-email").value.trim(),
+          password: form.querySelector("#admin-password").value,
+        },
+      });
+      if (result.user.role !== "admin") throw new Error("Use a student login for this account.");
+      saveAuthSession(result.token, result.user);
+      return "Administrator login successful.";
     },
   });
 
   initializeNavigation();
-  initializeCoursePage();
-  initializeDashboard();
-  initializeMyCourses();
-  initializeLearningProgress();
-  initializeModuleQuiz();
-  initializeFinalAssessment();
+  void initializeCoursePage();
+  void initializeDashboard();
+  void initializeMyCourses();
+  void initializeLearningProgress();
+  void initializeModuleQuiz();
+  void initializeFinalAssessment();
+  void initializeCertificate();
+  void initializeNotifications();
+  void initializeStudentProfile();
+  void initializeAddStudent();
+  void initializeAdminStudents();
+  void initializeAdminCourses();
 }
 
 if (document.readyState === "loading") {

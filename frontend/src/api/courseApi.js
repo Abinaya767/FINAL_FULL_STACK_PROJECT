@@ -1,28 +1,28 @@
-import api from "./axios.js";
+import { expressRequest } from "./expressApi.js";
 
 export async function getCourses() {
-  const { data } = await api.get("/courses");
-  return data;
+  const result = await expressRequest("/courses");
+  return result.data.courses;
 }
 
 export async function getCourse(id) {
-  const { data } = await api.get("/courses", { params: { id } });
-  if (!data[0]) {
-    throw new Error("Course not found.");
-  }
-  return data[0];
+  const result = await expressRequest(`/courses/${encodeURIComponent(id)}`);
+  return result.data.course;
 }
 
 export async function createCourse(course) {
-  const { data } = await api.post("/courses", course);
-  return data;
+  const result = await expressRequest("/courses", { method: "POST", body: course });
+  return result.data.course;
 }
 
 export async function updateCourse(id, course) {
-  const { data } = await api.patch(`/courses/${encodeURIComponent(id)}`, course);
-  return data;
+  const result = await expressRequest(`/courses/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    body: course,
+  });
+  return result.data.course;
 }
 
 export async function deleteCourse(id) {
-  await api.delete(`/courses/${encodeURIComponent(id)}`);
+  await expressRequest(`/courses/${encodeURIComponent(id)}`, { method: "DELETE" });
 }

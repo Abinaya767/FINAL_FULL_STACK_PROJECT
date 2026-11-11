@@ -1,4 +1,7 @@
 import { apiError } from "../utils/apiResponse.js";
+import Student from "../models/Student.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import mongoose from "mongoose";
 
 export function authorizeRoles(...roles) {
   return function authorizeRole(request, response, next) {
@@ -10,13 +13,18 @@ export function authorizeRoles(...roles) {
   };
 }
 
-export function authorizeSelfOrAdmin(request, response, next) {
-  if (
-    request.user?.role === "admin"
-    || (request.user?.role === "student" && request.user.id === request.params.id)
-  ) {
+export const authorizeSelfOrAdmin = asyncHandler(async (request, response, next) => {
+  if (request.user?.role === "admin") {
     next();
     return;
   }
-  response.status(403).json(apiError("You may access only your own student profile."));
-}
+  const id = request.params.id;
+  const alternatives = [{ legacyId: id }];
+  if (mongoose.isValidObjectId(id)) alternatives.push({ _id: id }, { user: id });
+  const student = await Student.findOne({ $or: alternatives }).select("user");
+  if (!student || student.user.toString() !== request.user?.id) {
+    response.status(403).json(apiError("You may access only your own student profile."));
+    return;
+  }
+  next();
+});

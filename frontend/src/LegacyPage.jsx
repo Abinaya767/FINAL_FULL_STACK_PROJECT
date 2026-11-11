@@ -1,7 +1,6 @@
 import React from "react";
 import { useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { clearDemoState } from "../js/storage.js";
 import { clearAuthSession } from "./api/authSession.js";
 
 const legacyPathByRoute = {
@@ -57,6 +56,15 @@ export default function LegacyPage({ title }) {
       return undefined;
     }
 
+    const handleApiUnauthorized = (event) => {
+      if (event.origin !== window.location.origin || event.source !== frame.contentWindow
+        || event.data?.type !== "learnspace:unauthorized") {
+        return;
+      }
+      clearAuthSession();
+    };
+    window.addEventListener("message", handleApiUnauthorized);
+
     const handleLoad = () => {
       const frameDocument = frame.contentDocument;
       if (!frameDocument) {
@@ -81,7 +89,6 @@ export default function LegacyPage({ title }) {
 
         event.preventDefault();
         if (link.textContent.trim().toLowerCase() === "logout") {
-          clearDemoState();
           clearAuthSession();
         }
         navigate(route);
@@ -97,6 +104,7 @@ export default function LegacyPage({ title }) {
     frameUrl.searchParams.set("embed", "1");
     frame.src = `${frameUrl.pathname}${frameUrl.search}`;
     return () => {
+      window.removeEventListener("message", handleApiUnauthorized);
       frame.removeEventListener("load", handleLoad);
       if (frame.contentDocument && frame.__learnSpaceLinkHandler) {
         frame.contentDocument.removeEventListener("click", frame.__learnSpaceLinkHandler);

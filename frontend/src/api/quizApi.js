@@ -1,6 +1,14 @@
-import api from "./axios.js";
+import { expressRequest } from "./expressApi.js";
 
 export async function getModuleQuiz(moduleId) {
-  const { data } = await api.get("/quizzes", { params: { moduleId } });
-  return data[0] ?? null;
+  const result = await expressRequest(`/modules/${encodeURIComponent(moduleId)}/quiz`);
+  return result.data.quiz ?? null;
+}
+
+export async function submitModuleQuiz(moduleId, answers) {
+  const result = await expressRequest(`/modules/${encodeURIComponent(moduleId)}/quiz/attempts`, {
+    method: "POST",
+    body: { answers },
+  });
+  return result.data;
 }

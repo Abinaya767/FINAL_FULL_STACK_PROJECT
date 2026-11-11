@@ -1,6 +1,12 @@
 import mongoose from "mongoose";
 
 const courseSchema = new mongoose.Schema({
+  legacyId: {
+    type: String,
+    trim: true,
+    unique: true,
+    sparse: true,
+  },
   title: {
     type: String,
     required: true,
@@ -34,6 +40,11 @@ const courseSchema = new mongoose.Schema({
     type: String,
     trim: true,
     maxlength: 100,
+  },
+  demo: {
+    type: Boolean,
+    default: false,
+    required: true,
   },
   modules: [{
     type: mongoose.Schema.Types.ObjectId,

@@ -136,7 +136,7 @@ function attachValidation(form, fieldRules, onValid) {
     field.addEventListener("change", recheck);
   });
 
-  form.addEventListener("submit", (event) => {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
     let isValid = true;
 
@@ -157,13 +157,18 @@ function attachValidation(form, fieldRules, onValid) {
       return;
     }
 
+    const submitButton = form.querySelector('button[type="submit"]');
+    if (submitButton) submitButton.disabled = true;
+    status.textContent = "Submitting...";
+    status.dataset.state = "loading";
     try {
-      status.textContent = onValid(form);
+      status.textContent = await onValid(form);
       status.dataset.state = "notice";
     } catch (error) {
-      console.error("LearnSpace demo form state could not be updated.", error);
-      status.textContent = "Your form is valid, but the demo state could not be saved in this browser session.";
+      status.textContent = error.message || "The request could not be completed.";
       status.dataset.state = "error";
+    } finally {
+      if (submitButton) submitButton.disabled = false;
     }
   });
 }
@@ -192,7 +197,7 @@ export function initializeFormValidation(handlers = {}) {
           return value === password.value ? "" : "Passwords do not match.";
         },
       },
-    ], handlers.onRegistrationValid || (() => "Registration demo is unavailable."));
+    ], handlers.onRegistrationValid || (() => "Registration API is not connected. No account was created."));
 
     const validateConfirmation = () => {
       if (!confirmPassword.value) {
@@ -215,7 +220,7 @@ export function initializeFormValidation(handlers = {}) {
     attachValidation(loginForm, [
       { selector: "#email", validate: validateEmail },
       { selector: "#password", validate: validateRequired },
-    ], handlers.onLoginValid || (() => "Login demo is unavailable."));
+    ], handlers.onLoginValid || (() => "Login API is not connected. No login was performed."));
   }
 
   const adminLoginForm = document.querySelector("form:has(#admin-email):has(#admin-password)");
@@ -223,7 +228,7 @@ export function initializeFormValidation(handlers = {}) {
     attachValidation(adminLoginForm, [
       { selector: "#admin-email", validate: validateEmail },
       { selector: "#admin-password", validate: validateRequired },
-    ], () => "Admin authentication is not connected. No login was performed.");
+    ], handlers.onAdminLoginValid || (() => "Admin authentication is not connected. No login was performed."));
   }
 
   document.querySelectorAll('form [name="studentName"]').forEach((nameField) => {
@@ -235,6 +240,6 @@ export function initializeFormValidation(handlers = {}) {
     attachValidation(form, [
       { selector: '[name="studentName"]', validate: validateName },
       { selector: '[name="registeredEmail"]', validate: validateEmail },
-    ], handlers.onEnrollmentValid || (() => "Enrollment demo is unavailable."));
+    ], handlers.onEnrollmentValid || (() => "Enrollment API is not connected. No enrollment was created."));
   });
 }

@@ -1,20 +1,19 @@
-import api from "./axios.js";
+import { expressRequest } from "./expressApi.js";
 
 export async function getEnrollments() {
-  const { data } = await api.get("/enrollments");
-  return data;
+  const result = await expressRequest("/enrollments");
+  return result.data.enrollments;
 }
 
-export async function getStudentEnrollments(studentId) {
-  const { data } = await api.get("/enrollments", { params: { studentId } });
-  return data;
+export async function getStudentEnrollments() {
+  return getEnrollments();
 }
 
 export async function createEnrollment(enrollment) {
-  const { data } = await api.post("/enrollments", enrollment);
-  return data;
+  const result = await expressRequest("/enrollments", { method: "POST", body: enrollment });
+  return result.data.enrollment;
 }
 
 export async function deleteEnrollment(id) {
-  await api.delete(`/enrollments/${encodeURIComponent(id)}`);
+  await expressRequest(`/enrollments/${encodeURIComponent(id)}`, { method: "DELETE" });
 }

@@ -1,473 +1,291 @@
 import { getCourseIdForLearning } from "./course.js";
-import { webDevelopmentFinalQuestions, webDevelopmentModules } from "./assessment-data.js";
-import {
-  readDemoState,
-  setSelectedCourse,
-  updateCourseProgress,
-} from "./storage.js";
+import { getEnrollments } from "../src/api/enrollmentApi.js";
+import { getCourseModules } from "../src/api/moduleApi.js";
+import { completeLesson, getProgress } from "../src/api/progressApi.js";
+import { getModuleQuiz, submitModuleQuiz } from "../src/api/quizApi.js";
+import { getCourseAssessment, submitCourseAssessment } from "../src/api/assessmentApi.js";
+import { getCertificates } from "../src/api/certificateApi.js";
+import { deleteNotification, getNotifications, markNotificationRead } from "../src/api/notificationApi.js";
+import { getCourse } from "../src/api/courseApi.js";
+import { getAuthSession } from "../src/api/authSession.js";
 
-const COURSE_ID = "web-development";
-const PASS_PERCENTAGE = 50;
-const MAX_ATTEMPTS = 2;
-
-function emptyProgress() {
-  return {
-    selectedModuleId: "module-1",
-    selectedLessonId: "",
-    moduleLessons: {},
-    completedLessons: [],
-    completedModules: [],
-    quizAttempts: {},
-    quizPassed: {},
-    finalAssessmentAttempts: 0,
-    finalAssessmentResult: null,
-    requiredModuleCount: webDevelopmentModules.length,
-  };
-}
-
-function getCourseProgress(courseId = COURSE_ID) {
-  return readDemoState().progress[courseId] || emptyProgress();
-}
-
-function moduleLessonIds(progress, moduleId) {
-  return progress.moduleLessons[moduleId] || [];
-}
-
-function moduleLessonPercentage(progress, moduleId) {
-  const lessonIds = moduleLessonIds(progress, moduleId);
-  if (!lessonIds.length) {
-    return 0;
-  }
-  const completed = lessonIds.filter((lessonId) => progress.completedLessons.includes(lessonId)).length;
-  return Math.round((completed / lessonIds.length) * 100);
-}
-
-function isModuleComplete(progress, moduleId) {
-  return moduleLessonPercentage(progress, moduleId) === 100
-    && progress.quizPassed[moduleId] === true;
-}
-
-function moduleIsUnlocked(progress, index) {
-  return index === 0 || isModuleComplete(progress, `module-${index}`);
-}
-
-function syncCompletedModules(progress) {
-  progress.completedModules = webDevelopmentModules
-    .map((_module, index) => `module-${index + 1}`)
-    .filter((moduleId) => isModuleComplete(progress, moduleId));
-  return progress;
-}
-
-function updateProgress(courseId, updater) {
-  updateCourseProgress(courseId, (progress) => {
-    updater(progress);
-    return progress;
-  });
-  return getCourseProgress(courseId);
-}
-
-function addStatus(container, className = "demo-state-note") {
-  let status = container.querySelector(`.${className}`);
-  if (!status) {
+function addStatus(container, className = "api-status") {
+  let status = container?.querySelector(`.${className}`);
+  if (!status && container) {
     status = document.createElement("p");
     status.className = className;
     status.setAttribute("role", "status");
     status.setAttribute("aria-live", "polite");
+    status.setAttribute("aria-atomic", "true");
     container.append(status);
   }
   return status;
 }
 
-function getCourseTitle() {
-  return document.querySelector("main > section:first-child h2")?.textContent.trim()
-    || "Web Development";
+function addError(container, error) {
+  const status = addStatus(container);
+  if (status) {
+    status.textContent = error.message;
+    status.dataset.state = "error";
+  }
 }
 
-function showUnsupportedCourse(container) {
-  const note = addStatus(container, "demo-course-unavailable");
-  note.textContent = "This frontend demo currently includes course-specific modules and assessments for Web Development only. Other catalog courses need their own course content.";
-}
-
-function initializeModuleCatalog(courseId) {
-  const section = [...document.querySelectorAll("main section")]
-    .find((item) => item.querySelector("h2")?.textContent.trim() === "Course Modules");
-  if (!section) {
-    return null;
-  }
-
-  section.querySelectorAll(":scope > article").forEach((article) => article.remove());
-
-  const moduleArticles = webDevelopmentModules.map((module, index) => {
-    const moduleId = `module-${index + 1}`;
-    const article = document.createElement("article");
-    const heading = document.createElement("h3");
-    const description = document.createElement("p");
-    const list = document.createElement("ul");
-    const progressLabel = document.createElement("p");
-    const progress = document.createElement("progress");
-    const lessonLink = document.createElement("a");
-    const quizLink = document.createElement("a");
-    const stateLabel = document.createElement("p");
-
-    heading.textContent = `Module ${index + 1}: ${module.title}`;
-    description.textContent = module.description;
-    module.lessons.forEach((lesson, lessonIndex) => {
-      const item = document.createElement("li");
-      item.textContent = lesson;
-      item.dataset.lessonId = `${moduleId}-lesson-${lessonIndex + 1}`;
-      list.append(item);
-    });
-
-    progressLabel.className = "module-progress-label";
-    progress.max = 100;
-    progress.className = "module-progress";
-    progress.setAttribute("aria-label", `${module.title} completion`);
-    lessonLink.href = `#${moduleId}`;
-    lessonLink.textContent = "Open Module";
-    quizLink.href = `module-quiz.html?course=${encodeURIComponent(courseId)}&module=${moduleId}`;
-    quizLink.textContent = `Module ${index + 1} Quiz`;
-    quizLink.className = "module-quiz-link";
-    stateLabel.className = "module-lock-status";
-
-    article.dataset.moduleId = moduleId;
-    article.id = moduleId;
-    article.append(heading, description, list, progressLabel, progress, lessonLink, quizLink, stateLabel);
-    section.append(article);
-    lessonLink.addEventListener("click", () => {
-      const current = getCourseProgress(courseId);
-      if (!moduleIsUnlocked(current, index)) {
-        return;
-      }
-      updateProgress(courseId, (next) => {
-        next.selectedModuleId = moduleId;
-        next.selectedLessonId = next.moduleLessons[moduleId]
-          .find((lessonId) => !next.completedLessons.includes(lessonId)) || "";
-      });
-    });
-    return { id: moduleId, article, lessons: [...list.querySelectorAll("li")] };
-  });
-
-  return moduleArticles;
-}
-
-function ensureDemoCourseSelected(courseId) {
-  const state = readDemoState();
-  const course = state.enrollments.find((entry) => entry.id === courseId)
-    || (state.selectedCourse?.id === courseId ? state.selectedCourse : null);
-  setSelectedCourse({
-    id: courseId,
-    title: course?.title || "Web Development",
-    description: course?.description || "Learn web development through ten structured modules.",
-  });
-}
-
-export function initializeLearningProgress() {
-  const modulesSection = [...document.querySelectorAll("main section")]
-    .find((section) => section.querySelector("h2")?.textContent.trim() === "Course Modules");
-  if (!modulesSection) {
-    return;
-  }
-
-  const courseId = getCourseIdForLearning();
-  if (courseId !== COURSE_ID) {
-    showUnsupportedCourse(modulesSection);
-    return;
-  }
-
-  ensureDemoCourseSelected(courseId);
-  const modules = initializeModuleCatalog(courseId);
-  if (!modules?.length) {
-    return;
-  }
-
-  updateProgress(courseId, (progress) => {
-    progress.moduleLessons = Object.fromEntries(modules.map(({ id, lessons }) => [
-      id,
-      lessons.map((lesson) => lesson.dataset.lessonId),
-    ]));
-    progress.requiredModuleCount = modules.length;
-    syncCompletedModules(progress);
-  });
-
-  const moduleIds = modules.map(({ id }) => id);
-  const requestedModule = new URLSearchParams(window.location.search).get("module");
-  let progress = getCourseProgress(courseId);
-  let currentIndex = moduleIds.indexOf(progress.selectedModuleId);
-  const requestedIndex = moduleIds.indexOf(requestedModule);
-  if (requestedIndex >= 0 && moduleIsUnlocked(progress, requestedIndex)) {
-    currentIndex = requestedIndex;
-    progress = updateProgress(courseId, (next) => {
-      next.selectedModuleId = moduleIds[requestedIndex];
-      next.selectedLessonId = next.moduleLessons[moduleIds[requestedIndex]]
-        .find((lessonId) => !next.completedLessons.includes(lessonId)) || "";
-    });
-  }
-  if (currentIndex < 0 || !moduleIsUnlocked(progress, currentIndex)) {
-    currentIndex = moduleIds.findIndex((_id, index) => moduleIsUnlocked(progress, index));
-  }
-  currentIndex = Math.max(0, currentIndex);
-
-  const currentModule = modules[currentIndex];
-  const lessonSection = document.querySelector("#lesson-content");
-  const lessonHeading = lessonSection?.querySelector("h3");
-  const markButton = lessonSection?.querySelector("button");
-  const lessonStatus = lessonSection ? addStatus(lessonSection, "demo-lesson-status") : null;
-  const progressSection = [...document.querySelectorAll("main section")]
-    .find((section) => section.querySelector("h2")?.textContent.trim() === "Course Progress");
-  const overallProgress = progressSection?.querySelector("progress");
-  const overallLabel = progressSection?.querySelector("p");
-  const finalAssessmentLink = [...document.querySelectorAll("a[href='final-assessment.html']")]
-    .find((link) => link.textContent.toLowerCase().includes("final assessment"));
-
-  const render = () => {
-    progress = syncCompletedModules(getCourseProgress(courseId));
-    const selectedModuleIndex = moduleIds.indexOf(progress.selectedModuleId);
-    const selectedModule = modules[selectedModuleIndex];
-    const selectedLessonId = progress.selectedLessonId;
-    const selectedLesson = selectedModule?.lessons.find((lesson) => lesson.dataset.lessonId === selectedLessonId);
-
-    modules.forEach(({ id, article, lessons }, index) => {
-      const unlocked = moduleIsUnlocked(progress, index);
-      const lessonPercent = moduleLessonPercentage(progress, id);
-      const complete = isModuleComplete(progress, id);
-      article.dataset.demoState = complete ? "complete" : unlocked ? "available" : "locked";
-      article.setAttribute("aria-disabled", String(!unlocked));
-      article.querySelector(".module-progress").value = lessonPercent;
-      article.querySelector(".module-progress-label").textContent =
-        `Lesson completion: ${lessonPercent}%${progress.quizPassed[id] ? " · Quiz passed" : " · Quiz required"}`;
-      article.querySelector(".module-lock-status").textContent = complete
-        ? "Completed — 100%"
-        : unlocked
-          ? index === selectedModuleIndex ? "Current unlocked module" : "Unlocked"
-          : "Locked — complete the previous module's lessons and pass its quiz.";
-      article.querySelector(".module-quiz-link").setAttribute("aria-disabled", String(!unlocked));
-      article.querySelector(".module-quiz-link").tabIndex = unlocked ? 0 : -1;
-
-      lessons.forEach((lesson) => {
-        const lessonId = lesson.dataset.lessonId;
-        const done = progress.completedLessons.includes(lessonId);
-        lesson.tabIndex = unlocked ? 0 : -1;
-        lesson.setAttribute("role", "button");
-        lesson.setAttribute("aria-disabled", String(!unlocked));
-        lesson.setAttribute("aria-pressed", String(selectedLessonId === lessonId));
-        lesson.dataset.demoCompleted = String(done);
-      });
-    });
-
-    if (selectedModule && selectedLesson) {
-      lessonHeading.textContent = selectedLesson.textContent.trim();
-    }
-
-    const lessonIsDone = progress.completedLessons.includes(selectedLessonId);
-    if (markButton) {
-      markButton.disabled = !selectedLessonId || lessonIsDone;
-      markButton.textContent = lessonIsDone ? "Lesson Completed (Demo)" : "Mark Lesson as Completed";
-    }
-
-    if (lessonStatus) {
-      lessonStatus.textContent = selectedModule
-        ? `${selectedModule.id.replace("-", " ")} selected. Demo progress is stored in this tab only.`
-        : "No lesson is selected.";
-    }
-
-    const overallPercent = Math.round((progress.completedModules.length / modules.length) * 100);
-    if (overallProgress) {
-      overallProgress.value = overallPercent;
-      overallProgress.setAttribute("aria-label", "Overall Web Development course completion");
-    }
-    if (overallLabel) {
-      overallLabel.textContent = `${overallPercent}% overall course completion (${progress.completedModules.length} of ${modules.length} modules complete, demo)`;
-    }
-    if (finalAssessmentLink) {
-      const eligible = progress.completedModules.length === modules.length;
-      finalAssessmentLink.setAttribute("aria-disabled", String(!eligible));
-      finalAssessmentLink.tabIndex = eligible ? 0 : -1;
-      finalAssessmentLink.textContent = eligible
-        ? "Start Final Assessment"
-        : "Final Assessment (complete all modules first)";
-    }
-  };
-
-  modules.forEach(({ id, article, lessons }, moduleIndex) => {
-    lessons.forEach((lesson) => {
-      lesson.addEventListener("click", () => {
-        const current = getCourseProgress(courseId);
-        if (!moduleIsUnlocked(current, moduleIndex)) {
-          lessonStatus.textContent = "This module is locked until the previous module reaches 100% and its quiz is passed.";
-          return;
-        }
-        updateProgress(courseId, (next) => {
-          next.selectedModuleId = id;
-          next.selectedLessonId = lesson.dataset.lessonId;
-        });
-        render();
-      });
-      lesson.addEventListener("keydown", (event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          lesson.click();
-        }
-      });
-    });
-
-    article.querySelector(".module-quiz-link").addEventListener("click", (event) => {
-      const current = getCourseProgress(courseId);
-      if (!moduleIsUnlocked(current, moduleIndex)) {
-        event.preventDefault();
-        lessonStatus.textContent = "This quiz is locked until the previous module reaches 100% and its quiz is passed.";
-        return;
-      }
-      updateProgress(courseId, (next) => {
-        next.selectedModuleId = id;
-        next.selectedLessonId = next.moduleLessons[id].find((lessonId) => !next.completedLessons.includes(lessonId)) || "";
-      });
-    });
-  });
-
-  markButton?.addEventListener("click", () => {
-    const current = getCourseProgress(courseId);
-    if (!current.selectedLessonId || current.completedLessons.includes(current.selectedLessonId)) {
-      return;
-    }
-    updateProgress(courseId, (next) => {
-      next.completedLessons.push(next.selectedLessonId);
-      const selectedModuleIndex = moduleIds.indexOf(next.selectedModuleId);
-      const selectedModule = modules[selectedModuleIndex];
-      next.selectedLessonId = selectedModule.lessons
-        .map((lesson) => lesson.dataset.lessonId)
-        .find((lessonId) => !next.completedLessons.includes(lessonId)) || "";
-      syncCompletedModules(next);
-      if (!next.selectedLessonId && modules[selectedModuleIndex + 1] && moduleIsUnlocked(next, selectedModuleIndex + 1)) {
-        next.selectedModuleId = modules[selectedModuleIndex + 1].id;
-        next.selectedLessonId = next.moduleLessons[next.selectedModuleId]
-          .find((lessonId) => !next.completedLessons.includes(lessonId)) || "";
-      }
-    });
-    render();
-  });
-
-  render();
-}
-
-function renderQuestion(form, item, index, prefix = "q") {
+function renderQuestion(form, question, index, prefix) {
   const fieldset = document.createElement("fieldset");
   const legend = document.createElement("legend");
   const prompt = document.createElement("p");
-  const name = `${prefix}${index + 1}`;
   legend.textContent = `Question ${index + 1}`;
-  prompt.textContent = item.prompt;
-  fieldset.dataset.questionIndex = String(index);
+  prompt.textContent = question.question;
+  fieldset.dataset.questionId = question.id;
   fieldset.append(legend, prompt);
-  item.options.forEach((option, optionIndex) => {
+  question.options.forEach((option, optionIndex) => {
     const label = document.createElement("label");
     const input = document.createElement("input");
     input.type = "radio";
-    input.name = name;
+    input.name = `${prefix}${index + 1}`;
     input.value = String(optionIndex);
+    input.required = optionIndex === 0;
     label.append(input, document.createTextNode(` ${option}`));
     fieldset.append(label);
   });
   form.insertBefore(fieldset, form.querySelector('button[type="submit"]'));
-  return fieldset;
 }
 
-function getQuizModuleId() {
-  const requested = new URLSearchParams(window.location.search).get("module");
-  return /^module-(?:[1-9]|10)$/.test(requested || "") ? requested : "module-1";
+function selectedCourseId() {
+  return getCourseIdForLearning();
 }
 
-export function initializeModuleQuiz() {
-  const form = document.querySelector("main > form");
-  if (!form) {
-    return;
-  }
+function setNavigationCourse(link, courseId, moduleId) {
+  const params = new URLSearchParams({ course: courseId });
+  if (moduleId) params.set("module", moduleId);
+  link.href = `${link.pathname}?${params}`;
+}
 
-  const courseId = getCourseIdForLearning();
-  const moduleId = getQuizModuleId();
-  const moduleIndex = Number(moduleId.match(/\d+/)?.[0]) - 1;
-  const module = webDevelopmentModules[moduleIndex];
-  const header = document.querySelector("main > section");
-  const status = addStatus(form, "demo-quiz-status");
-  const submitButton = form.querySelector('button[type="submit"]');
+export async function initializeLearningProgress() {
+  const modulesSection = [...document.querySelectorAll("main section")]
+    .find((section) => section.querySelector("h2")?.textContent.trim() === "Course Modules");
+  if (!modulesSection) return;
 
-  if (courseId !== COURSE_ID || !module) {
-    showUnsupportedCourse(header);
-    submitButton.disabled = true;
-    return;
-  }
+  const courseId = selectedCourseId();
+  const status = addStatus(modulesSection);
+  modulesSection.querySelectorAll(":scope > article").forEach((article) => article.remove());
+  const title = document.querySelector("main > section h2");
+  if (title) title.textContent = "Course";
+  const courseSummary = document.querySelector("main > section > p");
+  if (courseSummary) courseSummary.textContent = "Course information will load from LearnSpace.";
+  const progressSection = [...document.querySelectorAll("main section")]
+    .find((section) => section.querySelector("h2")?.textContent.trim() === "Course Progress");
+  const progressLabel = progressSection?.querySelector("p");
+  if (progressLabel) progressLabel.textContent = "Progress will load from LearnSpace.";
+  const lessonSection = document.querySelector("#lesson-content")
+    || [...document.querySelectorAll("main section")].find((section) => section.querySelector("h2")?.textContent.trim() === "Lesson Content");
+  const lessonHeading = lessonSection?.querySelector("h3");
+  if (lessonHeading) lessonHeading.textContent = "Lesson content";
+  const lessonDescription = lessonSection?.querySelector("p");
+  if (lessonDescription) lessonDescription.textContent = "Select a lesson loaded from LearnSpace.";
+  status.textContent = "Loading course modules and your saved progress...";
+  try {
+    const [modules, allProgress, course] = await Promise.all([
+      getCourseModules(courseId),
+      getProgress(),
+      getCourse(courseId),
+    ]);
+    const progressByModule = new Map(allProgress.map((record) => [record.moduleId, record]));
+    modulesSection.querySelectorAll(":scope > article").forEach((article) => article.remove());
+    if (title) title.textContent = course.title;
+    if (courseSummary) courseSummary.textContent = course.description;
+    status.textContent = "";
 
-  const progress = getCourseProgress(courseId);
-  const unlocked = moduleIsUnlocked(progress, moduleIndex);
-  const lessonsComplete = moduleLessonPercentage(progress, moduleId) === 100;
-  const prompt = header?.querySelector("p");
-  if (prompt) {
-    prompt.textContent = `Web Development · ${module.title} · 5 questions · 2 attempts maximum · frontend demo only.`;
-  }
-  if (header) {
-    const moduleInfo = [...header.querySelectorAll("p")].find((item) => item.textContent.includes("Module:"));
-    if (moduleInfo) {
-      moduleInfo.remove();
+    const progressBar = progressSection?.querySelector("progress");
+    const courseRecords = modules
+      .map((module) => progressByModule.get(module.id))
+      .filter(Boolean);
+    const completed = courseRecords.filter((record) => record.completionPercentage === 100).length;
+    const percentage = courseRecords.length
+      ? Math.round(courseRecords.reduce((sum, record) => sum + record.completionPercentage, 0) / courseRecords.length)
+      : 0;
+    if (progressBar) progressBar.value = percentage;
+    if (progressLabel) progressLabel.textContent = `${percentage}% completed (${completed} of ${courseRecords.length} modules complete).`;
+
+    let lessonContent = lessonSection?.querySelector(".api-lesson-content");
+    if (!lessonContent && lessonSection) {
+      lessonContent = document.createElement("p");
+      lessonContent.className = "api-lesson-content";
+      lessonSection.insertBefore(lessonContent, lessonSection.querySelector("button"));
     }
-  }
-  form.querySelectorAll("fieldset").forEach((fieldset) => fieldset.remove());
-  module.quiz.forEach((item, index) => renderQuestion(form, item, index));
+    let markButton = lessonSection?.querySelector("button");
+    if (markButton) markButton.disabled = true;
 
-  if (!unlocked) {
-    status.textContent = "This module quiz is locked until the previous module reaches 100% and its quiz is passed.";
-    submitButton.disabled = true;
-    return;
-  }
-  if (!lessonsComplete) {
-    status.textContent = `Complete all lessons in ${module.title} (currently ${moduleLessonPercentage(progress, moduleId)}%) before attempting its quiz.`;
-    submitButton.disabled = true;
-    return;
-  }
+    let selected;
+    const renderModules = () => {
+      modulesSection.querySelectorAll(":scope > article").forEach((article) => article.remove());
+      modules.forEach((module) => {
+        const progress = progressByModule.get(module.id) || module.progress;
+        const article = document.createElement("article");
+        const heading = document.createElement("h3");
+        const description = document.createElement("p");
+        const label = document.createElement("p");
+        const bar = document.createElement("progress");
+        const list = document.createElement("ul");
+        const state = document.createElement("p");
+        heading.textContent = `Module ${module.order}: ${module.title}`;
+        description.textContent = module.description || "";
+        label.textContent = `Completion: ${progress?.completionPercentage ?? 0}%`;
+        bar.max = 100;
+        bar.value = progress?.completionPercentage ?? 0;
+        state.textContent = module.unlocked ? "Unlocked" : "Locked — complete the previous module to unlock.";
+        for (const lesson of module.lessons) {
+          const item = document.createElement("li");
+          const link = document.createElement("button");
+          link.type = "button";
+          link.textContent = lesson.title;
+          link.disabled = !module.unlocked;
+          link.addEventListener("click", () => {
+            selected = { module, lesson, progress };
+            if (lessonHeading) lessonHeading.textContent = lesson.title;
+            if (lessonContent) lessonContent.textContent = lesson.content;
+            if (markButton) markButton.disabled = progress?.completedLessons?.includes(lesson.id) ?? true;
+            const lessonStatus = addStatus(lessonSection, "api-lesson-status");
+            lessonStatus.textContent = progress?.completedLessons?.includes(lesson.id)
+              ? "This lesson is already complete."
+              : "Lesson content loaded from LearnSpace.";
+            lessonStatus.dataset.state = "success";
+          });
+          item.append(link);
+          if (progress?.completedLessons?.includes(lesson.id)) item.append(document.createTextNode(" — Completed"));
+          list.append(item);
+        }
+        const quizLink = document.createElement("a");
+        quizLink.textContent = "Open Module Quiz";
+        quizLink.href = `module-quiz.html?course=${encodeURIComponent(courseId)}&module=${encodeURIComponent(module.id)}`;
+        quizLink.setAttribute("aria-disabled", String(!module.unlocked));
+        if (!module.unlocked) quizLink.addEventListener("click", (event) => event.preventDefault());
+        article.append(heading, description, label, bar, list, state, quizLink);
+        modulesSection.append(article);
+      });
+    };
+    renderModules();
 
-  const attemptCount = () => getCourseProgress(courseId).quizAttempts[moduleId] || 0;
-  const refresh = () => {
-    const latest = getCourseProgress(courseId);
-    const attempts = latest.quizAttempts[moduleId] || 0;
-    const passed = latest.quizPassed[moduleId] === true;
-    status.textContent = `Module quiz: ${attempts} of ${MAX_ATTEMPTS} attempts used. Pass requires ${PASS_PERCENTAGE}%. ${passed ? "Passed." : "Answers are graded in this frontend demo only."}`;
-    submitButton.disabled = passed || attempts >= MAX_ATTEMPTS;
-  };
-
-  form.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const answers = module.quiz.map((_item, index) =>
-      form.querySelector(`input[name="q${index + 1}"]:checked`));
-    const missingIndex = answers.findIndex((answer) => !answer);
-    if (missingIndex >= 0) {
-      status.textContent = `Answer Question ${missingIndex + 1} before submitting.`;
-      status.dataset.state = "error";
-      form.querySelector(`[name="q${missingIndex + 1}"]`)?.focus();
-      return;
-    }
-    if (attemptCount() >= MAX_ATTEMPTS) {
-      refresh();
-      return;
-    }
-
-    const score = answers.reduce((sum, answer, index) =>
-      sum + (Number(answer.value) === module.quiz[index].answer ? 1 : 0), 0);
-    const percentage = Math.round((score / module.quiz.length) * 100);
-    const passed = percentage >= PASS_PERCENTAGE;
-    updateProgress(courseId, (next) => {
-      next.quizAttempts[moduleId] = (next.quizAttempts[moduleId] || 0) + 1;
-      next.quizPassed[moduleId] = passed;
-      syncCompletedModules(next);
+    markButton?.addEventListener("click", async () => {
+      if (!selected?.progress || !selected.lesson) return;
+      markButton.disabled = true;
+      const lessonStatus = addStatus(lessonSection, "api-lesson-status");
+      lessonStatus.textContent = "Saving lesson completion...";
+      try {
+        const updated = await completeLesson(selected.progress.id, selected.lesson.id);
+        progressByModule.set(updated.moduleId, updated);
+        const [refreshedModules, refreshedProgress] = await Promise.all([
+          getCourseModules(courseId),
+          getProgress(),
+        ]);
+        modules.splice(0, modules.length, ...refreshedModules);
+        refreshedProgress.forEach((record) => progressByModule.set(record.moduleId, record));
+        renderModules();
+        lessonStatus.textContent = "Lesson completion saved.";
+        lessonStatus.dataset.state = "success";
+      } catch (error) {
+        lessonStatus.textContent = error.message;
+        lessonStatus.dataset.state = "error";
+        markButton.disabled = false;
+      }
     });
-    status.dataset.state = passed ? "success" : "error";
-    status.textContent = `Demo result: ${passed ? "PASS" : "FAIL"} — ${score}/${module.quiz.length} (${percentage}%). ${passed ? "This module is complete." : `At least ${PASS_PERCENTAGE}% is required. You may retry if an attempt remains.`}`;
-    refresh();
-    status.dataset.state = passed ? "success" : "error";
-  });
 
-  refresh();
+    const finalLink = [...document.querySelectorAll("a[href*='final-assessment.html']")]
+      .find((link) => link.textContent.toLowerCase().includes("final assessment"));
+    if (finalLink) setNavigationCourse(finalLink, courseId);
+  } catch (error) {
+    status.textContent = error.message;
+    status.dataset.state = "error";
+  }
 }
 
-function allRequiredModulesComplete(progress) {
-  return webDevelopmentModules.every((_module, index) => isModuleComplete(progress, `module-${index + 1}`));
+function moduleIdFromLocation() {
+  return new URLSearchParams(window.location.search).get("module");
+}
+
+export async function initializeModuleQuiz() {
+  const form = document.querySelector("main > form");
+  if (!form) return;
+  const courseId = selectedCourseId();
+  const moduleId = moduleIdFromLocation();
+  const header = document.querySelector("main > section");
+  const status = addStatus(form, "api-quiz-status");
+  const submitButton = form.querySelector('button[type="submit"]');
+  form.querySelectorAll(":scope > section, fieldset").forEach((element) => element.remove());
+  const headerParagraphs = header?.querySelectorAll("p") ?? [];
+  headerParagraphs.forEach((paragraph, index) => {
+    if (index > 0) paragraph.remove();
+  });
+  if (headerParagraphs[0]) headerParagraphs[0].textContent = "Quiz details will load from LearnSpace.";
+  if (!moduleId) {
+    addError(header, new Error("Open a quiz from an unlocked course module."));
+    submitButton.disabled = true;
+    return;
+  }
+
+  status.textContent = "Loading module quiz...";
+  submitButton.disabled = true;
+  try {
+    const [quiz, progressRecords, course] = await Promise.all([
+      getModuleQuiz(moduleId),
+      getProgress(),
+      getCourse(courseId),
+    ]);
+    if (!quiz) throw new Error("This module does not have a quiz yet.");
+    const module = (await getCourseModules(courseId)).find((item) => item.id === moduleId);
+    if (!module) throw new Error("This module is not part of the selected course.");
+    const headerParagraph = header?.querySelector("p");
+    if (headerParagraph) headerParagraph.textContent = `${course.title} · ${module.title} · ${quiz.questions.length} questions · maximum 2 attempts per 24-hour window.`;
+    const progress = progressRecords.find((record) => record.moduleId === moduleId);
+    form.querySelectorAll("fieldset").forEach((fieldset) => fieldset.remove());
+    quiz.questions.forEach((question, index) => renderQuestion(form, question, index, "q"));
+    const attempts = progress?.quizAttempts?.length ?? 0;
+    if ((progress?.completionPercentage ?? 0) < 100) {
+      status.textContent = "Complete all lessons in this module before taking its quiz.";
+      status.dataset.state = "notice";
+      return;
+    }
+    if (progress?.quizPassed) {
+      status.textContent = "You have passed this module quiz.";
+      status.dataset.state = "success";
+      return;
+    }
+    if (progress?.lockedUntil && new Date(progress.lockedUntil) > new Date()) {
+      status.textContent = `Quiz locked until ${new Date(progress.lockedUntil).toLocaleString()}.`;
+      status.dataset.state = "error";
+      return;
+    }
+    status.textContent = `${attempts} of 2 attempts used in the current window. Pass mark: 50%.`;
+    submitButton.disabled = false;
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const answers = quiz.questions.map((question, index) => ({
+        questionId: question.id,
+        answerIndex: Number(form.querySelector(`input[name="q${index + 1}"]:checked`)?.value),
+      }));
+      if (answers.some((answer) => !Number.isInteger(answer.answerIndex))) {
+        status.textContent = "Answer every question before submitting.";
+        status.dataset.state = "error";
+        return;
+      }
+      submitButton.disabled = true;
+      status.textContent = "Submitting answers...";
+      try {
+        const result = await submitModuleQuiz(moduleId, answers);
+        const history = (await getProgress()).find((record) => record.moduleId === moduleId);
+        status.textContent = `Score: ${result.scorePercentage}%. ${result.passed ? "Passed." : "Not passed."} ${result.attemptsRemaining} attempt(s) remain.${result.lockedUntil ? ` Locked until ${new Date(result.lockedUntil).toLocaleString()}.` : ""} History: ${history?.quizAttemptHistory?.length ?? attempts + 1} attempt(s) recorded.`;
+        status.dataset.state = result.passed ? "success" : "notice";
+        submitButton.disabled = result.passed || result.attemptsRemaining === 0;
+      } catch (error) {
+        status.textContent = error.message;
+        status.dataset.state = "error";
+        submitButton.disabled = false;
+      }
+    }, { once: true });
+  } catch (error) {
+    status.textContent = error.message;
+    status.dataset.state = "error";
+  }
 }
 
 function createQuestionNavigation(form, questions) {
@@ -484,213 +302,248 @@ function createQuestionNavigation(form, questions) {
   form.before(nav);
 }
 
-export function gradeAssessment(questions, answers) {
-  const score = questions.reduce((sum, item, index) =>
-    sum + (Number(answers[index]) === item.answer ? 1 : 0), 0);
-  const percentage = questions.length ? (score / questions.length) * 100 : 0;
-  return { score, total: questions.length, percentage, passed: percentage >= PASS_PERCENTAGE };
-}
-
-export function initializeFinalAssessment() {
+export async function initializeFinalAssessment() {
   const main = document.querySelector("main");
-  const form = document.querySelector('main section form');
-  if (!main || !form) {
-    return;
-  }
-
-  const courseId = getCourseIdForLearning();
-  const gate = document.createElement("p");
-  gate.className = "demo-assessment-status";
-  gate.setAttribute("role", "status");
-  gate.setAttribute("aria-live", "polite");
-  const eligibilitySection = main.querySelector("section");
-  eligibilitySection?.append(gate);
-  const startButton = document.createElement("button");
-  startButton.type = "button";
-  startButton.textContent = "Start Final Assessment";
-  startButton.className = "start-final-assessment";
-  form.before(startButton);
-  form.hidden = true;
-
-  if (courseId !== COURSE_ID) {
-    showUnsupportedCourse(eligibilitySection);
-    startButton.disabled = true;
-    return;
-  }
-
-  const progress = getCourseProgress(courseId);
-  const eligible = allRequiredModulesComplete(progress);
-  const attempts = progress.finalAssessmentAttempts || 0;
-  const questions = webDevelopmentFinalQuestions;
+  if (!document.title.toLowerCase().includes("final assessment")) return;
+  const form = document.querySelector("main section form");
+  if (!main || !form) return;
+  const courseId = selectedCourseId();
+  const header = main.querySelector("section");
+  const status = addStatus(header, "api-assessment-status");
   const submitButton = form.querySelector('button[type="submit"]');
-  const assessmentSection = form.closest("section");
-  const resultPanel = [...main.querySelectorAll("section")]
-    .find((section) => section.querySelector("h2")?.textContent.trim() === "Assessment Result");
+  form.querySelectorAll(":scope > section, fieldset").forEach((element) => element.remove());
+  const attemptLabel = [...header.querySelectorAll("p")]
+    .find((paragraph) => paragraph.textContent.includes("Maximum Attempts"));
+  attemptLabel?.remove();
+  form.hidden = true;
+  submitButton.disabled = true;
+  status.textContent = "Checking course completion and loading the assessment...";
 
-  form.querySelectorAll("fieldset").forEach((fieldset) => fieldset.remove());
-  form.querySelector("button[type='submit']").textContent = "Submit Assessment";
-  questions.forEach((item, index) => {
-    renderQuestion(form, item, index, "final-q").id = `final-question-${index + 1}`;
-  });
-  createQuestionNavigation(form, questions);
-  const fullscreenMessage = addStatus(assessmentSection, "fullscreen-status");
-
-  if (!eligible) {
-    gate.textContent = "Final assessment is locked in demo mode. Complete all 10 modules: every lesson must be complete and each five-question module quiz must be passed.";
-    startButton.disabled = true;
-    return;
-  }
-
-  if (attempts >= MAX_ATTEMPTS || progress.finalAssessmentResult?.passed) {
-    gate.textContent = `Assessment attempts used: ${attempts} of ${MAX_ATTEMPTS}. ${progress.finalAssessmentResult?.passed ? "The final assessment has been passed." : "No attempts remain."}`;
-    startButton.disabled = true;
-    if (resultPanel && progress.finalAssessmentResult) {
-      resultPanel.dataset.state = progress.finalAssessmentResult.passed ? "pass" : "fail";
-      const result = resultPanel.querySelector("p");
-      if (result) {
-        result.textContent = `Most recent demo result: ${progress.finalAssessmentResult.passed ? "PASS" : "FAIL"} — ${progress.finalAssessmentResult.score}/${progress.finalAssessmentResult.total} (${progress.finalAssessmentResult.percentage}%).`;
-      }
-    }
-    return;
-  }
-
-  gate.textContent = `25 questions · Pass mark ${PASS_PERCENTAGE}% · ${MAX_ATTEMPTS - attempts} attempt${MAX_ATTEMPTS - attempts === 1 ? "" : "s"} remaining. Results are frontend demo state, not server-verified.`;
-  startButton.addEventListener("click", async () => {
-    form.hidden = false;
-    startButton.hidden = true;
-    assessmentSection?.classList.add("assessment-active");
-    try {
-      if (typeof assessmentSection?.requestFullscreen !== "function") {
-        throw new Error("Fullscreen is not supported by this browser.");
-      }
-      await assessmentSection.requestFullscreen();
-      fullscreenMessage.textContent = document.fullscreenElement === assessmentSection
-        ? "Full-screen assessment is active."
-        : "The browser did not enter full-screen mode. You can continue in this page.";
-    } catch (error) {
-      fullscreenMessage.textContent = `Full-screen mode was not granted: ${error.message} Continue in this page or use the button below to try again.`;
-      console.warn("LearnSpace could not enter full-screen mode.", error);
-    }
-    const returnButton = document.createElement("button");
-    returnButton.type = "button";
-    returnButton.className = "return-to-fullscreen";
-    returnButton.textContent = "Return to Full-Screen Assessment";
-    fullscreenMessage.after(returnButton);
-    returnButton.addEventListener("click", async () => {
-      try {
-        await assessmentSection.requestFullscreen();
-        fullscreenMessage.textContent = document.fullscreenElement === assessmentSection
-          ? "Full-screen assessment is active."
-          : "The browser did not enter full-screen mode.";
-      } catch (error) {
-        fullscreenMessage.textContent = `Full-screen mode was not granted: ${error.message}`;
+  try {
+    const [assessment, course, enrollments] = await Promise.all([
+      getCourseAssessment(courseId),
+      getCourse(courseId),
+      getEnrollmentsForAssessment(),
+    ]);
+    const enrollment = enrollments.find((item) => item.courseId === assessment.courseId);
+    const attempts = enrollment?.finalAssessmentAttempts ?? [];
+    const info = header.querySelectorAll("p");
+    if (info[0]) info[0].textContent = `Course: ${course.title}`;
+    const eligibility = [...info].find((paragraph) => paragraph.textContent.includes("Eligibility"));
+    if (eligibility) eligibility.textContent = "Eligibility: Course modules are complete.";
+    form.querySelectorAll("fieldset").forEach((fieldset) => fieldset.remove());
+    assessment.questions.forEach((question, index) => {
+      renderQuestion(form, question, index, "final-q");
+      form.querySelectorAll("fieldset")[index].id = `final-question-${index + 1}`;
+    });
+    createQuestionNavigation(form, assessment.questions);
+    status.textContent = `${assessment.totalQuestions} questions · Pass mark ${assessment.passingPercentage}%. No attempt cap or quiz cooldown applies. ${attempts.length} previous attempt(s) recorded.`;
+    status.dataset.state = "success";
+    const startButton = document.createElement("button");
+    startButton.type = "button";
+    startButton.textContent = "Start Final Assessment";
+    form.before(startButton);
+    startButton.addEventListener("click", async () => {
+      startButton.hidden = true;
+      form.hidden = false;
+      const section = form.closest("section");
+      section?.classList.add("assessment-active");
+      if (typeof section?.requestFullscreen === "function") {
+        try {
+          await section.requestFullscreen();
+        } catch {
+          status.textContent = "Full-screen mode was not granted; you can continue in this page.";
+        }
       }
     });
-  }, { once: true });
-
-  document.addEventListener("fullscreenchange", () => {
-    if (!assessmentSection?.classList.contains("assessment-active")) {
-      return;
-    }
-    if (document.fullscreenElement === assessmentSection) {
-      fullscreenMessage.textContent = "Full-screen assessment is active.";
-    } else {
-      fullscreenMessage.textContent = "Full-screen mode was exited. Your answers are still here; return to full-screen mode or submit when ready.";
-    }
-  });
-
-  form.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const answers = questions.map((_item, index) =>
-      form.querySelector(`input[name="final-q${index + 1}"]:checked`)?.value);
-    const missing = answers.findIndex((answer) => answer === undefined);
-    if (missing >= 0) {
-      gate.textContent = `Answer Question ${missing + 1} before submitting the assessment.`;
-      gate.dataset.state = "error";
-      form.querySelector(`[name="final-q${missing + 1}"]`)?.focus();
-      return;
-    }
-
-    const latest = getCourseProgress(courseId);
-    if (latest.finalAssessmentAttempts >= MAX_ATTEMPTS) {
-      gate.textContent = "The maximum of two final-assessment attempts has been reached.";
+    submitButton.disabled = false;
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const answers = assessment.questions.map((question, index) => ({
+        questionId: question.id,
+        answerIndex: Number(form.querySelector(`input[name="final-q${index + 1}"]:checked`)?.value),
+      }));
+      if (answers.some((answer) => !Number.isInteger(answer.answerIndex))) {
+        status.textContent = "Answer every question before submitting.";
+        status.dataset.state = "error";
+        return;
+      }
       submitButton.disabled = true;
-      return;
-    }
-
-    const result = gradeAssessment(questions, answers);
-    updateProgress(courseId, (next) => {
-      next.finalAssessmentAttempts += 1;
-      next.finalAssessmentResult = {
-        ...result,
-        percentage: Math.round(result.percentage * 100) / 100,
-        completedAt: new Date().toISOString(),
-      };
-    });
-    if (resultPanel) {
-      resultPanel.dataset.state = result.passed ? "pass" : "fail";
-      const output = resultPanel.querySelector("p");
-      if (output) {
-        output.textContent = `Demo result: ${result.passed ? "PASS" : "FAIL"} — ${result.score}/${result.total} (${result.percentage.toFixed(2)}%). ${result.passed ? "Certificate demo eligibility unlocked." : `A score of at least ${PASS_PERCENTAGE}% is required. You may retry if an attempt remains.`}`;
+      status.textContent = "Submitting final assessment...";
+      try {
+        const result = await submitCourseAssessment(courseId, answers);
+        status.textContent = `Score: ${result.scorePercentage}%. ${result.passed ? "Assessment passed." : "Assessment not passed."} ${attempts.length + 1} attempt(s) recorded.${result.certificate ? ` Certificate issued: ${result.certificate.id}.` : ""}`;
+        status.dataset.state = result.passed ? "success" : "notice";
+        const resultPanel = [...main.querySelectorAll("section")]
+          .find((section) => section.querySelector("h2")?.textContent.trim() === "Assessment Result");
+        const resultText = resultPanel?.querySelector("p");
+        if (resultText) resultText.textContent = status.textContent;
+        const history = document.createElement("ul");
+        for (const attempt of [...attempts, {
+          attemptedAt: new Date().toISOString(),
+          scorePercentage: result.scorePercentage,
+          passed: result.passed,
+        }]) {
+          const item = document.createElement("li");
+          item.textContent = `${new Date(attempt.attemptedAt).toLocaleString()} — ${attempt.scorePercentage}% — ${attempt.passed ? "Pass" : "Not passed"}`;
+          history.append(item);
+        }
+        if (resultPanel) {
+          resultPanel.querySelector(".api-assessment-history")?.remove();
+          history.className = "api-assessment-history";
+          resultPanel.append(history);
+        }
+        submitButton.disabled = false;
+      } catch (error) {
+        status.textContent = error.message;
+        status.dataset.state = "error";
+        submitButton.disabled = false;
       }
-    }
-    gate.textContent = `Demo result: ${result.passed ? "PASS" : "FAIL"} — ${result.score}/${result.total} (${result.percentage.toFixed(2)}%). Attempt ${latest.finalAssessmentAttempts + 1} of ${MAX_ATTEMPTS}.`;
-    gate.dataset.state = result.passed ? "success" : "error";
-    submitButton.disabled = result.passed || latest.finalAssessmentAttempts + 1 >= MAX_ATTEMPTS;
-    const retryButton = document.createElement("button");
-    retryButton.type = "button";
-    retryButton.textContent = "Exit Assessment";
-    retryButton.addEventListener("click", async () => {
-      if (document.fullscreenElement) {
-        await document.exitFullscreen();
-      }
-      window.location.reload();
     });
-    form.append(retryButton);
-  });
+  } catch (error) {
+    status.textContent = error.message;
+    status.dataset.state = error.status === 403 ? "notice" : "error";
+    status.dataset.state === "notice" && (status.textContent = `${error.message} Complete all course modules before starting the final assessment.`);
+  }
 }
 
-export function initializeCertificate() {
-  const card = document.querySelector(".certificate-page-card");
-  if (!card) {
-    return;
+async function getEnrollmentsForAssessment() {
+  return getEnrollments();
+}
+
+export async function initializeCertificate() {
+  const card = document.querySelector("main section article");
+  if (!card || !document.querySelector("main h1")?.textContent.includes("Certificate")) return;
+  const status = addStatus(card.parentElement);
+  card.hidden = true;
+  status.textContent = "Loading your certificates...";
+  const details = [...document.querySelectorAll("main section")]
+    .find((section) => section.querySelector("h2")?.textContent.trim() === "Certificate Details");
+  try {
+    const [certificates, session] = await Promise.all([getCertificates(), Promise.resolve(getAuthSession())]);
+    if (!certificates.length) {
+      status.textContent = "No certificate has been issued to your account yet. Complete a course and pass its final assessment to become eligible.";
+      status.dataset.state = "empty";
+      const button = document.querySelector("main button");
+      if (button) button.disabled = true;
+      return;
+    }
+    const courseId = new URLSearchParams(window.location.search).get("course");
+    const certificate = courseId
+      ? certificates.find((item) => item.courseId === courseId || item.course === courseId)
+      : certificates[0];
+    if (!certificate) {
+      status.textContent = "No issued certificate matches this course.";
+      status.dataset.state = "empty";
+      return;
+    }
+    const course = await getCourse(certificate.courseId);
+    card.hidden = false;
+    const studentName = session?.user?.name || "Student";
+    const placeholders = [...card.querySelectorAll("h2")];
+    if (placeholders[1]) placeholders[1].textContent = studentName;
+    if (placeholders[2]) placeholders[2].textContent = course.title;
+    card.querySelectorAll("p").forEach((paragraph) => {
+      if (paragraph.textContent.includes("[Completion Date]")) paragraph.textContent = `Completion Date: ${new Date(certificate.issuedAt).toLocaleDateString()}`;
+      if (paragraph.textContent.includes("[Unique Certificate ID]")) paragraph.textContent = `Certificate ID: ${certificate.certificateId}`;
+    });
+    if (details) {
+      details.querySelectorAll("p").forEach((paragraph) => {
+        if (paragraph.textContent.includes("[Student Full Name]")) paragraph.textContent = `Student Name: ${studentName}`;
+        if (paragraph.textContent.includes("[Course Name]")) paragraph.textContent = `Course Name: ${course.title}`;
+        if (paragraph.textContent.includes("[Pass Status]")) paragraph.textContent = "Assessment Status: Passed";
+        if (paragraph.textContent.includes("[Completion Date]")) paragraph.textContent = `Completion Date: ${new Date(certificate.issuedAt).toLocaleDateString()}`;
+        if (paragraph.textContent.includes("[Unique Certificate ID]")) paragraph.textContent = `Certificate ID: ${certificate.certificateId}`;
+      });
+    }
+    const button = document.querySelector("main button");
+    button?.addEventListener("click", () => window.print());
+    status.textContent = `Certificate verified by LearnSpace. ID: ${certificate.certificateId}`;
+    status.dataset.state = "success";
+  } catch (error) {
+    status.textContent = error.message;
+    status.dataset.state = "error";
   }
+}
 
-  const courseId = getCourseIdForLearning();
-  const state = readDemoState();
-  const progress = state.progress[courseId];
-  const eligible = courseId === COURSE_ID
-    && !!progress?.finalAssessmentResult?.passed
-    && allRequiredModulesComplete(progress)
-    && !!state.profile?.displayName;
-  const heading = card.querySelector("h1");
-  const message = card.querySelector("p");
-  const button = card.querySelector("button");
+export async function initializeNotifications() {
+  const section = [...document.querySelectorAll("main section")]
+    .find((item) => item.querySelector("h2")?.textContent.trim() === "All Notifications");
+  if (!section) return;
+  const status = addStatus(section);
+  section.querySelectorAll(":scope > article, :scope > hr").forEach((element) => element.remove());
+  status.textContent = "Loading notifications...";
+  try {
+    const notifications = await getNotifications();
+    if (!notifications.length) {
+      status.textContent = "You have no notifications.";
+      status.dataset.state = "empty";
+      return;
+    }
+    status.textContent = "";
+    for (const notification of notifications) {
+      const article = document.createElement("article");
+      const heading = document.createElement("h3");
+      const message = document.createElement("p");
+      const date = document.createElement("small");
+      heading.textContent = notification.title;
+      message.textContent = notification.message;
+      date.textContent = `${new Date(notification.createdAt).toLocaleString()} · ${notification.isRead ? "Read" : "Unread"}`;
+      article.append(heading, message, date);
+      if (!notification.isRead) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = "Mark as Read";
+        button.addEventListener("click", async () => {
+          button.disabled = true;
+          try {
+            await markNotificationRead(notification._id);
+            date.textContent = `${new Date(notification.createdAt).toLocaleString()} · Read`;
+            button.remove();
+          } catch (error) {
+            status.textContent = error.message;
+            status.dataset.state = "error";
+            button.disabled = false;
+          }
+        });
+        article.append(button);
+      }
+      const removeButton = document.createElement("button");
+      removeButton.type = "button";
+      removeButton.textContent = "Delete";
+      removeButton.addEventListener("click", async () => {
+        removeButton.disabled = true;
+        try {
+          await deleteNotification(notification._id);
+          article.remove();
+        } catch (error) {
+          status.textContent = error.message;
+          status.dataset.state = "error";
+          removeButton.disabled = false;
+        }
+      });
+      article.append(removeButton);
+      section.append(article);
+    }
 
-  if (!eligible) {
-    heading.textContent = "Certificate Not Available Yet";
-    message.textContent = "Complete all Web Development modules and pass the final assessment. Real certificate eligibility requires server verification, which is not connected in this demo.";
-    button.disabled = true;
-    return;
+    const markAll = [...document.querySelectorAll("main button")]
+      .find((button) => button.textContent.trim() === "Mark All as Read");
+    if (markAll) {
+      markAll.addEventListener("click", async () => {
+        markAll.disabled = true;
+        try {
+          await Promise.all(notifications.filter((item) => !item.isRead)
+            .map((item) => markNotificationRead(item._id)));
+          await initializeNotifications();
+        } catch (error) {
+          status.textContent = error.message;
+          status.dataset.state = "error";
+          markAll.disabled = false;
+        }
+      });
+    }
+  } catch (error) {
+    status.textContent = error.message;
+    status.dataset.state = "error";
   }
-
-  heading.textContent = "Congratulations!";
-  message.textContent = "Your Web Development demo certificate is ready. This frontend-generated sample is not verified by LearnSpace.";
-  button.disabled = false;
-  button.addEventListener("click", () => window.print());
-
-  const certificate = document.createElement("div");
-  certificate.className = "earned-certificate";
-  certificate.innerHTML = `
-    <p class="earned-certificate-watermark" aria-hidden="true">DEMO</p>
-    <p class="earned-certificate-brand">LearnSpace</p>
-    <h2>Certificate of Completion</h2>
-    <p>This demo certificate is presented to</p>
-    <p class="earned-certificate-name"></p>
-    <p>for completing</p>
-    <p class="earned-certificate-course">Web Development</p>
-    <p class="earned-certificate-note">Demo only · Not verified or issued by a server</p>
-  `;
-  certificate.querySelector(".earned-certificate-name").textContent = state.profile.displayName;
-  card.append(certificate);
 }

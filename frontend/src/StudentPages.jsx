@@ -70,6 +70,22 @@ function AuthenticationForm({ admin = false, registration = false }) {
             <input name="phone" type="tel" autoComplete="tel" required />
           </label>
         )}
+        {registration && (
+          <>
+            <label>
+              College
+              <input name="college" autoComplete="organization" required maxLength={200} />
+            </label>
+            <label>
+              Department
+              <input name="department" required maxLength={200} />
+            </label>
+            <label>
+              Year of Study
+              <input name="yearOfStudy" type="number" min="1" max="20" step="1" required />
+            </label>
+          </>
+        )}
         {error && <p role="alert">{error}</p>}
         {!registration && location.state?.message && <p role="status">{location.state.message}</p>}
         <button type="submit" disabled={submitting}>{submitting ? "Please wait..." : registration ? "Create account" : "Sign in"}</button>

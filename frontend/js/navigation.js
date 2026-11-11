@@ -1,4 +1,4 @@
-import { clearDemoState } from "./storage.js";
+import { clearAuthSession } from "../src/api/authSession.js";
 
 export function initializeNavigation() {
   document.querySelectorAll("body > header nav a, main a, body > footer a").forEach((link) => {
@@ -7,7 +7,7 @@ export function initializeNavigation() {
     }
 
     link.addEventListener("click", () => {
-      clearDemoState();
+      clearAuthSession();
     });
   });
 }

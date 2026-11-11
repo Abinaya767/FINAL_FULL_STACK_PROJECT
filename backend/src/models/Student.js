@@ -8,6 +8,12 @@ const profileSchema = new mongoose.Schema({
 }, { _id: false });
 
 const studentSchema = new mongoose.Schema({
+  legacyId: {
+    type: String,
+    trim: true,
+    unique: true,
+    sparse: true,
+  },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",

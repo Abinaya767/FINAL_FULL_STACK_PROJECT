@@ -119,23 +119,8 @@
 
                 <div>
                     <label for="student-password">Temporary Password</label><br>
-                    <input
-                        type="password"
-                        id="student-password"
-                        name="password"
-                        placeholder="Create temporary password"
-                        required
-                    >
-                </div>
-
-                <br>
-
-                <div>
-                    <label for="student-status">Account Status</label><br>
-                    <select id="student-status" name="status" required>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                    </select>
+                    <input type="password" id="student-password" name="password"
+                        placeholder="Create temporary password" minlength="8" maxlength="128" required>
                 </div>
 
                 <br>
@@ -153,7 +138,7 @@
             <ul>
                 <li>Each student must have a unique email address.</li>
                 <li>All required student details must be provided.</li>
-                <li>Passwords must be securely hashed before database storage.</li>
+                <li>Use a unique temporary password and share it with the student securely.</li>
                 <li>Student account information should be stored in MongoDB.</li>
                 <li>Only authorized administrators can create student accounts.</li>
             </ul>
@@ -171,5 +156,6 @@
         <p>&copy; 2026 LearnSpace. Keep growing.</p>
     </footer>
 
+    <script type="module" src="/js/main.js"></script>
 </body>
 </html>

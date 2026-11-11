@@ -28,7 +28,10 @@ export async function expressRequest(path, { method = "GET", body } = {}) {
     throw new Error("The LearnSpace API returned an invalid response.");
   }
 
-  if (response.status === 401) clearAuthSession();
+  if (response.status === 401) {
+    clearAuthSession();
+    window.parent.postMessage({ type: "learnspace:unauthorized" }, window.location.origin);
+  }
   if (!response.ok) {
     const error = new Error(payload.message || "The API request could not be completed.");
     error.status = response.status;

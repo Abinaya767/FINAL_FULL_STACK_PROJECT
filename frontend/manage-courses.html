@@ -108,15 +108,32 @@
                 <br>
 
                 <div>
-                    <label for="course-status">Course Status</label><br>
-                    <select id="course-status" name="status" required>
-                        <option value="draft">Draft</option>
-                        <option value="published">Published</option>
-                        <option value="unpublished">Unpublished</option>
-                    </select>
+                    <label for="course-instructor">Instructor</label><br>
+                    <input type="text" id="course-instructor" name="instructor" maxlength="200" required>
                 </div>
 
                 <br>
+
+                <div>
+                    <label for="course-modules">Course curriculum (JSON)</label><br>
+                    <textarea id="course-modules" name="modules" rows="12" required
+                        aria-describedby="course-modules-help"></textarea>
+                    <p id="course-modules-help">
+                        Enter at least 10 modules. Each module needs a title, at least one lesson
+                        with a title and content, and a quiz with exactly five questions.
+                        Each question needs a prompt, at least two options, and a correctAnswerIndex.
+                        See the Task 12 documentation for the JSON shape.
+                    </p>
+                </div>
+
+                <br>
+
+                <label for="course-demo">
+                    <input type="checkbox" id="course-demo" name="demo">
+                    Mark as demo course
+                </label>
+
+                <br><br>
 
                 <button type="submit">Add Course</button>
 
@@ -178,5 +195,6 @@
         <p>&copy; 2026 LearnSpace. Keep growing.</p>
     </footer>
 
+    <script type="module" src="/js/main.js"></script>
 </body>
 </html>

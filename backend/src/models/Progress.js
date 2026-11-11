@@ -51,6 +51,15 @@ const progressSchema = new mongoose.Schema({
     type: Date,
     default: null,
   },
+  completedLessons: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Lesson",
+  }],
+  quizPassed: {
+    type: Boolean,
+    default: false,
+    required: true,
+  },
   quizAttempts: {
     type: [quizAttemptSchema],
     default: [],

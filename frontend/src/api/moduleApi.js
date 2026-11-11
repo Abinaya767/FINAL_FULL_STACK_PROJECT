@@ -1,14 +1,11 @@
-import api from "./axios.js";
+import { expressRequest } from "./expressApi.js";
 
 export async function getCourseModules(courseId) {
-  const { data } = await api.get("/modules", { params: { courseId, _sort: "order" } });
-  return data;
+  const result = await expressRequest(`/courses/${encodeURIComponent(courseId)}/modules`);
+  return result.data.modules;
 }
 
 export async function getModule(id) {
-  const { data } = await api.get("/modules", { params: { id } });
-  if (!data[0]) {
-    throw new Error("Module not found.");
-  }
-  return data[0];
+  const result = await expressRequest(`/modules/${encodeURIComponent(id)}`);
+  return result.data.module;
 }

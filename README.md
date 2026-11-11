@@ -141,3 +141,69 @@ The project is planned across 15 cumulative tasks:
 15. Testing and deployment.
 
 Each task submission is cumulative and must preserve the work completed in previous tasks.
+
+## Task 12 — MongoDB integration and CRUD
+
+The Express backend in `backend/` connects to MongoDB through Mongoose before it
+starts listening. Its connection string, JWT secret, and administrator
+credentials come from `backend/.env`; never commit that file. Start from the
+project directory:
+
+```powershell
+Copy-Item .\backend\.env.example .\backend\.env
+# Set private MongoDB, JWT, and administrator values in backend\.env.
+cd .\backend
+npm ci
+npm run dev
+```
+
+In another terminal, start the React/Vite frontend:
+
+```powershell
+cd .\frontend\src
+npm ci
+npm run dev
+```
+
+Set `MONGODB_URI` to a reachable MongoDB database. Quiz submissions use
+transactions, so MongoDB must support transactions (for example, Atlas or a
+local replica set). `FRONTEND_URL` must match the Vite origin. `.env` and local
+environment files are ignored by Git; `.env.example` contains placeholders.
+Persisted course records are not automatically seeded: create real course
+content through the administrator API or course-management form. Student
+registration saves college, department, and study year when supplied; students
+can update their own name, phone, and profile fields from the dashboard.
+
+### Persisted endpoints
+
+All API paths are under `/api`. Successful and failed API responses use JSON
+with a `success` flag and a message.
+
+| Method and path | Access | Operation |
+|---|---|---|
+| `GET /health` | Public | Backend health check |
+| `POST /auth/register`, `POST /auth/login`, `GET /auth/me` | Register/login public; `me` authenticated | Register a student and issue/validate JWT sessions |
+| `GET /students`, `POST /students` | Admin | List/create students |
+| `GET /students/:id`, `PATCH /students/:id` | Authenticated; students may access their own record | Read/update a student profile |
+| `PUT /students/:id`, `DELETE /students/:id` | Admin | Replace/delete a student and related learning records |
+| `GET /courses`, `GET /courses/:id` | Public | Read saved courses |
+| `POST /courses`, `PUT /courses/:id`, `PATCH /courses/:id`, `DELETE /courses/:id` | Admin | Create/read/update/delete saved courses and curriculum |
+| `GET /courses/:courseId/modules`, `GET /modules/:id`, `GET /modules/:moduleId/lessons`, `GET /lessons/:id` | Authenticated | Read accessible curriculum |
+| `POST /courses/:courseId/modules`, `PATCH` or `DELETE /modules/:id`, `POST /modules/:moduleId/lessons`, `PUT`/`PATCH`/`DELETE /lessons/:id` | Admin | Manage persisted curriculum |
+| `POST /modules/:moduleId/quiz/attempts`, `POST /courses/:courseId/assessment/attempts` | Enrolled student | Save quiz and final-assessment attempts |
+| `GET`, `POST /enrollments`, `GET /progress`, `PATCH /progress/:id/lessons/:lessonId` | Authenticated | Persist enrollment and learning progress |
+| `GET /certificates`, `GET /notifications` | Authenticated | Read saved certificates and notifications |
+
+Course creation requires at least 10 real modules, with at least one lesson and
+exactly five quiz questions per module. The course-management form accepts this
+curriculum as JSON and does not invent lesson or quiz content. Enrollment,
+module progress, quiz attempts, final-assessment attempts, and certificates
+are stored in MongoDB. Only module quizzes have the two-failure/24-hour lock;
+final assessments have no attempt cap or cooldown.
+
+Register and sign in through the frontend to test student flows. Sign in with
+the configured administrator to create/manage students and courses. API CRUD
+can also be exercised with Postman by sending the JWT in the `Authorization:
+Bearer <token>` header. Database availability, validation errors, missing
+records, duplicate records, and authorization failures are reported through
+HTTP error responses; secrets are never returned by API endpoints.
