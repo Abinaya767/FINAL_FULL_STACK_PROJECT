@@ -138,14 +138,14 @@ function studentDto(student) {
 }
 
 export const getStudents = asyncHandler(async (request, response) => {
-  const filter = {};
+  const email = typeof request.query.email === "string" ? request.query.email.trim().toLowerCase() : "";
+  const matchingUsers = email ? await User.find({ email }).select("_id").lean() : null;
+  const filter = matchingUsers ? { user: { $in: matchingUsers.map(({ _id }) => _id) } } : {};
   const students = await Student.find(filter)
     .populate("user")
     .populate({ path: "enrollments", populate: { path: "course" } })
     .sort({ createdAt: -1 });
-  const results = students.map(studentDto).filter((student) => (
-    !request.query.email || student.email === request.query.email.trim().toLowerCase()
-  ));
+  const results = students.map(studentDto);
   response.status(200).json(apiResponse("Students retrieved successfully.", { students: results }));
 });
 
@@ -227,10 +227,14 @@ async function updateStudentRecord(request, response, replacement) {
       }
     }
   }
-  await Promise.all([
-    Object.keys(userUpdate).length ? User.updateOne({ _id: student.user }, { $set: userUpdate }, { runValidators: true }) : Promise.resolve(),
-    student.save(),
-  ]);
+  const user = Object.keys(userUpdate).length
+    ? await User.findById(student.user).select("+passwordHash")
+    : null;
+  if (user) {
+    Object.assign(user, userUpdate);
+    await user.save(); // User schema hashes changed passwords before saving.
+  }
+  await student.save();
   const updated = await findStudent(request.params.id, { populate: true });
   response.status(200).json(apiResponse(
     replacement ? "Student updated successfully." : "Student updated successfully.",
