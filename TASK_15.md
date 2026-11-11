@@ -16,7 +16,7 @@ database, and enter private environment variables in those hosting dashboards.
 
 - `render.yaml`: Render Node web service using `backend/` as its root and
   `/api/health` as its health check.
-- `vercel.json`: SPA route fallback for React Router.
+- `frontend/vercel.json`: SPA route fallback for React Router.
 - `frontend/package.json` and `frontend/vite.config.js`: frontend package
   manifest and Vite configuration at the Vercel project root. The existing
   React source remains in `frontend/src/`.
