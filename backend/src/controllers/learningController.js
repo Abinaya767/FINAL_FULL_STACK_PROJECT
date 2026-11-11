@@ -950,6 +950,10 @@ export const createNotification = asyncHandler(async (request, response) => {
     throw badRequest("Notification title and message are required.");
   }
   const notification = await Notification.create({ student: student._id, title: title.trim(), message: message.trim() });
+  const recipient = await Student.findById(student._id).select("user").lean();
+  if (recipient?.user) {
+    request.app.get("io")?.to(`user:${recipient.user.toString()}`).emit("notification:new", notification);
+  }
   response.status(201).json(apiResponse("Notification created successfully.", { notification }));
 });
 
