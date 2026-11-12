@@ -4,8 +4,8 @@ import { expressRequest } from "./src/api/expressApi.js";
 
 const courseSelect = document.querySelector("#quiz-course");
 const moduleSelect = document.querySelector("#quiz-module");
-const form = document.querySelector("main form");
-const quizTableBody = [...document.querySelectorAll("main table tbody")][0];
+const form = document.querySelector("#module-quiz-form");
+const quizTableBody = document.querySelector("main table tbody");
 const status = document.createElement("p");
 status.className = "api-status";
 status.setAttribute("role", "status");
@@ -22,41 +22,32 @@ function showStatus(message, state = "") {
 
 function setOptions(select, placeholder, items, getValue, getLabel) {
   select.replaceChildren(new Option(placeholder, ""));
-  for (const item of items) {
-    select.add(new Option(getLabel(item), getValue(item)));
-  }
+  for (const item of items) select.add(new Option(getLabel(item), getValue(item)));
 }
 
 function renderQuizRows() {
   quizTableBody.replaceChildren();
-  const quizzes = [];
-  for (const course of courses) {
-    for (const module of course.modules || []) {
-      if (module.quiz) {
-        quizzes.push({ course, module, quiz: module.quiz });
-      }
-    }
-  }
+  const quizzes = courses.flatMap((course) => (course.modules || [])
+    .filter((module) => module.quiz)
+    .map((module) => ({ course, module, quiz: module.quiz })));
 
   if (!quizzes.length) {
     const row = quizTableBody.insertRow();
-    const cell = row.insertCell();
-    cell.colSpan = 7;
-    cell.textContent = "No module quizzes have been created yet.";
+    row.insertCell().colSpan = 7;
+    row.cells[0].textContent = "No module quizzes have been created yet.";
     return;
   }
 
   for (const item of quizzes) {
     const row = quizTableBody.insertRow();
-    const values = [
+    for (const value of [
       item.quiz.id || "Saved quiz",
       item.course.title,
-      item.module.title,
-      `${item.module.title} Quiz`,
+      `Module ${item.module.order}: ${item.module.title}`,
+      item.quiz.title || `${item.module.title} Quiz`,
       String(item.quiz.questions?.length || 0),
       "2",
-    ];
-    for (const value of values) row.insertCell().textContent = value;
+    ]) row.insertCell().textContent = String(value);
     const actions = row.insertCell();
     const remove = document.createElement("button");
     remove.type = "button";
@@ -66,9 +57,7 @@ function renderQuizRows() {
       remove.disabled = true;
       showStatus("Deleting module quiz...", "loading");
       try {
-        await expressRequest(`/modules/${encodeURIComponent(item.module.id)}/quiz`, {
-          method: "DELETE",
-        });
+        await expressRequest(`/modules/${encodeURIComponent(item.module.id)}/quiz`, { method: "DELETE" });
         item.module.quiz = null;
         renderQuizRows();
         showStatus("Module quiz deleted.", "success");
@@ -95,15 +84,12 @@ async function loadCourses() {
         return { ...course, modules: [], moduleLoadError: error.message };
       }
     }));
-    setOptions(courseSelect, courses.length ? "Choose Course" : "No admin-created courses found", courses,
+    setOptions(courseSelect, courses.length ? "Choose Course" : "No saved courses found", courses,
       (course) => course.id, (course) => course.title);
     courseSelect.disabled = courses.length === 0;
     renderQuizRows();
-    if (courses.some((course) => course.moduleLoadError)) {
-      showStatus("Some course modules could not be loaded. Check your admin session and API.", "error");
-    } else {
-      showStatus(courses.length ? "Courses loaded from the database." : "Add a course in Manage Courses first.", courses.length ? "success" : "empty");
-    }
+    showStatus(courses.length ? "Courses and their modules loaded from the database." : "Create a course and its modules first.", courses.length ? "success" : "empty");
+    if (courses.some((course) => course.moduleLoadError)) showStatus("Some modules could not be loaded. Check the admin login and API.", "error");
   } catch (error) {
     setOptions(courseSelect, "Unable to load courses", []);
     showStatus(error.message, "error");
@@ -113,16 +99,24 @@ async function loadCourses() {
 courseSelect.addEventListener("change", () => {
   const selectedCourse = courses.find((course) => course.id === courseSelect.value);
   modules = selectedCourse?.modules || [];
-  setOptions(moduleSelect, selectedCourse ? "Choose Module" : "Choose a course first",
-    modules, (module) => module.id, (module) => `Module ${module.order}: ${module.title}`);
+  setOptions(moduleSelect, selectedCourse ? "Choose Module" : "Choose a course first", modules,
+    (module) => module.id, (module) => `Module ${module.order}: ${module.title}`);
   moduleSelect.disabled = modules.length === 0;
-  if (selectedCourse?.moduleLoadError) {
-    showStatus(selectedCourse.moduleLoadError, "error");
-  } else if (!modules.length && selectedCourse) {
-    showStatus("No modules are available for this course yet.", "empty");
-  } else {
-    showStatus(selectedCourse ? "Only modules from the selected course are shown." : "Select a course first.", "success");
+  if (selectedCourse?.moduleLoadError) showStatus(selectedCourse.moduleLoadError, "error");
+  else showStatus(modules.length ? "Choose the module that this quiz belongs to." : "This course has no modules yet. Add modules first.", modules.length ? "success" : "empty");
+  const title = form.querySelector("#quiz-title");
+  if (selectedCourse && !title.value.trim()) title.value = selectedCourse.title + " Module Quiz";
+});
+
+moduleSelect.addEventListener("change", () => {
+  const selectedModule = modules.find((module) => module.id === moduleSelect.value);
+  if (selectedModule && !form.querySelector("#quiz-title").dataset.edited) {
+    form.querySelector("#quiz-title").value = `${selectedModule.title} Quiz`;
   }
+});
+
+form.querySelector("#quiz-title").addEventListener("input", (event) => {
+  event.currentTarget.dataset.edited = "true";
 });
 
 form.addEventListener("submit", async (event) => {
@@ -148,27 +142,31 @@ form.addEventListener("submit", async (event) => {
       showStatus(`Complete the question, all four options and correct answer for Question ${index + 1}.`, "error");
       return;
     }
-    questions.push({
-      question: question.value.trim(),
-      options,
-      correctAnswerIndex: Number(answer),
-    });
+    questions.push({ question: question.value.trim(), options, correctAnswerIndex: Number(answer) });
+  }
+
+  const title = form.querySelector("#quiz-title").value.trim();
+  const passingPercentage = Number(form.querySelector("#pass-mark").value);
+  if (!title || !Number.isInteger(passingPercentage) || passingPercentage < 1 || passingPercentage > 100) {
+    showStatus("Enter a quiz title and a passing percentage between 1 and 100.", "error");
+    return;
   }
 
   const submit = form.querySelector('button[type="submit"]');
   submit.disabled = true;
-  showStatus("Saving quiz to the database...", "loading");
+  showStatus("Saving this module quiz to MongoDB...", "loading");
   try {
-    await expressRequest(`/modules/${encodeURIComponent(selectedModule.id)}/quiz`, {
+    const result = await expressRequest(`/modules/${encodeURIComponent(selectedModule.id)}/quiz`, {
       method: "POST",
-      body: { questions },
+      body: { title, passingPercentage, questions },
     });
-    selectedModule.quiz = { questions };
+    selectedModule.quiz = result.data.quiz;
     renderQuizRows();
     form.reset();
-    moduleSelect.value = selectedModule.id;
     form.querySelector("#attempt-limit").value = "2";
-    showStatus("Quiz saved successfully and linked to the selected course module.", "success");
+    form.querySelector("#pass-mark").value = "50";
+    form.querySelector("#quiz-title").dataset.edited = "";
+    showStatus(`Quiz saved for ${selectedModule.title}. Select another module to add its quiz.`, "success");
   } catch (error) {
     showStatus(error.message, "error");
   } finally {
@@ -179,6 +177,8 @@ form.addEventListener("submit", async (event) => {
 form.addEventListener("reset", () => {
   window.setTimeout(() => {
     form.querySelector("#attempt-limit").value = "2";
+    form.querySelector("#pass-mark").value = "50";
+    form.querySelector("#quiz-title").dataset.edited = "";
   }, 0);
 });
 
