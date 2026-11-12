@@ -641,7 +641,18 @@ export const updateModuleQuiz = asyncHandler(async (request, response) => {
     } },
     { returnDocument: "after", runValidators: true },
   );
-  response.status(200).json(apiResponse("Quiz updated successfully.", {
+  await Progress.updateMany(
+    { module: module._id },
+    { $set: { quizPassed: false, quizAttempts: [], lockedUntil: null } },
+  );
+  const laterModules = await Module.find({ course: module.course, order: { $gt: module.order } }).select("_id");
+  if (laterModules.length) {
+    await Progress.updateMany(
+      { module: { $in: laterModules.map((item) => item._id) } },
+      { $set: { unlockedAt: null } },
+    );
+  }
+  response.status(200).json(apiResponse("Quiz updated. Student attempts for this module have been reset.", {
     quiz: {
       id: quiz._id.toString(),
       moduleId: module._id.toString(),
