@@ -34,22 +34,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="sample-certificate" aria-labelledby="sample-certificate-heading">
-          <h2 id="sample-certificate-heading">See What You'll Earn</h2>
-          <p>This certificate preview is a sample only. It does not represent a real student or completed course.</p>
-          <article className="sample-certificate-card certificate-artwork">
-            <p className="sample-certificate-watermark" aria-hidden="true">SAMPLE</p>
-            <p className="sample-certificate-brand">LearnSpace</p>
-            <h3>Certificate of Completion</h3>
-            <p className="sample-certificate-intro">This sample certificate is presented to</p>
-            <p className="sample-certificate-student">Sample Student</p>
-            <p>for completing the sample course</p>
-            <p className="sample-certificate-course">Introduction to Web Development</p>
-            <p className="sample-certificate-date">Sample completion date: November 2, 2026</p>
-          </article>
-          <p className="sample-certificate-link"><Link to="/certificate">View Certificate</Link></p>
-        </section>
-
         <section id="about">
           <h2>About LearnSpace</h2>
           <p>
