@@ -14,6 +14,7 @@ form?.prepend(status);
 
 let courses = [];
 let modules = [];
+let editingModuleId = null;
 
 function showStatus(message, state = "") {
   status.textContent = message;
@@ -49,6 +50,28 @@ function renderQuizRows() {
       "2",
     ]) row.insertCell().textContent = String(value);
     const actions = row.insertCell();
+    const edit = document.createElement("button");
+    edit.type = "button";
+    edit.textContent = "Edit";
+    edit.addEventListener("click", () => {
+      courseSelect.value = item.course.id;
+      courseSelect.dispatchEvent(new Event("change"));
+      moduleSelect.value = item.module.id;
+      moduleSelect.dispatchEvent(new Event("change"));
+      form.querySelector("#quiz-title").value = item.quiz.title || item.module.title + " Quiz";
+      form.querySelector("#pass-mark").value = String(item.quiz.passingPercentage || 50);
+      item.quiz.questions.forEach((question, index) => {
+        form.querySelector('[name="questions[' + index + '][text]"]').value = question.question || "";
+        question.options.forEach((option, optionIndex) => {
+          form.querySelector('[name="questions[' + index + '][options][' + optionIndex + ']"]').value = option;
+        });
+        form.querySelector('[name="questions[' + index + '][correctAnswer]"]').value = String(question.correctAnswerIndex);
+      });
+      editingModuleId = item.module.id;
+      form.querySelector('button[type="submit"]').textContent = "Update Module Quiz";
+      showStatus("Edit the questions and save the updated quiz.", "success");
+      form.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
     const remove = document.createElement("button");
     remove.type = "button";
     remove.textContent = "Delete";
@@ -66,7 +89,7 @@ function renderQuizRows() {
         remove.disabled = false;
       }
     });
-    actions.append(remove);
+    actions.append(edit, document.createTextNode(" "), remove);
   }
 }
 
@@ -97,6 +120,8 @@ async function loadCourses() {
 }
 
 courseSelect.addEventListener("change", () => {
+  editingModuleId = null;
+  form.querySelector('button[type="submit"]').textContent = "Save Module Quiz";
   const selectedCourse = courses.find((course) => course.id === courseSelect.value);
   modules = selectedCourse?.modules || [];
   setOptions(moduleSelect, selectedCourse ? "Choose Module" : "Choose a course first", modules,
@@ -127,8 +152,9 @@ form.addEventListener("submit", async (event) => {
     showStatus("Select a saved course and one of its modules.", "error");
     return;
   }
-  if (selectedModule.quiz) {
-    showStatus("This module already has a quiz. Delete it before creating a replacement.", "error");
+  const isEditing = editingModuleId === selectedModule.id && Boolean(selectedModule.quiz);
+  if (selectedModule.quiz && !isEditing) {
+    showStatus("This module already has a quiz. Use its Edit button to update it.", "error");
     return;
   }
 
@@ -157,12 +183,14 @@ form.addEventListener("submit", async (event) => {
   showStatus("Saving this module quiz to MongoDB...", "loading");
   try {
     const result = await expressRequest(`/modules/${encodeURIComponent(selectedModule.id)}/quiz`, {
-      method: "POST",
+      method: isEditing ? "PUT" : "POST",
       body: { title, passingPercentage, questions },
     });
     selectedModule.quiz = result.data.quiz;
+    editingModuleId = null;
     renderQuizRows();
     form.reset();
+    submit.textContent = "Save Module Quiz";
     form.querySelector("#attempt-limit").value = "2";
     form.querySelector("#pass-mark").value = "50";
     form.querySelector("#quiz-title").dataset.edited = "";
@@ -176,6 +204,8 @@ form.addEventListener("submit", async (event) => {
 
 form.addEventListener("reset", () => {
   window.setTimeout(() => {
+    editingModuleId = null;
+    form.querySelector('button[type="submit"]').textContent = "Save Module Quiz";
     form.querySelector("#attempt-limit").value = "2";
     form.querySelector("#pass-mark").value = "50";
     form.querySelector("#quiz-title").dataset.edited = "";
