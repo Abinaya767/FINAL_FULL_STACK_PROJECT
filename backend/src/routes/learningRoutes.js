@@ -1,11 +1,14 @@
 import { Router } from "express";
 import * as learning from "../controllers/learningController.js";
+import { getDashboardStatistics } from "../controllers/adminDashboardController.js";
 import { authenticate } from "../middleware/authenticate.js";
 import { authorizeRoles } from "../middleware/authorize.js";
 
 const router = Router();
 const admin = [authenticate, authorizeRoles("admin")];
 const signedIn = [authenticate];
+
+router.get("/admin/dashboard/statistics", ...admin, getDashboardStatistics);
 
 router.get("/courses/:courseId/modules", ...signedIn, learning.getCourseModules);
 router.post("/courses/:courseId/modules", ...admin, learning.createModule);
