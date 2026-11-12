@@ -235,7 +235,7 @@ export async function initializeModuleQuiz() {
     const module = (await getCourseModules(courseId)).find((item) => item.id === moduleId);
     if (!module) throw new Error("This module is not part of the selected course.");
     const headerParagraph = header?.querySelector("p");
-    if (headerParagraph) headerParagraph.textContent = `${course.title} · ${module.title} · ${quiz.questions.length} questions · maximum 2 attempts per 24-hour window.`;
+    if (headerParagraph) headerParagraph.textContent = `${course.title} · ${module.title} · ${quiz.title || "Module Quiz"} · ${quiz.questions.length} questions · maximum 2 attempts per 24-hour window.`;
     const progress = progressRecords.find((record) => record.moduleId === moduleId);
     form.querySelectorAll("fieldset").forEach((fieldset) => fieldset.remove());
     quiz.questions.forEach((question, index) => renderQuestion(form, question, index, "q"));
@@ -255,7 +255,7 @@ export async function initializeModuleQuiz() {
       status.dataset.state = "error";
       return;
     }
-    status.textContent = `${attempts} of 2 attempts used in the current window. Pass mark: 50%.`;
+    status.textContent = `${attempts} of 2 attempts used in the current window. Pass mark: ${quiz.passingPercentage ?? 50}%.`;
     submitButton.disabled = false;
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
