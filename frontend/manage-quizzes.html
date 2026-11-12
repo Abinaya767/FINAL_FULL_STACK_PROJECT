@@ -46,37 +46,7 @@
                     <label for="quiz-course">Select Course</label><br>
 
                     <select id="quiz-course" name="courseId" required>
-                        <option value="">Choose Course</option>
-                        <option value="web-development">Web Development</option>
-                        <option value="python">Python Programming</option>
-                        <option value="java">Java Programming</option>
-                        <option value="c">C Programming</option>
-                        <option value="cpp">C++ Programming</option>
-                        <option value="javascript">JavaScript Programming</option>
-                        <option value="react">React Development</option>
-                        <option value="nodejs">Node.js Development</option>
-                        <option value="php">PHP Programming</option>
-                        <option value="sql">SQL Programming</option>
-                        <option value="dbms">Database Management Systems</option>
-                        <option value="mongodb">MongoDB</option>
-                        <option value="dsa">Data Structures and Algorithms</option>
-                        <option value="os">Operating Systems</option>
-                        <option value="networks">Computer Networks</option>
-                        <option value="cybersecurity">Cybersecurity Fundamentals</option>
-                        <option value="cloud">Cloud Computing</option>
-                        <option value="aws">AWS Cloud Fundamentals</option>
-                        <option value="devops">DevOps Fundamentals</option>
-                        <option value="git">Git and GitHub</option>
-                        <option value="uiux">UI/UX Design</option>
-                        <option value="figma">Figma Design</option>
-                        <option value="analytics">Data Analytics</option>
-                        <option value="datascience">Data Science</option>
-                        <option value="ml">Machine Learning</option>
-                        <option value="ai">Artificial Intelligence</option>
-                        <option value="excel">Microsoft Excel</option>
-                        <option value="powerbi">Power BI</option>
-                        <option value="android">Android App Development</option>
-                        <option value="testing">Software Testing</option>
+                        <option value="">Loading saved courses...</option>
                     </select>
                 </div>
 
@@ -85,8 +55,8 @@
                 <div>
                     <label for="quiz-module">Select Module</label><br>
 
-                    <select id="quiz-module" name="moduleId" required>
-                        <option value="">Choose Module</option>
+                    <select id="quiz-module" name="moduleId" required disabled>
+                        <option value="">Choose a course first</option>
                     </select>
                 </div>
 
@@ -314,9 +284,7 @@
 
                 <tbody>
                     <tr>
-                        <td colspan="7">
-                            Quiz records will appear here after database integration.
-                        </td>
+                        <td colspan="7">Loading quiz records from the database...</td>
                     </tr>
                 </tbody>
 
@@ -353,5 +321,6 @@
         <p>&copy; 2026 LearnSpace. Keep growing.</p>
     </footer>
 
+    <script type="module" src="/admin-quizzes.js"></script>
 </body>
 </html>
