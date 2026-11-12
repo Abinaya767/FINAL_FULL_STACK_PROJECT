@@ -40,29 +40,29 @@
             <h2>Platform Overview</h2>
 
             <p>
-                The following information will display actual
-                platform statistics retrieved from the database.
+                Live platform statistics retrieved from the LearnSpace database.
             </p>
 
             <div>
                 <h3>Total Students</h3>
-                <p>Database-backed student count</p>
+                <p id="total-students" aria-live="polite">Loading...</p>
             </div>
 
             <div>
                 <h3>Total Courses</h3>
-                <p>Database-backed course count</p>
+                <p id="total-courses" aria-live="polite">Loading...</p>
             </div>
 
             <div>
                 <h3>Total Enrollments</h3>
-                <p>Database-backed enrollment count</p>
+                <p id="total-enrollments" aria-live="polite">Loading...</p>
             </div>
 
             <div>
                 <h3>Completed Courses</h3>
-                <p>Database-backed course completion count</p>
+                <p id="completed-courses" aria-live="polite">Loading...</p>
             </div>
+            <p id="dashboard-stats-status" role="status" aria-live="polite"></p>
         </section>
 
         <section>
@@ -133,5 +133,6 @@
         <p>&copy; 2026 LearnSpace. Keep growing.</p>
     </footer>
 
+    <script type="module" src="/js/admin-dashboard.js"></script>
 </body>
 </html>
