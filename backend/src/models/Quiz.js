@@ -13,8 +13,8 @@ const questionSchema = new mongoose.Schema({
     type: [String],
     required: true,
     validate: {
-      validator: (options) => options.length >= 2 && options.every((option) => option.trim()),
-      message: "Each question must have at least two non-empty options.",
+      validator: (options) => options.length === 4 && options.every((option) => option.trim()),
+      message: "Each question must have exactly four non-empty options.",
     },
   },
   correctAnswerIndex: {
@@ -36,6 +36,19 @@ const quizSchema = new mongoose.Schema({
     ref: "Module",
     required: true,
     unique: true,
+  },
+  title: {
+    type: String,
+    required: true,
+    trim: true,
+    maxlength: 200,
+  },
+  passingPercentage: {
+    type: Number,
+    required: true,
+    default: 50,
+    min: 1,
+    max: 100,
   },
   attemptLimit: {
     type: Number,
