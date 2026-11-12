@@ -107,8 +107,8 @@ async function requireCompletedCourse(request, course) {
   const progresses = await Progress.find({ student: student._id, course: course._id });
   if (course.modules.length < 10 || progresses.length !== course.modules.length
     || course.modules.some((moduleId) => !progresses.some((progress) => progress.module.equals(moduleId)))
-    || progresses.some((progress) => progress.completionPercentage !== 100)) {
-    throw forbidden("Complete all course modules before accessing the final assessment.");
+    || progresses.some((progress) => progress.completionPercentage !== 100 || !progress.quizPassed)) {
+    throw forbidden("Complete every lesson and pass every module quiz before accessing the final assessment.");
   }
   return { student, progresses };
 }
@@ -365,16 +365,6 @@ export const completeLesson = asyncHandler(async (request, response) => {
   if (progress.completionPercentage === 100) progress.completionPercentage = 100;
   await progress.save();
 
-  if (progress.completionPercentage === 100) {
-    const modules = await Module.find({ course: progress.course }).sort({ order: 1 }).select("_id");
-    const position = modules.findIndex((item) => item._id.equals(progress.module));
-    if (position >= 0 && position + 1 < modules.length) {
-      await Progress.updateOne(
-        { student: progress.student, course: progress.course, module: modules[position + 1]._id, unlockedAt: null },
-        { $set: { unlockedAt: new Date() } },
-      );
-    }
-  }
   response.status(200).json(apiResponse("Lesson completion recorded successfully.", {
     progress: progressDto(progress),
   }));
@@ -794,7 +784,18 @@ export const submitModuleQuiz = asyncHandler(async (request, response) => {
     throw conflict("The quiz attempt could not be accepted. Refresh progress and try again.");
   }
 
-  response.status(200).json(apiResponse(passed ? "Quiz passed." : "Quiz attempt recorded.", {
+  if (passed) {
+    const modules = await Module.find({ course: module.course }).sort({ order: 1 }).select("_id");
+    const position = modules.findIndex((item) => item._id.equals(module._id));
+    if (position >= 0 && position + 1 < modules.length) {
+      await Progress.updateOne(
+        { student: student._id, course: module.course, module: modules[position + 1]._id, unlockedAt: null },
+        { $set: { unlockedAt: new Date() } },
+      );
+    }
+  }
+
+  response.status(200).json(apiResponse(passed ? "Quiz passed. The next module is now unlocked." : "Quiz attempt recorded.", {
     scorePercentage,
     passed,
     attemptsRemaining: passed ? 0 : Math.max(0, QUIZ_ATTEMPT_LIMIT - updatedProgress.quizAttempts.length),
