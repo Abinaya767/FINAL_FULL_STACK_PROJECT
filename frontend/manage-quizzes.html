@@ -1,326 +1,155 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Quizzes | LearnSpace</title>
+    <title>Manage Module Quizzes | LearnSpace</title>
     <link rel="stylesheet" href="/css/admin.css">
 </head>
 <body>
-
     <header>
         <h1>LearnSpace Admin Portal</h1>
-
         <nav>
-            <a href="admin-dashboard.html">Dashboard</a> |
-            <a href="manage-courses.html">Manage Courses</a> |
-            <a href="manage-students.html">Manage Students</a> |
-            <a href="manage-modules.html">Manage Modules</a> |
-            <a href="manage-lessons.html">Manage Lessons</a> |
-            <a href="manage-quizzes.html">Manage Quizzes</a> |
-            <a href="manage-assessments.html">Manage Assessments</a> |
+            <a href="admin-dashboard.html">Dashboard</a>
+            <a href="manage-courses.html">Manage Courses</a>
+            <a href="manage-students.html">Manage Students</a>
+            <a href="manage-modules.html">Manage Modules</a>
+            <a href="manage-lessons.html">Manage Lessons</a>
+            <a href="manage-quizzes.html">Manage Quizzes</a>
+            <a href="manage-assessments.html">Final Assessment</a>
             <a href="../index.html">Logout</a>
         </nav>
     </header>
 
     <main>
-
         <section>
             <h1>Manage Module Quizzes</h1>
-
-            <p>
-                Create and manage quizzes for individual course modules.
-                Each module quiz must contain exactly five questions.
-            </p>
+            <p>Create one separate quiz for every course module. Select a course first, then select one of its modules.</p>
+            <p><strong>Important:</strong> Each module quiz contains exactly 5 questions and 4 options per question. Students get 2 attempts; after two failed attempts, the quiz is locked for 24 hours.</p>
         </section>
 
-        <hr>
-
         <section>
-            <h2>Create New Module Quiz</h2>
-
-            <form action="#" method="post">
-
+            <h2>Create a Module Quiz</h2>
+            <form id="module-quiz-form">
                 <div>
-                    <label for="quiz-course">Select Course</label><br>
-
+                    <label for="quiz-course">Select Course</label>
                     <select id="quiz-course" name="courseId" required>
                         <option value="">Loading saved courses...</option>
                     </select>
                 </div>
-
-                <br>
-
                 <div>
-                    <label for="quiz-module">Select Module</label><br>
-
+                    <label for="quiz-module">Select Module</label>
                     <select id="quiz-module" name="moduleId" required disabled>
                         <option value="">Choose a course first</option>
                     </select>
                 </div>
-
-                <br>
-
                 <div>
-                    <label for="quiz-title">Quiz Title</label><br>
-
-                    <input
-                        type="text"
-                        id="quiz-title"
-                        name="quizTitle"
-                        placeholder="Enter quiz title"
-                        required
-                    >
+                    <label for="quiz-title">Quiz Title</label>
+                    <input type="text" id="quiz-title" name="quizTitle" maxlength="200" placeholder="Example: Module 1 Quiz" required>
+                </div>
+                <div>
+                    <label for="attempt-limit">Maximum Attempts</label>
+                    <input type="number" id="attempt-limit" value="2" min="2" max="2" readonly>
+                    <small>Fixed by the system: 2 attempts, followed by a 24-hour cooldown after two failures.</small>
+                </div>
+                <div>
+                    <label for="pass-mark">Passing Percentage</label>
+                    <input type="number" id="pass-mark" name="passingPercentage" value="50" min="1" max="100" required>
                 </div>
 
-                <br>
-
-                <div>
-                    <label for="attempt-limit">Maximum Attempts</label><br>
-
-                    <input
-                        type="number"
-                        id="attempt-limit"
-                        name="attemptLimit"
-                        value="2"
-                        min="2"
-                        max="2"
-                        readonly
-                    >
-                </div>
-
-                <br>
-
-                <div>
-                    <label for="pass-mark">Passing Percentage</label><br>
-
-                    <input
-                        type="number"
-                        id="pass-mark"
-                        name="passingPercentage"
-                        min="1"
-                        max="100"
-                        placeholder="Enter passing percentage"
-                        required
-                    >
-                </div>
-
-                <br>
-
-                <p><strong>Question 1</strong></p>
-
-                <label for="question1">Question</label><br>
-                <textarea id="question1" name="questions[0][text]"
-                    rows="3" required></textarea><br><br>
-
-                <label>Option A</label><br>
-                <input type="text" name="questions[0][options][0]" required><br><br>
-
-                <label>Option B</label><br>
-                <input type="text" name="questions[0][options][1]" required><br><br>
-
-                <label>Option C</label><br>
-                <input type="text" name="questions[0][options][2]" required><br><br>
-
-                <label>Option D</label><br>
-                <input type="text" name="questions[0][options][3]" required><br><br>
-
-                <label for="answer1">Correct Answer</label><br>
-                <select id="answer1" name="questions[0][correctAnswer]" required>
-                    <option value="">Select Answer</option>
-                    <option value="0">Option A</option>
-                    <option value="1">Option B</option>
-                    <option value="2">Option C</option>
-                    <option value="3">Option D</option>
-                </select>
-
-                <hr>
-
-                <p><strong>Question 2</strong></p>
-
-                <label for="question2">Question</label><br>
-                <textarea id="question2" name="questions[1][text]"
-                    rows="3" required></textarea><br><br>
-
-                <label>Option A</label><br>
-                <input type="text" name="questions[1][options][0]" required><br><br>
-
-                <label>Option B</label><br>
-                <input type="text" name="questions[1][options][1]" required><br><br>
-
-                <label>Option C</label><br>
-                <input type="text" name="questions[1][options][2]" required><br><br>
-
-                <label>Option D</label><br>
-                <input type="text" name="questions[1][options][3]" required><br><br>
-
-                <label for="answer2">Correct Answer</label><br>
-                <select id="answer2" name="questions[1][correctAnswer]" required>
-                    <option value="">Select Answer</option>
-                    <option value="0">Option A</option>
-                    <option value="1">Option B</option>
-                    <option value="2">Option C</option>
-                    <option value="3">Option D</option>
-                </select>
-
-                <hr>
-
-                <p><strong>Question 3</strong></p>
-
-                <label for="question3">Question</label><br>
-                <textarea id="question3" name="questions[2][text]"
-                    rows="3" required></textarea><br><br>
-
-                <label>Option A</label><br>
-                <input type="text" name="questions[2][options][0]" required><br><br>
-
-                <label>Option B</label><br>
-                <input type="text" name="questions[2][options][1]" required><br><br>
-
-                <label>Option C</label><br>
-                <input type="text" name="questions[2][options][2]" required><br><br>
-
-                <label>Option D</label><br>
-                <input type="text" name="questions[2][options][3]" required><br><br>
-
-                <label for="answer3">Correct Answer</label><br>
-                <select id="answer3" name="questions[2][correctAnswer]" required>
-                    <option value="">Select Answer</option>
-                    <option value="0">Option A</option>
-                    <option value="1">Option B</option>
-                    <option value="2">Option C</option>
-                    <option value="3">Option D</option>
-                </select>
-
-                <hr>
-
-                <p><strong>Question 4</strong></p>
-
-                <label for="question4">Question</label><br>
-                <textarea id="question4" name="questions[3][text]"
-                    rows="3" required></textarea><br><br>
-
-                <label>Option A</label><br>
-                <input type="text" name="questions[3][options][0]" required><br><br>
-
-                <label>Option B</label><br>
-                <input type="text" name="questions[3][options][1]" required><br><br>
-
-                <label>Option C</label><br>
-                <input type="text" name="questions[3][options][2]" required><br><br>
-
-                <label>Option D</label><br>
-                <input type="text" name="questions[3][options][3]" required><br><br>
-
-                <label for="answer4">Correct Answer</label><br>
-                <select id="answer4" name="questions[3][correctAnswer]" required>
-                    <option value="">Select Answer</option>
-                    <option value="0">Option A</option>
-                    <option value="1">Option B</option>
-                    <option value="2">Option C</option>
-                    <option value="3">Option D</option>
-                </select>
-
-                <hr>
-
-                <p><strong>Question 5</strong></p>
-
-                <label for="question5">Question</label><br>
-                <textarea id="question5" name="questions[4][text]"
-                    rows="3" required></textarea><br><br>
-
-                <label>Option A</label><br>
-                <input type="text" name="questions[4][options][0]" required><br><br>
-
-                <label>Option B</label><br>
-                <input type="text" name="questions[4][options][1]" required><br><br>
-
-                <label>Option C</label><br>
-                <input type="text" name="questions[4][options][2]" required><br><br>
-
-                <label>Option D</label><br>
-                <input type="text" name="questions[4][options][3]" required><br><br>
-
-                <label for="answer5">Correct Answer</label><br>
-                <select id="answer5" name="questions[4][correctAnswer]" required>
-                    <option value="">Select Answer</option>
-                    <option value="0">Option A</option>
-                    <option value="1">Option B</option>
-                    <option value="2">Option C</option>
-                    <option value="3">Option D</option>
-                </select>
-
-                <hr>
-
-                <button type="submit">Create Quiz</button>
+                <fieldset>
+                    <legend>Question 1</legend>
+                    <label for="question1">Question</label>
+                    <textarea id="question1" name="questions[0][text]" rows="2" required></textarea>
+                    <label>Option A<input type="text" name="questions[0][options][0]" required></label>
+                    <label>Option B<input type="text" name="questions[0][options][1]" required></label>
+                    <label>Option C<input type="text" name="questions[0][options][2]" required></label>
+                    <label>Option D<input type="text" name="questions[0][options][3]" required></label>
+                    <label for="answer1">Correct Answer</label>
+                    <select id="answer1" name="questions[0][correctAnswer]" required>
+                        <option value="">Select correct option</option><option value="0">Option A</option><option value="1">Option B</option><option value="2">Option C</option><option value="3">Option D</option>
+                    </select>
+                </fieldset>
+                <fieldset>
+                    <legend>Question 2</legend>
+                    <label for="question2">Question</label>
+                    <textarea id="question2" name="questions[1][text]" rows="2" required></textarea>
+                    <label>Option A<input type="text" name="questions[1][options][0]" required></label>
+                    <label>Option B<input type="text" name="questions[1][options][1]" required></label>
+                    <label>Option C<input type="text" name="questions[1][options][2]" required></label>
+                    <label>Option D<input type="text" name="questions[1][options][3]" required></label>
+                    <label for="answer2">Correct Answer</label>
+                    <select id="answer2" name="questions[1][correctAnswer]" required>
+                        <option value="">Select correct option</option><option value="0">Option A</option><option value="1">Option B</option><option value="2">Option C</option><option value="3">Option D</option>
+                    </select>
+                </fieldset>
+                <fieldset>
+                    <legend>Question 3</legend>
+                    <label for="question3">Question</label>
+                    <textarea id="question3" name="questions[2][text]" rows="2" required></textarea>
+                    <label>Option A<input type="text" name="questions[2][options][0]" required></label>
+                    <label>Option B<input type="text" name="questions[2][options][1]" required></label>
+                    <label>Option C<input type="text" name="questions[2][options][2]" required></label>
+                    <label>Option D<input type="text" name="questions[2][options][3]" required></label>
+                    <label for="answer3">Correct Answer</label>
+                    <select id="answer3" name="questions[2][correctAnswer]" required>
+                        <option value="">Select correct option</option><option value="0">Option A</option><option value="1">Option B</option><option value="2">Option C</option><option value="3">Option D</option>
+                    </select>
+                </fieldset>
+                <fieldset>
+                    <legend>Question 4</legend>
+                    <label for="question4">Question</label>
+                    <textarea id="question4" name="questions[3][text]" rows="2" required></textarea>
+                    <label>Option A<input type="text" name="questions[3][options][0]" required></label>
+                    <label>Option B<input type="text" name="questions[3][options][1]" required></label>
+                    <label>Option C<input type="text" name="questions[3][options][2]" required></label>
+                    <label>Option D<input type="text" name="questions[3][options][3]" required></label>
+                    <label for="answer4">Correct Answer</label>
+                    <select id="answer4" name="questions[3][correctAnswer]" required>
+                        <option value="">Select correct option</option><option value="0">Option A</option><option value="1">Option B</option><option value="2">Option C</option><option value="3">Option D</option>
+                    </select>
+                </fieldset>
+                <fieldset>
+                    <legend>Question 5</legend>
+                    <label for="question5">Question</label>
+                    <textarea id="question5" name="questions[4][text]" rows="2" required></textarea>
+                    <label>Option A<input type="text" name="questions[4][options][0]" required></label>
+                    <label>Option B<input type="text" name="questions[4][options][1]" required></label>
+                    <label>Option C<input type="text" name="questions[4][options][2]" required></label>
+                    <label>Option D<input type="text" name="questions[4][options][3]" required></label>
+                    <label for="answer5">Correct Answer</label>
+                    <select id="answer5" name="questions[4][correctAnswer]" required>
+                        <option value="">Select correct option</option><option value="0">Option A</option><option value="1">Option B</option><option value="2">Option C</option><option value="3">Option D</option>
+                    </select>
+                </fieldset>
+                <button type="submit">Save Module Quiz</button>
                 <button type="reset">Clear Form</button>
-
             </form>
         </section>
 
-        <hr>
-
         <section>
             <h2>Existing Module Quizzes</h2>
-
-            <p>
-                Quiz records will be retrieved from the database.
-            </p>
-
-            <table border="1" cellpadding="10">
-
-                <thead>
-                    <tr>
-                        <th>Quiz ID</th>
-                        <th>Course</th>
-                        <th>Module</th>
-                        <th>Quiz Title</th>
-                        <th>Questions</th>
-                        <th>Attempts</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    <tr>
-                        <td colspan="7">Loading quiz records from the database...</td>
-                    </tr>
-                </tbody>
-
+            <p>Only quizzes saved in the LearnSpace database are shown here.</p>
+            <table>
+                <thead><tr><th>Quiz ID</th><th>Course</th><th>Module</th><th>Quiz Title</th><th>Questions</th><th>Attempts</th><th>Actions</th></tr></thead>
+                <tbody><tr><td colspan="7">Loading quiz records...</td></tr></tbody>
             </table>
         </section>
 
-        <hr>
-
         <section>
-            <h2>Quiz Management Rules</h2>
-
-            <ul>
-                <li>Each module must have exactly five quiz questions.</li>
-                <li>Each question must contain four answer options.</li>
-                <li>Every question must have one correct answer.</li>
-                <li>Quiz questions must match the selected module's subject.</li>
-                <li>Students are allowed a maximum of two attempts.</li>
-                <li>Attempt limits must be enforced by the server.</li>
-                <li>Correct answers must never be exposed to student pages or browser responses.</li>
-                <li>Quiz results and attempts must be stored in MongoDB.</li>
-                <li>The next module unlocks only after the current module is completed successfully.</li>
-            </ul>
+            <h2>Student Learning Flow</h2>
+            <ol>
+                <li>Student completes the lessons in Module 1 and takes the Module 1 quiz.</li>
+                <li>After passing, the next module becomes available with its own quiz.</li>
+                <li>This continues for every module in the selected course.</li>
+                <li>After all modules are completed and their quizzes are passed, the student can take the separate final overall assessment.</li>
+                <li>A certificate is issued only after the student passes the final overall assessment.</li>
+            </ol>
+            <a href="manage-assessments.html">Manage Final Overall Assessment</a>
         </section>
-
-        <section>
-            <a href="admin-dashboard.html">Back to Admin Dashboard</a>
-            <br><br>
-            <a href="manage-assessments.html">Go to Final Assessment Management</a>
-        </section>
-
+        <section><a href="admin-dashboard.html">Back to Admin Dashboard</a></section>
     </main>
-
-    <footer>
-        <p>&copy; 2026 LearnSpace. Keep growing.</p>
-    </footer>
-
+    <footer><p>&copy; 2026 LearnSpace. Keep growing.</p></footer>
     <script type="module" src="/admin-quizzes.js"></script>
 </body>
 </html>
