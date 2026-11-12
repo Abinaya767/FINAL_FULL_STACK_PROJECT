@@ -627,7 +627,13 @@ export const createModuleQuiz = asyncHandler(async (request, response) => {
   module.quiz = quiz._id;
   await module.save();
   response.status(201).json(apiResponse("Quiz created successfully.", {
-    quiz: { id: quiz._id.toString(), moduleId: module._id.toString(), questions: quiz.questions.map(safeQuestion) },
+    quiz: {
+      id: quiz._id.toString(),
+      moduleId: module._id.toString(),
+      title: quiz.title,
+      passingPercentage: quiz.passingPercentage,
+      questions: quiz.questions.map(safeQuestion),
+    },
   }));
 });
 
@@ -644,7 +650,13 @@ export const updateModuleQuiz = asyncHandler(async (request, response) => {
     { returnDocument: "after", runValidators: true },
   );
   response.status(200).json(apiResponse("Quiz updated successfully.", {
-    quiz: { id: quiz._id.toString(), moduleId: module._id.toString(), questions: quiz.questions.map(safeQuestion) },
+    quiz: {
+      id: quiz._id.toString(),
+      moduleId: module._id.toString(),
+      title: quiz.title,
+      passingPercentage: quiz.passingPercentage,
+      questions: quiz.questions.map(safeQuestion),
+    },
   }));
 });
 
