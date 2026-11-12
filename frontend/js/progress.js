@@ -281,7 +281,7 @@ export async function initializeModuleQuiz() {
         status.dataset.state = "error";
         submitButton.disabled = false;
       }
-    }, { once: true });
+    });
   } catch (error) {
     status.textContent = error.message;
     status.dataset.state = "error";
