@@ -404,7 +404,9 @@ export const getCourseModules = asyncHandler(async (request, response) => {
         id: module.quiz._id.toString(),
         title: module.quiz.title,
         passingPercentage: module.quiz.passingPercentage,
-        questions: module.quiz.questions.map(safeQuestion),
+        questions: module.quiz.questions.map((question) => request.user.role === "admin"
+          ? { ...safeQuestion(question), correctAnswerIndex: question.correctAnswerIndex }
+          : safeQuestion(question)),
       } : null,
     };
   });
