@@ -1,234 +1,72 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Modules | LearnSpace</title>
+    <title>Manage Course Modules | LearnSpace</title>
     <link rel="stylesheet" href="/css/admin.css">
 </head>
 <body>
-
     <header>
         <h1>LearnSpace Admin Portal</h1>
-
         <nav>
-            <a href="admin-dashboard.html">Dashboard</a> |
-            <a href="manage-courses.html">Manage Courses</a> |
-            <a href="manage-students.html">Manage Students</a> |
-            <a href="manage-modules.html">Manage Modules</a> |
-            <a href="manage-lessons.html">Manage Lessons</a> |
-            <a href="manage-quizzes.html">Manage Quizzes</a> |
-            <a href="manage-assessments.html">Manage Assessments</a> |
+            <a href="admin-dashboard.html">Dashboard</a>
+            <a href="manage-courses.html">Manage Courses</a>
+            <a href="manage-students.html">Manage Students</a>
+            <a href="manage-modules.html">Manage Modules</a>
+            <a href="manage-lessons.html">Manage Lessons</a>
+            <a href="manage-quizzes.html">Manage Quizzes</a>
+            <a href="manage-assessments.html">Final Assessment</a>
             <a href="../index.html">Logout</a>
         </nav>
     </header>
-
     <main>
-
         <section>
             <h1>Manage Course Modules</h1>
-
-            <p>
-                Create and organize learning modules for every course.
-                Each module contains lessons and a module quiz.
-            </p>
+            <p>Add modules to courses that already exist in LearnSpace. Each module should have its own lessons and a separate 5-question quiz.</p>
         </section>
-
-        <hr>
-
         <section>
             <h2>Add New Module</h2>
-
-            <form action="#" method="post">
-
-                <div>
-                    <label for="module-course">Select Course</label><br>
-
-                    <select id="module-course" name="courseId" required>
-                        <option value="">Choose a Course</option>
-                        <option value="web-development">Web Development</option>
-                        <option value="python">Python Programming</option>
-                        <option value="java">Java Programming</option>
-                        <option value="c">C Programming</option>
-                        <option value="cpp">C++ Programming</option>
-                        <option value="javascript">JavaScript Programming</option>
-                        <option value="react">React Development</option>
-                        <option value="nodejs">Node.js Development</option>
-                        <option value="php">PHP Programming</option>
-                        <option value="sql">SQL Programming</option>
-                        <option value="dbms">Database Management Systems</option>
-                        <option value="mongodb">MongoDB</option>
-                        <option value="dsa">Data Structures and Algorithms</option>
-                        <option value="os">Operating Systems</option>
-                        <option value="networks">Computer Networks</option>
-                        <option value="cybersecurity">Cybersecurity Fundamentals</option>
-                        <option value="cloud">Cloud Computing</option>
-                        <option value="aws">AWS Cloud Fundamentals</option>
-                        <option value="devops">DevOps Fundamentals</option>
-                        <option value="git">Git and GitHub</option>
-                        <option value="uiux">UI/UX Design</option>
-                        <option value="figma">Figma Design</option>
-                        <option value="analytics">Data Analytics</option>
-                        <option value="datascience">Data Science</option>
-                        <option value="ml">Machine Learning</option>
-                        <option value="ai">Artificial Intelligence</option>
-                        <option value="excel">Microsoft Excel</option>
-                        <option value="powerbi">Power BI</option>
-                        <option value="android">Android App Development</option>
-                        <option value="testing">Software Testing</option>
-                    </select>
-                </div>
-
-                <br>
-
-                <div>
-                    <label for="module-number">Module Number</label><br>
-                    <input
-                        type="number"
-                        id="module-number"
-                        name="moduleNumber"
-                        min="1"
-                        placeholder="Example: 1"
-                        required
-                    >
-                </div>
-
-                <br>
-
-                <div>
-                    <label for="module-title">Module Title</label><br>
-                    <input
-                        type="text"
-                        id="module-title"
-                        name="moduleTitle"
-                        placeholder="Enter module title"
-                        required
-                    >
-                </div>
-
-                <br>
-
-                <div>
-                    <label for="module-description">Module Description</label><br>
-                    <textarea
-                        id="module-description"
-                        name="description"
-                        rows="4"
-                        placeholder="Describe the topics covered in this module"
-                        required
-                    ></textarea>
-                </div>
-
-                <br>
-
-                <div>
-                    <label for="module-duration">Estimated Duration</label><br>
-                    <input
-                        type="text"
-                        id="module-duration"
-                        name="duration"
-                        placeholder="Example: 3 hours"
-                        required
-                    >
-                </div>
-
-                <br>
-
-                <div>
-                    <label for="module-status">Module Status</label><br>
-                    <select id="module-status" name="status" required>
-                        <option value="draft">Draft</option>
-                        <option value="published">Published</option>
-                    </select>
-                </div>
-
-                <br>
-
+            <form id="module-form">
+                <label for="module-course">Select Course</label>
+                <select id="module-course" name="courseId" required><option value="">Loading saved courses...</option></select>
+                <label for="module-number">Module Number</label>
+                <input type="number" id="module-number" name="order" min="1" step="1" placeholder="Example: 1" required>
+                <label for="module-title">Module Title</label>
+                <input type="text" id="module-title" name="title" maxlength="200" placeholder="Enter module title" required>
+                <label for="module-description">Module Description</label>
+                <textarea id="module-description" name="description" rows="4" placeholder="Describe the topics covered in this module"></textarea>
                 <button type="submit">Add Module</button>
                 <button type="reset">Clear Form</button>
-
             </form>
+            <div>
+                <h3>Next step: Add a quiz</h3>
+                <p>After saving a module, open the separate Quiz Management page. Select the same course and module, then add its five quiz questions.</p>
+                <a href="manage-quizzes.html">Go to Manage Module Quizzes</a>
+            </div>
         </section>
-
-        <hr>
-
         <section>
             <h2>Existing Course Modules</h2>
-
-            <form action="#" method="get">
-
-                <label for="filter-course">Filter by Course</label><br>
-
-                <select id="filter-course" name="courseId">
-                    <option value="">All Courses</option>
-                    <option value="web-development">Web Development</option>
-                    <option value="python">Python Programming</option>
-                    <option value="java">Java Programming</option>
-                    <option value="javascript">JavaScript Programming</option>
-                    <option value="react">React Development</option>
-                    <option value="other">Other Courses</option>
-                </select>
-
-                <button type="submit">Filter</button>
-
-            </form>
-
-            <br>
-
-            <table border="1" cellpadding="10">
-
-                <thead>
-                    <tr>
-                        <th>Module ID</th>
-                        <th>Course Name</th>
-                        <th>Module Number</th>
-                        <th>Module Title</th>
-                        <th>Duration</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    <tr>
-                        <td colspan="7">
-                            Course module records will be loaded from MongoDB.
-                        </td>
-                    </tr>
-                </tbody>
-
+            <label for="filter-course">Filter by Course</label>
+            <select id="filter-course"><option value="">All saved courses</option></select>
+            <table>
+                <thead><tr><th>Course</th><th>Module Number</th><th>Module Title</th><th>Quiz Status</th><th>Actions</th></tr></thead>
+                <tbody><tr><td colspan="5">Loading modules from the database...</td></tr></tbody>
             </table>
         </section>
-
-        <hr>
-
         <section>
             <h2>Module Management Rules</h2>
-
             <ul>
-                <li>Each module must belong to an existing course.</li>
-                <li>Every course should contain at least 10 relevant modules.</li>
-                <li>Modules must follow the correct learning sequence.</li>
-                <li>Each module must contain its own lessons.</li>
-                <li>Each module must have a quiz with exactly 5 questions.</li>
-                <li>Students can unlock the next module only after completing the current module and passing its quiz.</li>
-                <li>Module completion progress must be saved in MongoDB.</li>
-                <li>Published modules are visible to enrolled students.</li>
+                <li>Each module belongs to a course created in LearnSpace.</li>
+                <li>Modules follow their course learning sequence.</li>
+                <li>Add lessons to each module using Manage Lessons.</li>
+                <li>Add one separate quiz with exactly five questions for every module using Manage Quizzes.</li>
+                <li>Students unlock the next module only after completing the current module and passing its quiz.</li>
             </ul>
         </section>
-
-        <section>
-            <a href="admin-dashboard.html">Back to Admin Dashboard</a>
-            <br><br>
-            <a href="manage-lessons.html">Go to Manage Lessons</a>
-        </section>
-
+        <section><a href="admin-dashboard.html">Back to Admin Dashboard</a></section>
     </main>
-
-    <footer>
-        <p>&copy; 2026 LearnSpace. Keep growing.</p>
-    </footer>
-
+    <footer><p>&copy; 2026 LearnSpace. Keep growing.</p></footer>
+    <script type="module" src="/admin-modules.js"></script>
 </body>
 </html>
