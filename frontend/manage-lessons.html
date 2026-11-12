@@ -46,38 +46,7 @@
                 <div>
                     <label for="lesson-course">Select Course</label><br>
                     <select id="lesson-course" name="courseId" required>
-                        <option value="">Choose a Course</option>
-                        <option value="web-development">Web Development</option>
-                        <option value="python">Python Programming</option>
-                        <option value="java">Java Programming</option>
-                        <option value="c">C Programming</option>
-                        <option value="cpp">C++ Programming</option>
-                        <option value="javascript">JavaScript Programming</option>
-                        <option value="react">React Development</option>
-                        <option value="nodejs">Node.js Development</option>
-                        <option value="php">PHP Programming</option>
-                        <option value="sql">SQL Programming</option>
-                        <option value="dbms">Database Management Systems</option>
-                        <option value="mongodb">MongoDB</option>
-                        <option value="dsa">Data Structures and Algorithms</option>
-                        <option value="os">Operating Systems</option>
-                        <option value="networks">Computer Networks</option>
-                        <option value="cybersecurity">Cybersecurity Fundamentals</option>
-                        <option value="cloud">Cloud Computing</option>
-                        <option value="aws">AWS Cloud Fundamentals</option>
-                        <option value="devops">DevOps Fundamentals</option>
-                        <option value="git">Git and GitHub</option>
-                        <option value="uiux">UI/UX Design</option>
-                        <option value="figma">Figma Design</option>
-                        <option value="analytics">Data Analytics</option>
-                        <option value="datascience">Data Science</option>
-                        <option value="ml">Machine Learning</option>
-                        <option value="ai">Artificial Intelligence</option>
-                        <option value="excel">Microsoft Excel</option>
-                        <option value="powerbi">Power BI</option>
-                        <option value="android">Android App Development</option>
-                        <option value="testing">Software Testing</option>
-                    </select>
+                        <option value="">Loading courses...</option></select>
                 </div>
 
                 <br>
@@ -119,19 +88,6 @@
                 <br>
 
                 <div>
-                    <label for="lesson-objectives">Learning Objectives</label><br>
-                    <textarea
-                        id="lesson-objectives"
-                        name="objectives"
-                        rows="3"
-                        placeholder="What will students learn from this lesson?"
-                        required
-                    ></textarea>
-                </div>
-
-                <br>
-
-                <div>
                     <label for="lesson-content">Lesson Content</label><br>
                     <textarea
                         id="lesson-content"
@@ -140,29 +96,6 @@
                         placeholder="Enter detailed lesson content, explanations and examples"
                         required
                     ></textarea>
-                </div>
-
-                <br>
-
-                <div>
-                    <label for="lesson-duration">Estimated Duration</label><br>
-                    <input
-                        type="text"
-                        id="lesson-duration"
-                        name="duration"
-                        placeholder="Example: 30 minutes"
-                        required
-                    >
-                </div>
-
-                <br>
-
-                <div>
-                    <label for="lesson-status">Lesson Status</label><br>
-                    <select id="lesson-status" name="status" required>
-                        <option value="draft">Draft</option>
-                        <option value="published">Published</option>
-                    </select>
                 </div>
 
                 <br>
@@ -182,13 +115,7 @@
 
                 <label for="filter-course">Filter by Course</label><br>
                 <select id="filter-course" name="courseId">
-                    <option value="">All Courses</option>
-                    <option value="web-development">Web Development</option>
-                    <option value="python">Python Programming</option>
-                    <option value="java">Java Programming</option>
-                    <option value="javascript">JavaScript Programming</option>
-                    <option value="react">React Development</option>
-                </select>
+                    <option value="">All courses</option></select>
 
                 <br><br>
 
@@ -257,5 +184,6 @@
         <p>&copy; 2026 LearnSpace. Keep growing.</p>
     </footer>
 
+    <script type="module" src="/admin-lessons.js"></script>
 </body>
 </html>
