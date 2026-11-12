@@ -122,8 +122,9 @@
                     <p id="course-modules-help">
                         Enter at least 10 modules. Each module needs a title, at least one lesson
                         with a title and content, and a quiz with exactly five questions.
-                        Each question needs a prompt, at least two options, and a correctAnswerIndex.
-                        See the Task 12 documentation for the JSON shape.
+                        Every question must use the "question" field, exactly four non-empty options,
+                        and a correctAnswerIndex from 0 to 3 (A to D). Each module quiz allows
+                        two attempts; failing both starts a 24-hour cooldown.
                     </p>
                 </div>
 
