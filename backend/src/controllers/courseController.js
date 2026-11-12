@@ -141,6 +141,19 @@ function normalizeModule(module, index) {
   if (!Array.isArray(questions) || questions.length !== 5) {
     throw badRequest(`Module ${index + 1} quiz must contain exactly 5 questions.`);
   }
+  questions.forEach((question, questionIndex) => {
+    if (!question || typeof question.question !== "string" || !question.question.trim()) {
+      throw badRequest(`Question ${questionIndex + 1} in module ${index + 1} needs a question prompt.`);
+    }
+    if (!Array.isArray(question.options) || question.options.length !== 4
+      || question.options.some((option) => typeof option !== "string" || !option.trim())) {
+      throw badRequest(`Question ${questionIndex + 1} in module ${index + 1} must have exactly four non-empty options.`);
+    }
+    if (!Number.isInteger(question.correctAnswerIndex)
+      || question.correctAnswerIndex < 0 || question.correctAnswerIndex > 3) {
+      throw badRequest(`Question ${questionIndex + 1} in module ${index + 1} must have a correctAnswerIndex from 0 to 3.`);
+    }
+  });
   return { ...module, lessons, questions };
 }
 
@@ -231,6 +244,7 @@ export const createCourse = asyncHandler(async (request, response) => {
     duration: fields.duration,
     level: fields.level,
     instructor: fields.instructor,
+    demo: fields.demo ?? false,
     modules: [],
   });
   const moduleInputs = fields.modules.map(normalizeModule);
