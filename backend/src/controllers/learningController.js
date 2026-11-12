@@ -412,6 +412,8 @@ export const getCourseModules = asyncHandler(async (request, response) => {
       })) : [],
       quiz: unlocked && module.quiz ? {
         id: module.quiz._id.toString(),
+        title: module.quiz.title,
+        passingPercentage: module.quiz.passingPercentage,
         questions: module.quiz.questions.map(safeQuestion),
       } : null,
     };
@@ -435,6 +437,8 @@ export const getModule = asyncHandler(async (request, response) => {
       })),
       quiz: module.quiz ? {
         id: module.quiz._id.toString(),
+        title: module.quiz.title,
+        passingPercentage: module.quiz.passingPercentage,
         questions: module.quiz.questions.map(safeQuestion),
       } : null,
     },
@@ -601,6 +605,8 @@ export const getModuleQuiz = asyncHandler(async (request, response) => {
     quiz: {
       id: quiz._id.toString(),
       moduleId: quiz.module.toString(),
+      title: quiz.title,
+      passingPercentage: quiz.passingPercentage,
       questions: quiz.questions.map(safeQuestion),
     },
   }));
@@ -610,7 +616,14 @@ export const createModuleQuiz = asyncHandler(async (request, response) => {
   const module = await findModule(request.params.moduleId);
   if (!module) throw notFound("Module not found.");
   if (module.quiz) throw conflict("This module already has a quiz.");
-  const quiz = await Quiz.create({ module: module._id, questions: request.body?.questions });
+  const quiz = await Quiz.create({
+    module: module._id,
+    title: typeof request.body?.title === "string" && request.body.title.trim()
+      ? request.body.title.trim()
+      : `${module.title} Quiz`,
+    passingPercentage: request.body?.passingPercentage ?? 50,
+    questions: request.body?.questions,
+  });
   module.quiz = quiz._id;
   await module.save();
   response.status(201).json(apiResponse("Quiz created successfully.", {
@@ -623,7 +636,11 @@ export const updateModuleQuiz = asyncHandler(async (request, response) => {
   if (!module?.quiz) throw notFound("Quiz not found.");
   const quiz = await Quiz.findByIdAndUpdate(
     module.quiz,
-    { $set: { questions: request.body?.questions } },
+    { $set: {
+      title: request.body?.title,
+      passingPercentage: request.body?.passingPercentage,
+      questions: request.body?.questions,
+    } },
     { returnDocument: "after", runValidators: true },
   );
   response.status(200).json(apiResponse("Quiz updated successfully.", {
@@ -653,7 +670,7 @@ export const submitModuleQuiz = asyncHandler(async (request, response) => {
   if (!quiz) throw notFound("Quiz not found.");
 
   const scorePercentage = scoreAnswers(quiz.questions, request.body?.answers, "quiz");
-  const passed = scorePercentage >= 50;
+  const passed = scorePercentage >= quiz.passingPercentage;
   const now = new Date();
   const attemptId = new mongoose.Types.ObjectId();
   const attempt = {
