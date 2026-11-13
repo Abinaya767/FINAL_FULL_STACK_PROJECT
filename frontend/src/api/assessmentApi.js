@@ -5,10 +5,10 @@ export async function getCourseAssessment(courseId) {
   return result.data.assessment ?? null;
 }
 
-export async function submitCourseAssessment(courseId, answers) {
+export async function submitCourseAssessment(courseId, answers, options = {}) {
   const result = await expressRequest(`/courses/${encodeURIComponent(courseId)}/assessment/attempts`, {
     method: "POST",
-    body: { answers },
+    body: options.terminated ? { terminated: true } : { answers },
   });
   return result.data;
 }
