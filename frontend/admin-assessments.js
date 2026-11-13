@@ -126,23 +126,23 @@ function renderAssessments() {
 async function loadData() {
   showStatus("Loading courses and final assessments...", "loading");
   try {
-    courses = await getCourses();
+    const [courseList, assessmentResult] = await Promise.all([
+      getCourses(),
+      expressRequest("/admin/assessments"),
+    ]);
+    courses = courseList;
     courseSelect.replaceChildren(new Option("Choose a course", ""));
     courses.forEach((course) => courseSelect.add(new Option(course.title, course.id)));
-    const results = await Promise.all(courses.map(async (course) => {
-      try {
-        const result = await expressRequest("/courses/" + encodeURIComponent(course.id) + "/assessment");
-        return { ...result.data.assessment, course };
-      } catch (error) {
-        if (error.status === 404) return null;
-        throw error;
-      }
-    }));
-    assessments = results.filter(Boolean);
+
+    assessments = Array.isArray(assessmentResult.data?.assessments)
+      ? assessmentResult.data.assessments
+      : [];
     renderAssessments();
-    showStatus("Saved courses and assessments loaded from the database.", "success");
+    showStatus("Saved courses and final assessments loaded from the database.", "success");
   } catch (error) {
-    showStatus(error.message, "error");
+    assessments = [];
+    renderAssessments();
+    showStatus("Could not load final assessments: " + error.message, "error");
   }
 }
 
