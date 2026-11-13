@@ -10,8 +10,8 @@ const assessmentQuestionSchema = new mongoose.Schema({
     type: [String],
     required: true,
     validate: {
-      validator: (options) => options.length >= 2 && options.every((option) => option.trim()),
-      message: "Each question must have at least two non-empty options.",
+      validator: (options) => options.length === 4 && options.every((option) => typeof option === "string" && option.trim()),
+      message: "Each final assessment question must have exactly four non-empty options.",
     },
   },
   correctAnswerIndex: {
