@@ -905,39 +905,59 @@ export const submitFinalAssessment = asyncHandler(async (request, response) => {
   const assessment = await Assessment.findOne({ course: course._id });
   if (!assessment) throw notFound("Assessment not found.");
 
-  const recentTerminations = await AssessmentAttempt.find({
+  const history = await AssessmentAttempt.find({
     enrollment: enrollment._id,
     assessment: assessment._id,
-    terminated: true,
-  }).sort({ attemptedAt: -1 }).limit(2);
-  const latestTermination = recentTerminations[0];
-  const activeLock = latestTermination?.lockUntil && latestTermination.lockUntil > new Date()
-    ? latestTermination
-    : null;
-  if (activeLock) {
-    throw forbidden(`Final assessment is locked until ${activeLock.lockUntil.toISOString()} after two terminated attempts.`);
+  }).sort({ attemptedAt: -1 }).limit(100).lean();
+  if (history.some((attempt) => attempt.passed)) {
+    throw conflict("You have already passed this final assessment. Your certificate is available.");
   }
 
+  // Only fullscreen/tab-switch terminations count toward the 2-strike cooldown.
+  // A normally submitted assessment can be retaken without an attempt cap.
+  const terminationHistory = history.filter((attempt) => attempt.terminated === true);
+  const now = new Date();
+  const activeCooldown = terminationHistory.find(
+    (attempt) => attempt.lockUntil && new Date(attempt.lockUntil) > now,
+  );
+  if (activeCooldown) {
+    throw forbidden(`Final assessment is locked until ${new Date(activeCooldown.lockUntil).toISOString()}.`);
+  }
+
+  const latestCooldown = terminationHistory.find((attempt) => attempt.lockUntil);
+  const terminationWindow = latestCooldown && new Date(latestCooldown.lockUntil) <= now
+    ? terminationHistory.filter((attempt) => new Date(attempt.attemptedAt) > new Date(latestCooldown.lockUntil))
+    : terminationHistory;
+  const terminationCount = terminationWindow.length;
+
   if (request.body?.terminated === true) {
-    const now = new Date();
-    const terminationCount = latestTermination?.lockUntil
-      ? (latestTermination.lockUntil <= now ? 0 : 2)
-      : recentTerminations.length;
-    const lockUntil = terminationCount >= 1 ? new Date(now.getTime() + 24 * 60 * 60 * 1000) : null;
+    const attemptedAt = new Date();
+    const lockUntil = terminationCount >= 1
+      ? new Date(attemptedAt.getTime() + 24 * 60 * 60 * 1000)
+      : null;
     await AssessmentAttempt.create({
       enrollment: enrollment._id,
       student: student._id,
       course: course._id,
       assessment: assessment._id,
-      attemptedAt: now,
+      attemptedAt,
       scorePercentage: 0,
       passed: false,
       terminated: true,
       lockUntil,
     });
     response.status(200).json(apiResponse(
-      lockUntil ? "Second final assessment termination recorded. Locked for 24 hours." : "Final assessment terminated. One more attempt is available.",
-      { scorePercentage: 0, passed: false, terminated: true, terminations: terminationCount + 1, lockUntil, certificate: null },
+      lockUntil
+        ? "Two assessment terminations recorded. Locked for 24 hours."
+        : "Assessment terminated. One more monitored attempt is available.",
+      {
+        scorePercentage: 0,
+        passed: false,
+        terminated: true,
+        attemptsRemaining: lockUntil ? 0 : 1,
+        lockUntil,
+        certificate: null,
+      },
     ));
     return;
   }
@@ -952,7 +972,10 @@ export const submitFinalAssessment = asyncHandler(async (request, response) => {
     attemptedAt: new Date(),
     scorePercentage,
     passed,
+    terminated: false,
+    lockUntil: null,
   });
+
   if (passed) {
     await Enrollment.updateOne(
       { _id: enrollment._id },
@@ -961,7 +984,7 @@ export const submitFinalAssessment = asyncHandler(async (request, response) => {
   }
 
   let certificate = null;
-  if (passed && progresses.every((progress) => progress.completionPercentage === 100) && scorePercentage >= 50) {
+  if (passed && progresses.every((progress) => progress.completionPercentage === 100)) {
     certificate = await Certificate.findOne({ student: student._id, course: course._id });
     if (!certificate) {
       try {
@@ -984,9 +1007,12 @@ export const submitFinalAssessment = asyncHandler(async (request, response) => {
       await certificate.save();
     }
   }
+
   response.status(200).json(apiResponse(passed ? "Final assessment passed." : "Final assessment attempt recorded.", {
     scorePercentage,
     passed,
+    attemptsRemaining: null,
+    lockUntil: null,
     certificate: certificate ? {
       id: certificate.certificateId,
       issuedAt: certificate.issuedAt,
@@ -1031,10 +1057,19 @@ export const getCertificate = asyncHandler(async (request, response) => {
 });
 
 export const getNotifications = asyncHandler(async (request, response) => {
-  const filter = {};
-  if (request.user.role === "student") filter.student = (await currentStudent(request))._id;
-  else if (request.query.studentId) filter.student = (await findStudentByIdentifier(request.query.studentId))._id;
-  const notifications = await Notification.find(filter).sort({ createdAt: -1 });
+  let filter;
+  if (request.user.role === "admin") {
+    filter = { recipientUser: request.user.id };
+  } else {
+    const student = await currentStudent(request);
+    filter = {
+      $or: [
+        { recipientUser: request.user.id },
+        { student: student._id, recipientUser: { $exists: false } },
+      ],
+    };
+  }
+  const notifications = await Notification.find(filter).sort({ createdAt: -1 }).limit(200);
   response.status(200).json(apiResponse("Notifications retrieved successfully.", { notifications }));
 });
 
@@ -1042,7 +1077,7 @@ export const getNotification = asyncHandler(async (request, response) => {
   requireObjectId(request.params.id, "Notification ID");
   const notification = await Notification.findById(request.params.id);
   if (!notification) throw notFound("Notification not found.");
-  await authorizeStudentResource(request, notification.student);
+  await authorizeNotificationRecipient(request, notification);
   response.status(200).json(apiResponse("Notification retrieved successfully.", { notification }));
 });
 
@@ -1052,19 +1087,36 @@ export const createNotification = asyncHandler(async (request, response) => {
   if (typeof title !== "string" || !title.trim() || typeof message !== "string" || !message.trim()) {
     throw badRequest("Notification title and message are required.");
   }
-  const notification = await Notification.create({ student: student._id, title: title.trim(), message: message.trim() });
   const recipient = await Student.findById(student._id).select("user").lean();
+  const notification = await Notification.create({
+    student: student._id,
+    recipientUser: recipient?.user,
+    title: title.trim(),
+    message: message.trim(),
+    type: "general",
+  });
   if (recipient?.user) {
     request.app.get("io")?.to(`user:${recipient.user.toString()}`).emit("notification:new", notification);
   }
   response.status(201).json(apiResponse("Notification created successfully.", { notification }));
 });
 
+async function authorizeNotificationRecipient(request, notification) {
+  if (notification.recipientUser) {
+    if (notification.recipientUser.toString() !== request.user.id) {
+      throw Object.assign(new Error("You may access only your own notifications."), { status: 403 });
+    }
+    return;
+  }
+  if (request.user.role === "admin") return;
+  await authorizeStudentResource(request, notification.student);
+}
+
 export const markNotificationRead = asyncHandler(async (request, response) => {
   requireObjectId(request.params.id, "Notification ID");
   const notification = await Notification.findById(request.params.id);
   if (!notification) throw notFound("Notification not found.");
-  await authorizeStudentResource(request, notification.student);
+  await authorizeNotificationRecipient(request, notification);
   notification.isRead = true;
   await notification.save();
   response.status(200).json(apiResponse("Notification marked as read.", { notification }));
@@ -1074,7 +1126,7 @@ export const deleteNotification = asyncHandler(async (request, response) => {
   requireObjectId(request.params.id, "Notification ID");
   const notification = await Notification.findById(request.params.id);
   if (!notification) throw notFound("Notification not found.");
-  await authorizeStudentResource(request, notification.student);
+  await authorizeNotificationRecipient(request, notification);
   await notification.deleteOne();
   response.status(200).json(apiResponse("Notification deleted successfully.", { id: request.params.id }));
 });

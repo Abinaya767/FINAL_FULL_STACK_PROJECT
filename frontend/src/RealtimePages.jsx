@@ -28,6 +28,8 @@ function useLearnSpaceSocket() {
 
 export function RealtimeNotificationsPage() {
   const connected = useLearnSpaceSocket();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [notifications, setNotifications] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -55,17 +57,17 @@ export function RealtimeNotificationsPage() {
   return (
     <main className="realtime-page">
       <header className="realtime-header">
-        <div><p className="eyebrow">LEARNING UPDATES</p><h1>Notifications</h1><p>Important updates from your LearnSpace account.</p></div>
+        <div><p className="eyebrow">{isAdmin ? "ADMIN UPDATES" : "LEARNING UPDATES"}</p><h1>Notifications</h1><p>{isAdmin ? "New student messages and important LearnSpace updates." : "Important updates from your LearnSpace account."}</p><p className="notification-unread-count">{notifications.filter((item) => !item.isRead).length} unread</p></div>
         <span className={`connection-state ${connected ? "online" : ""}`}>{connected ? "Live connection" : "Connecting…"}</span>
       </header>
-      <nav className="realtime-nav"><Link to="/student-dashboard">Dashboard</Link><Link to="/chat">Chat</Link></nav>
+      <nav className="realtime-nav"><Link to={isAdmin ? "/admin/dashboard" : "/student-dashboard"}>Dashboard</Link><Link to="/chat">Chat</Link></nav>
       {error && <p className="realtime-error" role="alert">{error}</p>}
       {loading ? <p>Loading notifications…</p> : notifications.length === 0
         ? <section className="empty-state"><h2>You’re all caught up</h2><p>New notifications will appear here automatically.</p></section>
         : <section className="notification-list" aria-label="Your notifications">
           {notifications.map((item) => (
             <article className={`notification-card ${item.isRead ? "read" : "unread"}`} key={item._id}>
-              <div><h2>{item.title}</h2><p>{item.message}</p><time dateTime={item.createdAt}>{new Date(item.createdAt).toLocaleString()}</time></div>
+              <div><h2>{item.title}</h2><p>{item.message}</p><time dateTime={item.createdAt}>{new Date(item.createdAt).toLocaleString()}</time>{item.type === "message" && <p><Link to="/chat">Open conversation</Link></p>}</div>
               {!item.isRead && <button type="button" onClick={() => markRead(item._id)}>Mark as read</button>}
             </article>
           ))}
@@ -133,7 +135,7 @@ export function ChatPage() {
         <div><p className="eyebrow">LEARNSPACE MESSAGES</p><h1>Chat</h1><p>Talk with your LearnSpace {user?.role === "admin" ? "students" : "administrator"}.</p></div>
         <span className={`connection-state ${connected ? "online" : ""}`}>{connected ? "Live connection" : "Connecting…"}</span>
       </header>
-      <nav className="realtime-nav"><Link to={user?.role === "admin" ? "/admin/dashboard" : "/student-dashboard"}>Dashboard</Link>{user?.role === "student" && <Link to="/notifications">Notifications</Link>}</nav>
+      <nav className="realtime-nav"><Link to={user?.role === "admin" ? "/admin/dashboard" : "/student-dashboard"}>Dashboard</Link><Link to="/notifications">Notifications</Link></nav>
       {error && <p className="realtime-error" role="alert">{error}</p>}
       <section className="chat-layout">
         <aside className="contact-panel"><h2>Contacts</h2>{contacts.length === 0 ? <p>No contacts are available yet.</p> : contacts.map((contact) => (

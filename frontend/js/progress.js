@@ -495,15 +495,15 @@ export async function initializeModuleQuiz() {
         status.textContent = "Attempt " + (history?.quizAttemptHistory?.length ?? attempts + 1) + " recorded.";
         status.dataset.state = result.passed ? "success" : "notice";
         submitButton.disabled = result.passed || result.attemptsRemaining === 0;
-        if (result.passed) {
+        if (result.passed || result.attemptsRemaining === 0) {
           form.querySelectorAll("fieldset").forEach((fieldset) => { fieldset.hidden = true; });
           submitButton.hidden = true;
-          const continueLink = document.createElement("a");
-          continueLink.className = "button-link";
-          continueLink.textContent = "Continue to Course";
-          continueLink.href = "course-learning.html?course=" + encodeURIComponent(courseId);
-          status.after(continueLink);
         }
+        const continueLink = document.createElement("a");
+        continueLink.className = "button-link quiz-continue-button";
+        continueLink.textContent = "Continue";
+        continueLink.href = "course-learning.html?course=" + encodeURIComponent(courseId);
+        resultCard.append(continueLink);
       } catch (error) {
         status.textContent = error.message;
         status.dataset.state = "error";
@@ -585,7 +585,7 @@ function showFinalAssessmentCertificate(main, course, result) {
   const watermark = document.createElement("p");
   watermark.className = "sample-certificate-watermark";
   watermark.setAttribute("aria-hidden", "true");
-  watermark.textContent = "SAMPLE";
+  watermark.textContent = "LearnSpace";
   const brand = document.createElement("p");
   brand.className = "sample-certificate-brand";
   brand.textContent = "LearnSpace";
@@ -593,7 +593,7 @@ function showFinalAssessmentCertificate(main, course, result) {
   title.textContent = "Certificate of Completion";
   const presented = document.createElement("p");
   presented.className = "sample-certificate-intro";
-  presented.textContent = "This sample certificate is presented to";
+  presented.textContent = "This certificate is proudly presented to";
   const student = document.createElement("p");
   student.className = "sample-certificate-student";
   student.textContent = studentName;
@@ -604,7 +604,7 @@ function showFinalAssessmentCertificate(main, course, result) {
   courseName.textContent = course.title;
   const date = document.createElement("p");
   date.className = "sample-certificate-date";
-  date.textContent = "Sample completion date: " + new Date(result.certificate.issuedAt || Date.now()).toLocaleDateString();
+  date.textContent = "Completion date: " + new Date(result.certificate.issuedAt || Date.now()).toLocaleDateString();
   card.append(watermark, brand, title, presented, student, completed, courseName, date);
 
   const actions = document.createElement("div");
@@ -689,11 +689,11 @@ export async function initializeFinalAssessment() {
     const latestTermination = terminatedAttempts[0];
     const activeLockUntil = latestTermination?.lockUntil ? new Date(latestTermination.lockUntil) : null;
     const isLocked = activeLockUntil && activeLockUntil > new Date();
-    status.textContent = `${assessment.totalQuestions} questions · Pass mark ${assessment.passingPercentage}%. ${attempts.length} previous attempt(s) recorded.`;
+    status.textContent = `${assessment.totalQuestions} questions · Pass mark ${assessment.passingPercentage}%. Maximum 2 attempts; a 24-hour break follows two unsuccessful attempts.`;
     status.dataset.state = "success";
     const startButton = document.createElement("button");
     startButton.type = "button";
-    startButton.textContent = "Start Final Assessment";
+    startButton.textContent = "Go to Final Assessment";
     assessmentStage.before(startButton);
     if (isLocked) {
       startButton.disabled = true;
@@ -814,8 +814,41 @@ export async function initializeFinalAssessment() {
           history.className = "api-assessment-history";
           resultPanel.append(history);
         }
+        if (!result.passed && result.lockUntil) {
+          startButton.hidden = false;
+          startButton.disabled = true;
+          startButton.textContent = "Assessment Locked";
+          status.textContent = `Assessment access is locked until ${new Date(result.lockUntil).toLocaleString()} after two terminations.`;
+        } else if (!result.passed) {
+          startButton.hidden = false;
+          startButton.disabled = false;
+          startButton.textContent = result.terminated ? "Restart Assessment" : "Try Again";
+        }
         if (result.passed && result.certificate) {
           showFinalAssessmentCertificate(main, course, result);
+          const certificateLink = document.createElement("a");
+          certificateLink.className = "button-link";
+          certificateLink.href = "certificate.html?course=" + encodeURIComponent(courseId);
+          certificateLink.textContent = "View Your Certificate";
+          resultPanel?.append(certificateLink);
+        } else {
+          const finalResult = document.createElement("section");
+          finalResult.className = "final-result-card";
+          const resultHeading = document.createElement("h2");
+          resultHeading.textContent = result.passed ? "Congratulations!" : "Try Next Time";
+          const score = document.createElement("p");
+          score.className = "final-result-score";
+          score.textContent = "Your score: " + result.scorePercentage + "%";
+          const message = document.createElement("p");
+          message.textContent = result.passed
+            ? "You passed the final assessment. Your certificate is ready."
+            : result.lockUntil
+              ? "The assessment is locked after two terminations. You can try again after " + new Date(result.lockUntil).toLocaleString() + "."
+              : result.terminated
+                ? "The assessment was ended because its focus rules were interrupted. You have one more monitored attempt."
+                : "You did not reach the passing score. You can try the assessment again.";
+          finalResult.append(resultHeading, score, message);
+          resultPanel?.append(finalResult);
         }
         if (document.fullscreenElement) {
           try { await document.exitFullscreen(); } catch { /* Assessment result remains available. */ }

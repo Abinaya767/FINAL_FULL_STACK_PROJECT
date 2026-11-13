@@ -176,3 +176,50 @@
     text-align: center;
   }
 }
+
+
+/* Professional authentication layout */
+.auth-page {
+  min-height: 100vh;
+  padding: clamp(1rem, 4vw, 3rem);
+  background: linear-gradient(135deg, #edf3f8 0%, #f7f9fc 58%, #e5eef6 100%);
+}
+.auth-shell {
+  display: grid;
+  width: min(900px, 100%);
+  grid-template-columns: minmax(0, 1fr) minmax(290px, 360px);
+  align-items: center;
+  gap: clamp(1.5rem, 5vw, 3.5rem);
+  margin: 0 auto;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+.auth-role-panel { display: grid; gap: 1rem; align-content: center; }
+.auth-role-panel h1 { max-width: 420px; margin: 0; font-size: clamp(2rem, 4vw, 3rem); }
+.auth-role-panel > p:not(.auth-eyebrow) { color: var(--muted); }
+.auth-eyebrow { margin: 0; color: #356b98; font-size: .76rem; font-weight: 800; letter-spacing: .13em; }
+.auth-role-options { display: grid; gap: .7rem; margin: .5rem 0; }
+.auth-role-options button {
+  display: grid; gap: .15rem; width: 100%; min-height: 68px; padding: .85rem 1rem;
+  border: 1px solid var(--line); border-radius: 12px; background: #f7f9fc;
+  color: var(--plum); text-align: left; box-shadow: none;
+}
+.auth-role-options button span { color: var(--muted); font-size: .86rem; font-weight: 400; }
+.auth-role-options button.active { border-color: #6d9abe; background: #eaf2f9; box-shadow: 0 0 0 2px rgba(53,107,152,.1); }
+.auth-role-panel > a { width: fit-content; color: var(--rose-deep); font-weight: 650; }
+.auth-form { width: 100%; gap: .8rem; padding: 1.5rem; border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 8px 24px rgba(38,61,82,.07); }
+.auth-form h2 { margin: 0; font-family: inherit; font-size: 1.65rem; }
+.auth-intro, .auth-footnote { margin: 0; color: var(--muted); font-size: .9rem; }
+.auth-form label { gap: .3rem; font-size: .88rem; }
+.auth-form input { min-height: 42px; border: 1px solid var(--line); border-radius: 9px; }
+.auth-form .auth-submit { min-height: 42px; padding: .6rem 1rem; border: 1px solid #356b98; border-radius: 9px; background: #356b98; color: #fff; font-size: .94rem; }
+.auth-form .auth-submit:hover { background: #244f73; }
+.auth-error { margin: 0; color: #a33142; font-size: .88rem; }
+.auth-message { margin: 0; color: #287448; font-size: .88rem; }
+@media (max-width: 700px) {
+  .auth-shell { grid-template-columns: 1fr; max-width: 460px; }
+  .auth-role-panel h1 { font-size: 2rem; }
+}

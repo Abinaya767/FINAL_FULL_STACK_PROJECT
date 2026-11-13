@@ -28,6 +28,7 @@ function assertCourseId(id) {
 function courseDto(course, { includeModules = false } = {}) {
   const dto = {
     id: course.legacyId || course._id.toString(),
+    databaseId: course._id.toString(),
     title: course.title,
     description: course.description,
     category: course.category,

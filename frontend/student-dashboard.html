@@ -1,94 +1,67 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Dashboard | LearnSpace</title>
-    <link rel="stylesheet" href="/css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Dashboard | LearnSpace</title>
+  <link rel="stylesheet" href="/css/style.css">
 </head>
-<body>
+<body class="student-dashboard-page">
+  <header>
+    <h1>LearnSpace</h1>
+    <nav aria-label="Student navigation">
+      <a href="index.html">Home</a>
+      <a href="my-courses.html">My Courses</a>
+      <a href="notifications.html">Notifications</a>
+      <a href="login.html">Logout</a>
+    </nav>
+  </header>
 
-    <header>
-        <h1>LearnSpace</h1>
+  <main>
+    <section class="dashboard-welcome">
+      <p class="dashboard-eyebrow">STUDENT DASHBOARD</p>
+      <h2>Welcome to Your Dashboard!</h2>
+      <p>Your learning, progress and achievements in one place.</p>
+      <p class="api-status dashboard-live-summary" role="status" aria-live="polite">Loading your learning overview...</p>
+      <a class="button-link" href="my-courses.html">Continue Learning</a>
+    </section>
 
-        <nav>
-            <a href="index.html">Home</a>
-            <a href="courses.html">Explore Courses</a>
-            <a href="my-courses.html">My Courses</a>
-            <a href="notifications.html">Notifications</a>
-            <a href="login.html">Logout</a>
-        </nav>
-    </header>
+    <section class="dashboard-learning">
+      <h2>Your Learning</h2>
+      <div class="dashboard-card-grid">
+        <article class="dashboard-link-card">
+          <h3>My Courses</h3>
+          <p>Open your enrolled courses and continue from where you stopped.</p>
+          <a href="my-courses.html">View My Courses</a>
+        </article>
+        <article class="dashboard-link-card">
+          <h3>Certificates</h3>
+          <p>View and download certificates for courses you have completed.</p>
+          <a href="certificate.html">View Certificates</a>
+        </article>
+        <article class="dashboard-link-card">
+          <h3>Notifications</h3>
+          <p>Read important updates from your LearnSpace account.</p>
+          <a href="notifications.html">View Notifications</a>
+        </article>
+      </div>
+    </section>
 
-    <main>
+    <section class="dashboard-profile">
+      <h2>My Profile</h2>
+      <p>Keep your student details up to date.</p>
+      <form id="student-profile-form">
+        <div><label for="profile-name">Full Name</label><input id="profile-name" name="name" type="text" minlength="2" maxlength="100" required></div>
+        <div><label for="profile-phone">Phone Number</label><input id="profile-phone" name="phone" type="tel" maxlength="32"></div>
+        <div><label for="profile-college">College</label><input id="profile-college" name="college" type="text" maxlength="200"></div>
+        <div><label for="profile-department">Department</label><input id="profile-department" name="department" type="text" maxlength="200"></div>
+        <div><label for="profile-year">Year of Study</label><input id="profile-year" name="yearOfStudy" type="number" min="1" max="20" step="1"></div>
+        <button type="submit">Save Changes</button>
+      </form>
+    </section>
+  </main>
 
-        <section>
-            <h2>Welcome to Your Dashboard!</h2>
-            <p>Continue your learning journey with LearnSpace.</p>
-        </section>
-
-        <section>
-            <h2>My Profile</h2>
-            <form id="student-profile-form">
-                <label for="profile-name">Full Name</label>
-                <input id="profile-name" name="name" type="text" minlength="2" maxlength="100" required>
-                <label for="profile-phone">Phone Number</label>
-                <input id="profile-phone" name="phone" type="tel" maxlength="32">
-                <label for="profile-college">College</label>
-                <input id="profile-college" name="college" type="text" maxlength="200">
-                <label for="profile-department">Department</label>
-                <input id="profile-department" name="department" type="text" maxlength="200">
-                <label for="profile-year">Year of Study</label>
-                <input id="profile-year" name="yearOfStudy" type="number" min="1" max="20" step="1">
-                <button type="submit">Save Profile</button>
-            </form>
-        </section>
-
-        <section>
-            <h2>My Learning Overview</h2>
-
-            <article>
-                <h3>Enrolled Courses</h3>
-                <p>View the courses you have enrolled in.</p>
-                <a href="my-courses.html">View My Courses</a>
-            </article>
-
-            <article>
-                <h3>Learning Progress</h3>
-                <p>Track your completed modules and course progress.</p>
-                <a href="my-courses.html">View Progress</a>
-            </article>
-
-            <article>
-                <h3>Assessments</h3>
-                <p>Access your available module quizzes and final assessments.</p>
-                <a href="my-courses.html">View Assessments</a>
-            </article>
-
-            <article>
-                <h3>Certificates</h3>
-                <p>Access certificates for successfully completed courses.</p>
-                <a href="certificate.html">View Certificates</a>
-            </article>
-        </section>
-
-        <section>
-            <h2>Quick Actions</h2>
-
-            <ul>
-                <li><a href="courses.html">Explore Courses</a></li>
-                <li><a href="my-courses.html">Continue Learning</a></li>
-                <li><a href="notifications.html">View Notifications</a></li>
-            </ul>
-        </section>
-
-    </main>
-
-    <footer>
-        <p>&copy; 2026 LearnSpace. Keep growing.</p>
-    </footer>
-
-    <script type="module" src="/js/main.js"></script>
+  <footer><p>&copy; 2026 LearnSpace. Keep growing.</p></footer>
+  <script type="module" src="/js/main.js"></script>
 </body>
 </html>
