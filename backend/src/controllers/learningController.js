@@ -913,50 +913,49 @@ export const submitFinalAssessment = asyncHandler(async (request, response) => {
     throw conflict("You have already passed this final assessment. Your certificate is available.");
   }
 
+  // Only fullscreen/tab-switch terminations count toward the 2-strike cooldown.
+  // A normally submitted assessment can be retaken without an attempt cap.
+  const terminationHistory = history.filter((attempt) => attempt.terminated === true);
   const now = new Date();
-  const activeCooldown = history.find((attempt) => attempt.lockUntil && new Date(attempt.lockUntil) > now);
+  const activeCooldown = terminationHistory.find(
+    (attempt) => attempt.lockUntil && new Date(attempt.lockUntil) > now,
+  );
   if (activeCooldown) {
     throw forbidden(`Final assessment is locked until ${new Date(activeCooldown.lockUntil).toISOString()}.`);
   }
-  // Use the latest completed cooldown marker so a new attempt starts a clean window.
-  const latestCooldown = history.find((attempt) => attempt.lockUntil);
-  const windowAttempts = latestCooldown && new Date(latestCooldown.lockUntil) <= now
-    ? history.filter((attempt) => new Date(attempt.attemptedAt) > new Date(latestCooldown.lockUntil))
-    : history;
 
-  if (windowAttempts.length >= 2) {
-    const lockUntil = new Date(new Date(windowAttempts[0].attemptedAt).getTime() + 24 * 60 * 60 * 1000);
-    throw forbidden(`Final assessment is locked until ${lockUntil.toISOString()}.`);
-  }
-
-  const nextAttemptNumber = windowAttempts.length + 1;
-  const lockUntilForFailure = nextAttemptNumber >= 2
-    ? new Date(Date.now() + 24 * 60 * 60 * 1000)
-    : null;
+  const latestCooldown = terminationHistory.find((attempt) => attempt.lockUntil);
+  const terminationWindow = latestCooldown && new Date(latestCooldown.lockUntil) <= now
+    ? terminationHistory.filter((attempt) => new Date(attempt.attemptedAt) > new Date(latestCooldown.lockUntil))
+    : terminationHistory;
+  const terminationCount = terminationWindow.length;
 
   if (request.body?.terminated === true) {
-    const now = new Date();
+    const attemptedAt = new Date();
+    const lockUntil = terminationCount >= 1
+      ? new Date(attemptedAt.getTime() + 24 * 60 * 60 * 1000)
+      : null;
     await AssessmentAttempt.create({
       enrollment: enrollment._id,
       student: student._id,
       course: course._id,
       assessment: assessment._id,
-      attemptedAt: now,
+      attemptedAt,
       scorePercentage: 0,
       passed: false,
       terminated: true,
-      lockUntil: lockUntilForFailure,
+      lockUntil,
     });
     response.status(200).json(apiResponse(
-      lockUntilForFailure
-        ? "Both final assessment attempts are used. Locked for 24 hours."
-        : "Final assessment terminated. One more attempt is available.",
+      lockUntil
+        ? "Two assessment terminations recorded. Locked for 24 hours."
+        : "Assessment terminated. One more monitored attempt is available.",
       {
         scorePercentage: 0,
         passed: false,
         terminated: true,
-        attemptsRemaining: Math.max(0, 2 - nextAttemptNumber),
-        lockUntil: lockUntilForFailure,
+        attemptsRemaining: lockUntil ? 0 : 1,
+        lockUntil,
         certificate: null,
       },
     ));
