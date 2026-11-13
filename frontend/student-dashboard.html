@@ -33,7 +33,15 @@
             <div><dt>Department</dt><dd id="student-profile-display-department">—</dd></div>
             <div><dt>Year of study</dt><dd id="student-profile-display-year">—</dd></div>
           </dl>
-          <div class="student-profile-actions"><a href="#student-profile-form" id="student-profile-edit-link">Edit profile details</a></div>
+          <div class="student-profile-actions"><button type="button" id="student-profile-edit-link" aria-expanded="false">Edit profile details</button></div>
+          <form id="student-profile-form" class="student-profile-edit-form" hidden>
+            <label for="profile-name">Full Name</label><input id="profile-name" name="name" type="text" minlength="2" maxlength="100" required>
+            <label for="profile-phone">Phone Number</label><input id="profile-phone" name="phone" type="tel" maxlength="32">
+            <label for="profile-college">College</label><input id="profile-college" name="college" type="text" maxlength="200">
+            <label for="profile-department">Department</label><input id="profile-department" name="department" type="text" maxlength="200">
+            <label for="profile-year">Year of Study</label><input id="profile-year" name="yearOfStudy" type="number" min="1" max="20" step="1">
+            <button type="submit">Save Changes</button>
+          </form>
           <p id="student-profile-photo-status" class="student-profile-status" role="status" aria-live="polite"></p>
         </section>
       </div>
@@ -70,18 +78,6 @@
       </div>
     </section>
 
-    <section class="dashboard-profile">
-      <h2>My Profile</h2>
-      <p>Keep your student details up to date.</p>
-      <form id="student-profile-form">
-        <div><label for="profile-name">Full Name</label><input id="profile-name" name="name" type="text" minlength="2" maxlength="100" required></div>
-        <div><label for="profile-phone">Phone Number</label><input id="profile-phone" name="phone" type="tel" maxlength="32"></div>
-        <div><label for="profile-college">College</label><input id="profile-college" name="college" type="text" maxlength="200"></div>
-        <div><label for="profile-department">Department</label><input id="profile-department" name="department" type="text" maxlength="200"></div>
-        <div><label for="profile-year">Year of Study</label><input id="profile-year" name="yearOfStudy" type="number" min="1" max="20" step="1"></div>
-        <button type="submit">Save Changes</button>
-      </form>
-    </section>
   </main>
 
   <footer><p>&copy; 2026 LearnSpace. Keep growing.</p></footer>
