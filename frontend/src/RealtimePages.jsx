@@ -6,7 +6,7 @@ import { getAuthSession } from "./api/authSession.js";
 import { useAuth } from "./AuthContext.jsx";
 import "./realtime.css";
 
-const API_URL = (import.meta.env.VITE_EXPRESS_API_URL || "https://learnspace-api-idh2.onrender.com/api").replace(/\\/$/, "");
+const API_URL = (import.meta.env.VITE_EXPRESS_API_URL || "https://learnspace-api-idh2.onrender.com/api").replace(/\/$/, "");
 const SOCKET_URL = API_URL.replace(/\/api\/?$/, "");
 
 function useLearnSpaceSocket() {
