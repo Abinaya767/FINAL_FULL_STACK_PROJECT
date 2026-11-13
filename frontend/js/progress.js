@@ -665,8 +665,11 @@ export async function initializeFinalAssessment() {
       }
       try {
         await document.documentElement.requestFullscreen();
+        if (!document.fullscreenElement) {
+          throw new Error("The browser did not enter full-screen mode.");
+        }
       } catch {
-        status.textContent = "Full-screen permission is required. Please allow full-screen mode and click Start Final Assessment again.";
+        status.textContent = "Full-screen permission is required. Allow full-screen mode and click Start Final Assessment again. The questions will remain hidden until full-screen mode is active.";
         status.dataset.state = "error";
         return;
       }
@@ -791,9 +794,10 @@ export async function initializeCertificate() {
     const course = await getCourse(certificate.courseId);
     card.hidden = false;
     const studentName = session?.user?.name || "Student";
-    const placeholders = [...card.querySelectorAll("h2")];
-    if (placeholders[1]) placeholders[1].textContent = studentName;
-    if (placeholders[2]) placeholders[2].textContent = course.title;
+    const studentHeading = card.querySelector(".sample-certificate-student");
+    const courseHeading = card.querySelector(".sample-certificate-course");
+    if (studentHeading) studentHeading.textContent = studentName;
+    if (courseHeading) courseHeading.textContent = course.title;
     card.querySelectorAll("p").forEach((paragraph) => {
       if (paragraph.textContent.includes("[Completion Date]")) paragraph.textContent = `Completion Date: ${new Date(certificate.issuedAt).toLocaleDateString()}`;
       if (paragraph.textContent.includes("[Unique Certificate ID]")) paragraph.textContent = `Certificate ID: ${certificate.certificateId}`;
