@@ -1425,3 +1425,7 @@ main article:has(h2:first-child)::before {
   display: block;
   margin: 1rem 0;
 }
+
+
+/* Keep assessment content hidden until the student explicitly starts it. */
+#final-assessment-stage[hidden] { display: none !important; }
