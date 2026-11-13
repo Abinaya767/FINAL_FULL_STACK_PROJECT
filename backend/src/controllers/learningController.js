@@ -372,10 +372,18 @@ export const completeLesson = asyncHandler(async (request, response) => {
   if (!progress.unlockedAt) throw Object.assign(new Error("This module is locked until the previous module is complete."), { status: 403 });
   const module = await Module.findOne({ _id: progress.module, course: progress.course }).populate("lessons");
   if (!module) throw badRequest("Progress module does not belong to its course.");
-  const lesson = module.lessons.find((item) => item._id.equals(request.params.lessonId));
-  if (!lesson) throw notFound("Lesson not found in this module.");
-  if (module.lessons.length === 0) throw badRequest("This module has no lessons to complete.");
-  progress.completedLessons.addToSet(lesson._id);
+  const orderedLessons = [...module.lessons].sort((a, b) => a.order - b.order);
+  const lessonIndex = orderedLessons.findIndex((item) => item._id.equals(request.params.lessonId));
+  if (lessonIndex < 0) throw notFound("Lesson not found in this module.");
+  if (orderedLessons.length === 0) throw badRequest("This module has no lessons to complete.");
+  const earlierLessons = orderedLessons.slice(0, lessonIndex);
+  const hasFinishedEarlierLessons = earlierLessons.every((earlier) =>
+    progress.completedLessons.some((completedId) => completedId.equals(earlier._id))
+  );
+  if (!hasFinishedEarlierLessons) {
+    throw Object.assign(new Error("Complete the previous lesson before completing this lesson."), { status: 403 });
+  }
+  progress.completedLessons.addToSet(orderedLessons[lessonIndex]._id);
   progress.completionPercentage = Math.floor((progress.completedLessons.length / module.lessons.length) * 100);
   progress.status = progress.completionPercentage === 100 ? "completed" : "in_progress";
   if (progress.completionPercentage === 100) progress.completionPercentage = 100;
