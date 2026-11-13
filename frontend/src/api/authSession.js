@@ -9,6 +9,7 @@ export function getAuthSession() {
     const session = JSON.parse(raw);
     if (
       typeof session.token === "string"
+      && session.token.trim().length > 0
       && session.user
       && typeof session.user.id === "string"
       && ["student", "admin"].includes(session.user.role)
