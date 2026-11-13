@@ -58,6 +58,12 @@ function renderCourseCard(course, enrolled = false) {
     enrollButton.type = "button";
     enrollButton.textContent = "Enroll Now";
     enrollButton.addEventListener("click", async () => {
+      if (!requireStudentLogin()) {
+        const status = addStatus(article);
+        status.textContent = "Please sign in with your student account to enroll.";
+        status.dataset.state = "error";
+        return;
+      }
       const status = addStatus(article);
       enrollButton.disabled = true;
       status.textContent = "Enrolling...";
@@ -150,6 +156,11 @@ export async function initializeCoursePage() {
     status.textContent = "";
     if (button) {
       button.addEventListener("click", async () => {
+        if (!requireStudentLogin()) {
+          status.textContent = "Please sign in with your student account to enroll.";
+          status.dataset.state = "error";
+          return;
+        }
         button.disabled = true;
         status.textContent = "Enrolling...";
         try {
