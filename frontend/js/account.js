@@ -88,8 +88,11 @@ export async function initializeStudentProfile() {
       }
     });
     byId("student-profile-edit-link")?.addEventListener("click", () => {
-      menu.hidden = true;
-      trigger.setAttribute("aria-expanded", "false");
+      const editForm = byId("student-profile-form");
+      if (!editForm) return;
+      editForm.hidden = !editForm.hidden;
+      byId("student-profile-edit-link").setAttribute("aria-expanded", String(!editForm.hidden));
+      byId("student-profile-edit-link").textContent = editForm.hidden ? "Edit profile details" : "Cancel editing";
     });
   }
 
@@ -135,6 +138,9 @@ export async function initializeStudentProfile() {
           .find((section) => section.querySelector("h2")?.textContent.trim().startsWith("Welcome"));
         if (welcome) welcome.querySelector("h2").textContent = "Welcome, " + updated.name + "!";
         if (status) { status.textContent = "Profile changes saved."; status.dataset.state = "success"; }
+        form.hidden = true;
+        byId("student-profile-edit-link").setAttribute("aria-expanded", "false");
+        byId("student-profile-edit-link").textContent = "Edit profile details";
       } catch (error) {
         if (status) { status.textContent = error.message; status.dataset.state = "error"; }
       } finally { if (submit) submit.disabled = false; }
