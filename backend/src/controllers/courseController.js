@@ -133,41 +133,27 @@ function normalizeModule(module, index) {
     throw badRequest(`Module ${index + 1} title is required.`);
   }
   const lessons = module.lessons ?? [];
-  if (!Array.isArray(lessons)) throw badRequest(`Module ${index + 1} lessons must be an array.`);
-  if (lessons.length === 0) {
+  if (!Array.isArray(lessons) || lessons.length === 0) {
     throw badRequest(`Module ${index + 1} must contain at least one lesson.`);
   }
-  const questions = module.quiz?.questions;
-  if (!Array.isArray(questions) || questions.length !== 5) {
-    throw badRequest(`Module ${index + 1} quiz must contain exactly 5 questions.`);
-  }
-  questions.forEach((question, questionIndex) => {
-    if (!question || typeof question.question !== "string" || !question.question.trim()) {
-      throw badRequest(`Question ${questionIndex + 1} in module ${index + 1} needs a question prompt.`);
-    }
-    if (!Array.isArray(question.options) || question.options.length !== 4
-      || question.options.some((option) => typeof option !== "string" || !option.trim())) {
-      throw badRequest(`Question ${questionIndex + 1} in module ${index + 1} must have exactly four non-empty options.`);
-    }
-    if (!Number.isInteger(question.correctAnswerIndex)
-      || question.correctAnswerIndex < 0 || question.correctAnswerIndex > 3) {
-      throw badRequest(`Question ${questionIndex + 1} in module ${index + 1} must have a correctAnswerIndex from 0 to 3.`);
+  lessons.forEach((lesson, lessonIndex) => {
+    if (!lesson || typeof lesson.title !== "string" || !lesson.title.trim()
+      || typeof lesson.content !== "string" || !lesson.content.trim()) {
+      throw badRequest(`Lesson ${lessonIndex + 1} in module ${index + 1} requires a title and content.`);
     }
   });
-  return { ...module, lessons, questions };
+  return { ...module, lessons };
 }
 
 async function createCourseModules(course, inputModules) {
   const createdModuleIds = [];
   const createdLessonIds = [];
-  const createdQuizIds = [];
   try {
     for (let index = 0; index < inputModules.length; index += 1) {
       const input = normalizeModule(inputModules[index], index);
       const moduleId = course.modules[index];
       const lessonIds = input.lessons.map(() => new mongoose.Types.ObjectId());
       createdLessonIds.push(...lessonIds);
-      const quizId = new mongoose.Types.ObjectId();
       const module = await Module.create({
         _id: moduleId,
         course: course._id,
@@ -175,38 +161,25 @@ async function createCourseModules(course, inputModules) {
         description: typeof input.description === "string" ? input.description.trim() : "",
         order: Number.isInteger(input.order) && input.order > 0 ? input.order : index + 1,
         lessons: lessonIds,
-        quiz: quizId,
       });
       createdModuleIds.push(module._id);
 
-      const lessons = input.lessons.map((lesson, lessonIndex) => {
-        if (!lesson || typeof lesson.title !== "string" || typeof lesson.content !== "string") {
-          throw badRequest(`Lesson ${lessonIndex + 1} in module ${index + 1} requires a title and content.`);
-        }
-        return {
-          _id: lessonIds[lessonIndex],
-          module: module._id,
-          title: lesson.title.trim(),
-          content: lesson.content,
-          order: Number.isInteger(lesson.order) && lesson.order > 0 ? lesson.order : lessonIndex + 1,
-        };
-      });
-      if (lessons.length) {
-        await Lesson.insertMany(lessons, { ordered: true });
-      }
-
-      const quiz = new Quiz({ _id: quizId, module: module._id, questions: input.questions });
-      createdQuizIds.push(quiz._id);
-      await quiz.save();
+      const lessons = input.lessons.map((lesson, lessonIndex) => ({
+        _id: lessonIds[lessonIndex],
+        module: module._id,
+        title: lesson.title.trim(),
+        content: lesson.content,
+        order: Number.isInteger(lesson.order) && lesson.order > 0 ? lesson.order : lessonIndex + 1,
+      }));
+      await Lesson.insertMany(lessons, { ordered: true });
     }
     await course.save();
-    return { createdModuleIds, createdLessonIds, createdQuizIds };
+    return { createdModuleIds, createdLessonIds };
   } catch (error) {
     try {
       await Promise.all([
         Module.deleteMany({ _id: { $in: createdModuleIds } }),
         Lesson.deleteMany({ _id: { $in: createdLessonIds } }),
-        Quiz.deleteMany({ _id: { $in: createdQuizIds } }),
         Course.deleteOne({ _id: course._id }),
       ]);
     } catch (cleanupError) {
