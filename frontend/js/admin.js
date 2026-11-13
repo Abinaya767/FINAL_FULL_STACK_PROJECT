@@ -332,7 +332,7 @@ export async function initializeAdminCourses() {
     try {
       modules = JSON.parse(curriculum.value);
     } catch {
-      status.textContent = "Curriculum must be valid JSON containing at least 10 complete modules.";
+      status.textContent = "Curriculum must be valid JSON containing at least 10 modules, each with at least one lesson.";
       status.dataset.state = "error";
       return;
     }
@@ -347,11 +347,11 @@ export async function initializeAdminCourses() {
       modules,
     };
     submit.disabled = true;
-    status.textContent = "Saving course and curriculum...";
+    status.textContent = "Saving course, modules and lessons...";
     status.dataset.state = "loading";
     try {
       await createCourse(course);
-      status.textContent = "Course and curriculum saved.";
+      status.textContent = "Course, modules and lessons saved. Add quizzes separately in Manage Quizzes.";
       status.dataset.state = "success";
       form.reset();
       await loadCourses();
