@@ -913,13 +913,15 @@ export const submitFinalAssessment = asyncHandler(async (request, response) => {
     throw conflict("You have already passed this final assessment. Your certificate is available.");
   }
 
-  const latestAttempt = history[0];
-  if (latestAttempt?.lockUntil && latestAttempt.lockUntil > new Date()) {
-    throw forbidden(`Final assessment is locked until ${latestAttempt.lockUntil.toISOString()}.`);
+  const now = new Date();
+  const activeCooldown = history.find((attempt) => attempt.lockUntil && new Date(attempt.lockUntil) > now);
+  if (activeCooldown) {
+    throw forbidden(`Final assessment is locked until ${new Date(activeCooldown.lockUntil).toISOString()}.`);
   }
-  // A completed 24-hour cooldown starts a fresh two-attempt window.
-  const windowAttempts = latestAttempt?.lockUntil && latestAttempt.lockUntil <= new Date()
-    ? history.filter((attempt) => new Date(attempt.attemptedAt) > new Date(latestAttempt.lockUntil))
+  // Use the latest completed cooldown marker so a new attempt starts a clean window.
+  const latestCooldown = history.find((attempt) => attempt.lockUntil);
+  const windowAttempts = latestCooldown && new Date(latestCooldown.lockUntil) <= now
+    ? history.filter((attempt) => new Date(attempt.attemptedAt) > new Date(latestCooldown.lockUntil))
     : history;
 
   if (windowAttempts.length >= 2) {
