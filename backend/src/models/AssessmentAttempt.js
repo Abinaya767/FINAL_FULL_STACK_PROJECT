@@ -39,6 +39,14 @@ const assessmentAttemptSchema = new mongoose.Schema({
     type: Boolean,
     required: true,
   },
+  terminated: {
+    type: Boolean,
+    default: false,
+  },
+  lockUntil: {
+    type: Date,
+    default: null,
+  },
 }, { timestamps: true });
 
 assessmentAttemptSchema.index({ enrollment: 1, attemptedAt: -1 });
