@@ -564,6 +564,81 @@ function createQuestionNavigation(form, questions) {
   return { showQuestion, nav };
 }
 
+function showFinalAssessmentCertificate(main, course, result) {
+  if (!result.passed || !result.certificate) return;
+  main.querySelector("#issued-course-certificate")?.remove();
+
+  const session = getAuthSession();
+  const studentName = session?.user?.name || "Student";
+  const section = document.createElement("section");
+  section.id = "issued-course-certificate";
+  section.setAttribute("aria-labelledby", "issued-certificate-heading");
+
+  const heading = document.createElement("h2");
+  heading.id = "issued-certificate-heading";
+  heading.textContent = "Your Course Certificate";
+  const intro = document.createElement("p");
+  intro.textContent = "Congratulations on successfully completing your course and passing the final assessment!";
+
+  const card = document.createElement("article");
+  card.className = "sample-certificate-card certificate-artwork";
+  const watermark = document.createElement("p");
+  watermark.className = "sample-certificate-watermark";
+  watermark.setAttribute("aria-hidden", "true");
+  watermark.textContent = "LEARNSPACE";
+  const brand = document.createElement("p");
+  brand.className = "sample-certificate-brand";
+  brand.textContent = "LearnSpace";
+  const title = document.createElement("h3");
+  title.textContent = "Certificate of Completion";
+  const presented = document.createElement("p");
+  presented.className = "sample-certificate-intro";
+  presented.textContent = "This certificate is proudly presented to";
+  const student = document.createElement("p");
+  student.className = "sample-certificate-student";
+  student.textContent = studentName;
+  const completed = document.createElement("p");
+  completed.textContent = "for successfully completing the course";
+  const courseName = document.createElement("p");
+  courseName.className = "sample-certificate-course";
+  courseName.textContent = course.title;
+  const date = document.createElement("p");
+  date.className = "sample-certificate-date";
+  date.textContent = "Completion date: " + new Date(result.certificate.issuedAt || Date.now()).toLocaleDateString();
+  card.append(watermark, brand, title, presented, student, completed, courseName, date);
+
+  const actions = document.createElement("div");
+  actions.className = "certificate-actions";
+  const download = document.createElement("button");
+  download.type = "button";
+  download.textContent = "Download Certificate";
+  download.addEventListener("click", () => window.print());
+  actions.append(download);
+  section.append(heading, intro, card, actions);
+  main.append(section);
+
+  if (!document.querySelector("#issued-certificate-print-styles")) {
+    const style = document.createElement("style");
+    style.id = "issued-certificate-print-styles";
+    style.textContent = `
+      @media print {
+        @page { size: A4 landscape; margin: 8mm; }
+        body { display: block !important; min-height: 0 !important; background: #fff !important; }
+        body > header, body > footer, body > main > section:not(#issued-course-certificate) { display: none !important; }
+        body > main { display: block !important; width: 100% !important; max-width: none !important; margin: 0 !important; padding: 0 !important; }
+        #issued-course-certificate { display: block !important; margin: 0 !important; padding: 0 !important; border: 0 !important; box-shadow: none !important; background: #fff !important; break-inside: avoid !important; }
+        #issued-course-certificate > h2, #issued-course-certificate > p, #issued-course-certificate .certificate-actions { display: none !important; }
+        #issued-course-certificate .sample-certificate-card { display: flex !important; width: 100% !important; max-width: none !important; height: 190mm !important; min-height: 190mm !important; margin: 0 !important; padding: 18mm 22mm !important; border: 2px solid #d5bdc8 !important; border-radius: 14px !important; box-shadow: none !important; overflow: hidden !important; print-color-adjust: exact !important; -webkit-print-color-adjust: exact !important; }
+        #issued-course-certificate .sample-certificate-card h3 { font-size: 30pt !important; }
+        #issued-course-certificate .sample-certificate-student { font-size: 27pt !important; }
+        #issued-course-certificate .sample-certificate-course { font-size: 19pt !important; }
+      }
+    `;
+    document.head.append(style);
+  }
+  section.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 export async function initializeFinalAssessment() {
   const main = document.querySelector("main");
   if (!document.title.toLowerCase().includes("final assessment")) return;
@@ -738,6 +813,9 @@ export async function initializeFinalAssessment() {
           resultPanel.querySelector(".api-assessment-history")?.remove();
           history.className = "api-assessment-history";
           resultPanel.append(history);
+        }
+        if (result.passed && result.certificate) {
+          showFinalAssessmentCertificate(main, course, result);
         }
         if (document.fullscreenElement) {
           try { await document.exitFullscreen(); } catch { /* Assessment result remains available. */ }
