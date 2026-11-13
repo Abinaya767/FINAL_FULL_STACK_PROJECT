@@ -585,7 +585,7 @@ function showFinalAssessmentCertificate(main, course, result) {
   const watermark = document.createElement("p");
   watermark.className = "sample-certificate-watermark";
   watermark.setAttribute("aria-hidden", "true");
-  watermark.textContent = "SAMPLE";
+  watermark.textContent = "LearnSpace";
   const brand = document.createElement("p");
   brand.className = "sample-certificate-brand";
   brand.textContent = "LearnSpace";
@@ -593,7 +593,7 @@ function showFinalAssessmentCertificate(main, course, result) {
   title.textContent = "Certificate of Completion";
   const presented = document.createElement("p");
   presented.className = "sample-certificate-intro";
-  presented.textContent = "This sample certificate is presented to";
+  presented.textContent = "This certificate is proudly presented to";
   const student = document.createElement("p");
   student.className = "sample-certificate-student";
   student.textContent = studentName;
@@ -604,7 +604,7 @@ function showFinalAssessmentCertificate(main, course, result) {
   courseName.textContent = course.title;
   const date = document.createElement("p");
   date.className = "sample-certificate-date";
-  date.textContent = "Sample completion date: " + new Date(result.certificate.issuedAt || Date.now()).toLocaleDateString();
+  date.textContent = "Completion date: " + new Date(result.certificate.issuedAt || Date.now()).toLocaleDateString();
   card.append(watermark, brand, title, presented, student, completed, courseName, date);
 
   const actions = document.createElement("div");
@@ -689,7 +689,7 @@ export async function initializeFinalAssessment() {
     const latestTermination = terminatedAttempts[0];
     const activeLockUntil = latestTermination?.lockUntil ? new Date(latestTermination.lockUntil) : null;
     const isLocked = activeLockUntil && activeLockUntil > new Date();
-    status.textContent = `${assessment.totalQuestions} questions · Pass mark ${assessment.passingPercentage}%. ${attempts.length} previous attempt(s) recorded.`;
+    status.textContent = `${assessment.totalQuestions} questions · Pass mark ${assessment.passingPercentage}%. Maximum 2 attempts; a 24-hour break follows two unsuccessful attempts.`;
     status.dataset.state = "success";
     const startButton = document.createElement("button");
     startButton.type = "button";
@@ -813,6 +813,16 @@ export async function initializeFinalAssessment() {
           resultPanel.querySelector(".api-assessment-history")?.remove();
           history.className = "api-assessment-history";
           resultPanel.append(history);
+        }
+        if (!result.passed && result.attemptsRemaining > 0) {
+          startButton.hidden = false;
+          startButton.disabled = false;
+          startButton.textContent = "Start Second Attempt";
+        } else if (!result.passed && result.lockUntil) {
+          startButton.hidden = false;
+          startButton.disabled = true;
+          startButton.textContent = "Assessment Locked";
+          status.textContent = `Score: ${result.scorePercentage}%. Both attempts are used. Try again after ${new Date(result.lockUntil).toLocaleString()}.`;
         }
         if (result.passed && result.certificate) {
           showFinalAssessmentCertificate(main, course, result);
