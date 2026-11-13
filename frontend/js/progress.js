@@ -110,18 +110,35 @@ export async function initializeLearningProgress() {
   const status = addStatus(document.querySelector("main"), "learning-page-status");
   status.textContent = "Loading your learning progress...";
   try {
-    const [modules, records, course] = await Promise.all([getCourseModules(courseId), getProgress(), getCourse(courseId)]);
+    const [modules, records, course, enrollments] = await Promise.all([
+      getCourseModules(courseId),
+      getProgress(),
+      getCourse(courseId),
+      getEnrollments(),
+    ]);
     const progressMap = new Map(records.map((record) => [record.moduleId, record]));
+    const enrollment = enrollments.find((item) => item.courseId === courseId);
+    const finalAssessmentPassed = (enrollment?.finalAssessmentAttempts || [])
+      .some((attempt) => attempt.passed === true && !attempt.terminated);
     const title = document.querySelector("#course-title");
     if (title) title.textContent = course.title;
     const description = document.querySelector("#course-description");
     if (description) description.textContent = course.description || "";
     const bar = document.querySelector("#course-progress-bar");
     const label = document.querySelector("#course-progress-label");
-    const pct = modules.length ? Math.round(modules.reduce((sum, module) => sum + ((progressMap.get(module.id) || module.progress)?.completionPercentage || 0), 0) / modules.length) : 0;
+    const modulePercent = modules.length
+      ? Math.round(modules.reduce((sum, module) => sum + ((progressMap.get(module.id) || module.progress)?.completionPercentage || 0), 0) / modules.length)
+      : 0;
     const passed = modules.filter((module) => (progressMap.get(module.id) || module.progress)?.quizPassed).length;
+    const allModulesPassed = modules.length > 0 && passed === modules.length;
+    // The course is not 100% complete until its final assessment is passed.
+    const pct = allModulesPassed && finalAssessmentPassed ? 100 : Math.min(99, modulePercent);
     if (bar) bar.value = pct;
-    if (label) label.textContent = pct + "% completed (" + passed + " of " + modules.length + " modules passed).";
+    if (label) {
+      label.textContent = finalAssessmentPassed && allModulesPassed
+        ? "100% completed — final assessment passed."
+        : pct + "% completed (" + passed + " of " + modules.length + " modules passed).";
+    }
     status.textContent = "";
 
     if (!lessonNav) {
@@ -140,10 +157,15 @@ export async function initializeLearningProgress() {
         if (nextLabel) nextLabel.textContent = "Your next step: Module " + next.order + " — " + next.title;
       } else {
         if (startButton) startButton.hidden = true;
-        if (nextLabel) nextLabel.textContent = "All modules and quizzes completed. Your final assessment is ready.";
-        if (finalButton) {
-          finalButton.href = "final-assessment.html?course=" + encodeURIComponent(courseId);
-          finalButton.hidden = false;
+        if (finalAssessmentPassed) {
+          if (finalButton) finalButton.hidden = true;
+          if (nextLabel) nextLabel.textContent = "Course completed. You have passed the final assessment.";
+        } else {
+          if (nextLabel) nextLabel.hidden = true;
+          if (finalButton) {
+            finalButton.href = "final-assessment.html?course=" + encodeURIComponent(courseId);
+            finalButton.hidden = false;
+          }
         }
       }
       return;
@@ -370,6 +392,8 @@ export async function initializeModuleQuiz() {
   const header = document.querySelector("main > section");
   const status = addStatus(form, "api-quiz-status");
   const submitButton = form.querySelector('button[type="submit"]');
+  const assessmentStage = form.closest("#final-assessment-stage") || form.closest("section");
+  if (assessmentStage) assessmentStage.hidden = true;
   form.querySelectorAll(":scope > section, fieldset").forEach((element) => element.remove());
   const headerParagraphs = header?.querySelectorAll("p") ?? [];
   headerParagraphs.forEach((paragraph, index) => {
@@ -496,21 +520,135 @@ function createQuestionNavigation(form, questions) {
   const nav = document.createElement("nav");
   nav.className = "assessment-question-nav";
   nav.setAttribute("aria-label", "Assessment question navigation");
-  questions.forEach((_question, index) => {
-    const link = document.createElement("a");
-    link.href = `#final-question-${index + 1}`;
-    link.textContent = String(index + 1);
-    link.setAttribute("aria-label", `Go to question ${index + 1}`);
-    nav.append(link);
+  const questionPanels = [...form.querySelectorAll("fieldset")];
+  const buttons = questions.map((_question, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = String(index + 1);
+    button.setAttribute("aria-label", `Go to question ${index + 1}`);
+    button.addEventListener("click", () => showQuestion(index));
+    nav.append(button);
+    return button;
   });
+  const controls = document.createElement("div");
+  controls.className = "assessment-step-controls";
+  const previous = document.createElement("button");
+  previous.type = "button";
+  previous.textContent = "Previous";
+  const next = document.createElement("button");
+  next.type = "button";
+  next.textContent = "Next";
+  controls.append(previous, next);
+  form.insertBefore(controls, form.querySelector('button[type="submit"]'));
   form.before(nav);
+
+  let currentIndex = 0;
+  function showQuestion(index) {
+    currentIndex = Math.max(0, Math.min(index, questionPanels.length - 1));
+    questionPanels.forEach((panel, panelIndex) => {
+      panel.hidden = panelIndex !== currentIndex;
+    });
+    buttons.forEach((button, buttonIndex) => {
+      button.setAttribute("aria-current", buttonIndex === currentIndex ? "step" : "false");
+      button.classList.toggle("is-current", buttonIndex === currentIndex);
+    });
+    previous.disabled = currentIndex === 0;
+    next.hidden = currentIndex === questionPanels.length - 1;
+    form.querySelector('button[type="submit"]').hidden = currentIndex !== questionPanels.length - 1;
+    const active = questionPanels[currentIndex];
+    active?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }
+  previous.addEventListener("click", () => showQuestion(currentIndex - 1));
+  next.addEventListener("click", () => showQuestion(currentIndex + 1));
+  showQuestion(0);
+  return { showQuestion, nav };
+}
+
+function showFinalAssessmentCertificate(main, course, result) {
+  if (!result.passed || !result.certificate) return;
+  main.querySelector("#issued-course-certificate")?.remove();
+
+  const session = getAuthSession();
+  const studentName = session?.user?.name || "Student";
+  const section = document.createElement("section");
+  section.id = "issued-course-certificate";
+  section.setAttribute("aria-labelledby", "issued-certificate-heading");
+
+  const heading = document.createElement("h2");
+  heading.id = "issued-certificate-heading";
+  heading.textContent = "Your Course Certificate";
+  const intro = document.createElement("p");
+  intro.textContent = "Congratulations on successfully completing your course and passing the final assessment!";
+
+  const card = document.createElement("article");
+  card.className = "sample-certificate-card certificate-artwork";
+  const watermark = document.createElement("p");
+  watermark.className = "sample-certificate-watermark";
+  watermark.setAttribute("aria-hidden", "true");
+  watermark.textContent = "SAMPLE";
+  const brand = document.createElement("p");
+  brand.className = "sample-certificate-brand";
+  brand.textContent = "LearnSpace";
+  const title = document.createElement("h3");
+  title.textContent = "Certificate of Completion";
+  const presented = document.createElement("p");
+  presented.className = "sample-certificate-intro";
+  presented.textContent = "This sample certificate is presented to";
+  const student = document.createElement("p");
+  student.className = "sample-certificate-student";
+  student.textContent = studentName;
+  const completed = document.createElement("p");
+  completed.textContent = "for completing the course";
+  const courseName = document.createElement("p");
+  courseName.className = "sample-certificate-course";
+  courseName.textContent = course.title;
+  const date = document.createElement("p");
+  date.className = "sample-certificate-date";
+  date.textContent = "Sample completion date: " + new Date(result.certificate.issuedAt || Date.now()).toLocaleDateString();
+  card.append(watermark, brand, title, presented, student, completed, courseName, date);
+
+  const actions = document.createElement("div");
+  actions.className = "certificate-actions";
+  const download = document.createElement("button");
+  download.type = "button";
+  download.textContent = "Download Certificate";
+  download.addEventListener("click", () => window.print());
+  actions.append(download);
+  section.append(heading, intro, card, actions);
+  main.append(section);
+
+  if (!document.querySelector("#issued-certificate-print-styles")) {
+    const style = document.createElement("style");
+    style.id = "issued-certificate-print-styles";
+    style.textContent = `
+      @media print {
+        @page { size: A4 landscape; margin: 8mm; }
+        body { display: block !important; min-height: 0 !important; background: #fff !important; }
+        body > header, body > footer, body > main > section:not(#issued-course-certificate) { display: none !important; }
+        body > main { display: block !important; width: 100% !important; max-width: none !important; margin: 0 !important; padding: 0 !important; }
+        #issued-course-certificate { display: block !important; margin: 0 !important; padding: 0 !important; border: 0 !important; box-shadow: none !important; background: #fff !important; break-inside: avoid !important; }
+        #issued-course-certificate > h2, #issued-course-certificate > p, #issued-course-certificate .certificate-actions { display: none !important; }
+        #issued-course-certificate .sample-certificate-card { display: flex !important; width: 100% !important; max-width: none !important; height: 190mm !important; min-height: 190mm !important; margin: 0 !important; padding: 18mm 22mm !important; border: 2px solid #d5bdc8 !important; border-radius: 14px !important; box-shadow: none !important; overflow: hidden !important; print-color-adjust: exact !important; -webkit-print-color-adjust: exact !important; }
+        #issued-course-certificate .sample-certificate-card h3 { font-size: 30pt !important; }
+        #issued-course-certificate .sample-certificate-student { font-size: 27pt !important; }
+        #issued-course-certificate .sample-certificate-course { font-size: 19pt !important; }
+      }
+    `;
+    document.head.append(style);
+  }
+  section.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 export async function initializeFinalAssessment() {
   const main = document.querySelector("main");
   if (!document.title.toLowerCase().includes("final assessment")) return;
-  const form = document.querySelector("main section form");
+  const form = document.querySelector("#final-assessment-stage form");
   if (!main || !form) return;
+  const assessmentStage = form.closest("#final-assessment-stage");
+  if (!assessmentStage) return;
+  // Hide the complete question area immediately, before any API request or DOM updates.
+  assessmentStage.hidden = true;
+  assessmentStage.setAttribute("aria-hidden", "true");
   const courseId = selectedCourseId();
   const header = main.querySelector("section");
   const status = addStatus(header, "api-assessment-status");
@@ -531,38 +669,116 @@ export async function initializeFinalAssessment() {
     ]);
     const enrollment = enrollments.find((item) => item.courseId === assessment.courseId);
     const attempts = enrollment?.finalAssessmentAttempts ?? [];
-    const info = header.querySelectorAll("p");
-    if (info[0]) info[0].textContent = `Course: ${course.title}`;
-    const eligibility = [...info].find((paragraph) => paragraph.textContent.includes("Eligibility"));
+    const courseTitle = header.querySelector(".final-assessment-course-title");
+    if (courseTitle) courseTitle.innerHTML = "";
+    if (courseTitle) {
+      const label = document.createElement("strong");
+      label.textContent = "Course: ";
+      courseTitle.append(label, document.createTextNode(course.title));
+    }
+    const eligibility = [...header.querySelectorAll("p")].find((paragraph) => paragraph.textContent.includes("Eligibility"));
     if (eligibility) eligibility.textContent = "Eligibility: Course modules are complete.";
     form.querySelectorAll("fieldset").forEach((fieldset) => fieldset.remove());
     assessment.questions.forEach((question, index) => {
       renderQuestion(form, question, index, "final-q");
       form.querySelectorAll("fieldset")[index].id = `final-question-${index + 1}`;
     });
-    createQuestionNavigation(form, assessment.questions);
-    status.textContent = `${assessment.totalQuestions} questions · Pass mark ${assessment.passingPercentage}%. No attempt cap or quiz cooldown applies. ${attempts.length} previous attempt(s) recorded.`;
+    const questionNavigation = createQuestionNavigation(form, assessment.questions);
+    questionNavigation.nav.hidden = true;
+    const terminatedAttempts = attempts.filter((attempt) => attempt.terminated);
+    const latestTermination = terminatedAttempts[0];
+    const activeLockUntil = latestTermination?.lockUntil ? new Date(latestTermination.lockUntil) : null;
+    const isLocked = activeLockUntil && activeLockUntil > new Date();
+    status.textContent = `${assessment.totalQuestions} questions · Pass mark ${assessment.passingPercentage}%. ${attempts.length} previous attempt(s) recorded.`;
     status.dataset.state = "success";
     const startButton = document.createElement("button");
     startButton.type = "button";
     startButton.textContent = "Start Final Assessment";
-    form.before(startButton);
+    assessmentStage.before(startButton);
+    if (isLocked) {
+      startButton.disabled = true;
+      status.textContent = `Final assessment locked after two terminated attempts. You can try again after ${activeLockUntil.toLocaleString()}.`;
+      status.dataset.state = "error";
+    }
+    let assessmentStarted = false;
+    let assessmentEnded = false;
+    let assessmentSubmitted = false;
+
+    const endAssessmentForFocusLoss = async (reason) => {
+      if (!assessmentStarted || assessmentEnded || assessmentSubmitted) return;
+      assessmentEnded = true;
+      form.querySelectorAll("input, button").forEach((control) => { control.disabled = true; });
+      form.hidden = true;
+      assessmentStage.hidden = true;
+      assessmentStage.setAttribute("aria-hidden", "true");
+      questionNavigation.nav.hidden = true;
+      status.textContent = reason + " Your final assessment has been terminated and recorded as not passed (0%). You may start a new attempt.";
+      status.dataset.state = "error";
+      if (document.fullscreenElement) {
+        try { await document.exitFullscreen(); } catch { /* Browser may already have exited fullscreen. */ }
+      }
+      try {
+        const terminationResult = await submitCourseAssessment(courseId, [], { terminated: true });
+        if (terminationResult.lockUntil) {
+          status.textContent = `Second attempt terminated. Final assessment locked for 24 hours, until ${new Date(terminationResult.lockUntil).toLocaleString()}.`;
+        } else {
+          status.textContent = "First attempt terminated. You have one more attempt. If you leave the next attempt, the assessment will be locked for 24 hours.";
+          startButton.hidden = false;
+          startButton.disabled = false;
+          startButton.textContent = "Start Second Attempt";
+        }
+      } catch (error) {
+        status.textContent += " The termination could not be saved to the server: " + error.message;
+      }
+    };
+
     startButton.addEventListener("click", async () => {
+      if (typeof document.documentElement.requestFullscreen !== "function") {
+        status.textContent = "This browser does not support full-screen assessment mode. Please use a supported desktop browser.";
+        status.dataset.state = "error";
+        return;
+      }
+      try {
+        await document.documentElement.requestFullscreen();
+        if (!document.fullscreenElement) {
+          throw new Error("The browser did not enter full-screen mode.");
+        }
+      } catch {
+        status.textContent = "Full-screen permission is required. Allow full-screen mode and click Start Final Assessment again. The questions will remain hidden until full-screen mode is active.";
+        status.dataset.state = "error";
+        return;
+      }
+      assessmentStarted = true;
+      assessmentEnded = false;
+      assessmentSubmitted = false;
+      form.reset();
+      form.querySelectorAll("input, button").forEach((control) => { control.disabled = false; });
       startButton.hidden = true;
+      questionNavigation.nav.hidden = false;
       form.hidden = false;
+      assessmentStage.hidden = false;
+      assessmentStage.setAttribute("aria-hidden", "false");
       const section = form.closest("section");
       section?.classList.add("assessment-active");
-      if (typeof section?.requestFullscreen === "function") {
-        try {
-          await section.requestFullscreen();
-        } catch {
-          status.textContent = "Full-screen mode was not granted; you can continue in this page.";
-        }
+      status.textContent = "Assessment started. Do not switch tabs or exit full-screen mode. Leaving this page will terminate the assessment.";
+      status.dataset.state = "success";
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") {
+        void endAssessmentForFocusLoss("You switched tabs or left the assessment page.");
+      }
+    });
+
+    document.addEventListener("fullscreenchange", () => {
+      if (assessmentStarted && !document.fullscreenElement) {
+        void endAssessmentForFocusLoss("You exited full-screen mode.");
       }
     });
     submitButton.disabled = false;
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
+      if (!assessmentStarted || assessmentEnded || assessmentSubmitted) return;
       const answers = assessment.questions.map((question, index) => ({
         questionId: question.id,
         answerIndex: Number(form.querySelector(`input[name="final-q${index + 1}"]:checked`)?.value),
@@ -572,6 +788,7 @@ export async function initializeFinalAssessment() {
         status.dataset.state = "error";
         return;
       }
+      assessmentSubmitted = true;
       submitButton.disabled = true;
       status.textContent = "Submitting final assessment...";
       try {
@@ -597,8 +814,19 @@ export async function initializeFinalAssessment() {
           history.className = "api-assessment-history";
           resultPanel.append(history);
         }
-        submitButton.disabled = false;
+        if (result.passed && result.certificate) {
+          showFinalAssessmentCertificate(main, course, result);
+        }
+        if (document.fullscreenElement) {
+          try { await document.exitFullscreen(); } catch { /* Assessment result remains available. */ }
+        }
+        form.hidden = true;
+        assessmentStage.hidden = true;
+        assessmentStage.setAttribute("aria-hidden", "true");
+        questionNavigation.nav.hidden = true;
+        submitButton.disabled = true;
       } catch (error) {
+        assessmentSubmitted = false;
         status.textContent = error.message;
         status.dataset.state = "error";
         submitButton.disabled = false;
@@ -644,9 +872,10 @@ export async function initializeCertificate() {
     const course = await getCourse(certificate.courseId);
     card.hidden = false;
     const studentName = session?.user?.name || "Student";
-    const placeholders = [...card.querySelectorAll("h2")];
-    if (placeholders[1]) placeholders[1].textContent = studentName;
-    if (placeholders[2]) placeholders[2].textContent = course.title;
+    const studentHeading = card.querySelector(".sample-certificate-student");
+    const courseHeading = card.querySelector(".sample-certificate-course");
+    if (studentHeading) studentHeading.textContent = studentName;
+    if (courseHeading) courseHeading.textContent = course.title;
     card.querySelectorAll("p").forEach((paragraph) => {
       if (paragraph.textContent.includes("[Completion Date]")) paragraph.textContent = `Completion Date: ${new Date(certificate.issuedAt).toLocaleDateString()}`;
       if (paragraph.textContent.includes("[Unique Certificate ID]")) paragraph.textContent = `Certificate ID: ${certificate.certificateId}`;

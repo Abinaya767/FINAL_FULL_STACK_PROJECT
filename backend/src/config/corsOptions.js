@@ -1,8 +1,20 @@
-const configuredOrigins = (process.env.FRONTEND_URL || "http://localhost:5173")
-  .split(",").map((origin) => origin.trim()).filter(Boolean);
-const allowedOrigins = new Set(configuredOrigins.flatMap((origin) => [
-  origin, origin.replace("://localhost", "://127.0.0.1"),
-]));
+const configuredOrigins = (process.env.FRONTEND_URL || "")
+  .split(",")
+  .map((origin) => origin.trim().replace(/\/$/, ""))
+  .filter(Boolean);
+
+const trustedVercelOrigins = new Set([
+  "https://student-management-system-nu-five.vercel.app",
+  "https://student-management-system-ill13wvdw-haskies.vercel.app",
+]);
+
+const allowedOrigins = new Set([
+  ...trustedVercelOrigins,
+  ...configuredOrigins,
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+]);
+
 export default {
   origin(origin, callback) {
     if (!origin || allowedOrigins.has(origin)) return callback(null, true);

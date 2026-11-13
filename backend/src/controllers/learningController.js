@@ -175,6 +175,8 @@ function enrollmentDto(enrollment, attempts = []) {
       attemptedAt: attempt.attemptedAt,
       scorePercentage: attempt.scorePercentage,
       passed: attempt.passed,
+      terminated: attempt.terminated === true,
+      lockUntil: attempt.lockUntil ?? null,
     })),
   };
 }
@@ -902,6 +904,44 @@ export const submitFinalAssessment = asyncHandler(async (request, response) => {
   const enrollment = await getEnrollmentForStudent(student, course);
   const assessment = await Assessment.findOne({ course: course._id });
   if (!assessment) throw notFound("Assessment not found.");
+
+  const recentTerminations = await AssessmentAttempt.find({
+    enrollment: enrollment._id,
+    assessment: assessment._id,
+    terminated: true,
+  }).sort({ attemptedAt: -1 }).limit(2);
+  const latestTermination = recentTerminations[0];
+  const activeLock = latestTermination?.lockUntil && latestTermination.lockUntil > new Date()
+    ? latestTermination
+    : null;
+  if (activeLock) {
+    throw forbidden(`Final assessment is locked until ${activeLock.lockUntil.toISOString()} after two terminated attempts.`);
+  }
+
+  if (request.body?.terminated === true) {
+    const now = new Date();
+    const terminationCount = latestTermination?.lockUntil
+      ? (latestTermination.lockUntil <= now ? 0 : 2)
+      : recentTerminations.length;
+    const lockUntil = terminationCount >= 1 ? new Date(now.getTime() + 24 * 60 * 60 * 1000) : null;
+    await AssessmentAttempt.create({
+      enrollment: enrollment._id,
+      student: student._id,
+      course: course._id,
+      assessment: assessment._id,
+      attemptedAt: now,
+      scorePercentage: 0,
+      passed: false,
+      terminated: true,
+      lockUntil,
+    });
+    response.status(200).json(apiResponse(
+      lockUntil ? "Second final assessment termination recorded. Locked for 24 hours." : "Final assessment terminated. One more attempt is available.",
+      { scorePercentage: 0, passed: false, terminated: true, terminations: terminationCount + 1, lockUntil, certificate: null },
+    ));
+    return;
+  }
+
   const scorePercentage = scoreAnswers(assessment.questions, request.body?.answers, "assessment");
   const passed = scorePercentage >= assessment.passingPercentage;
   await AssessmentAttempt.create({

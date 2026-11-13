@@ -1,6 +1,6 @@
 import { clearAuthSession, getAuthSession } from "./authSession.js";
 
-const apiBaseUrl = import.meta.env.VITE_EXPRESS_API_URL || "http://127.0.0.1:5000/api";
+const apiBaseUrl = (import.meta.env.VITE_EXPRESS_API_URL || "https://learnspace-api-idh2.onrender.com/api").replace(/\/$/, "");
 
 export async function expressRequest(path, { method = "GET", body } = {}) {
   const headers = { Accept: "application/json" };

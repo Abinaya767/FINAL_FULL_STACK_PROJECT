@@ -136,6 +136,8 @@ export default function LegacyPage({ title }) {
       className="legacy-page-frame"
       title={title}
       referrerPolicy="same-origin"
+      allow="fullscreen"
+      allowFullScreen
     />
   );
 }
