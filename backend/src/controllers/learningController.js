@@ -175,6 +175,8 @@ function enrollmentDto(enrollment, attempts = []) {
       attemptedAt: attempt.attemptedAt,
       scorePercentage: attempt.scorePercentage,
       passed: attempt.passed,
+      terminated: attempt.terminated === true,
+      lockUntil: attempt.lockUntil ?? null,
     })),
   };
 }
