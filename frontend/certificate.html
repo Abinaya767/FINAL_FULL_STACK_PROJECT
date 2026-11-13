@@ -3,16 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Course Certificate | LearnSpace</title>
+    <title>My Certificate | LearnSpace</title>
     <link rel="stylesheet" href="/css/style.css">
     <style>
+      .certificate-page { max-width: 1040px; margin: 0 auto; padding: 2rem 1.25rem 3rem; text-align: center; }
+      .certificate-actions { display: flex; justify-content: center; gap: 0.8rem; flex-wrap: wrap; margin-top: 1.5rem; }
       @media print {
+        @page { size: landscape; margin: 10mm; }
         body { background: #fff !important; }
-        body > header, body > footer, main > section:not(#sample-certificate) { display: none !important; }
-        main { width: 100% !important; margin: 0 !important; padding: 0 !important; }
-        #sample-certificate { display: block !important; margin: 0 !important; padding: 0 !important; border: 0 !important; box-shadow: none !important; }
-        #sample-certificate > h2, #sample-certificate > p:first-of-type { display: none !important; }
-        #sample-certificate .sample-certificate-card { width: 100% !important; min-height: 180mm !important; border-radius: 0 !important; box-shadow: none !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+        body > header, body > footer, .certificate-page > h1, .certificate-page > p, .certificate-actions, .api-status { display: none !important; }
+        main, .certificate-page, #sample-certificate { display: block !important; width: 100% !important; max-width: none !important; margin: 0 !important; padding: 0 !important; border: 0 !important; box-shadow: none !important; background: #fff !important; }
+        #sample-certificate .sample-certificate-card { width: 100% !important; min-height: 175mm !important; border-radius: 0 !important; box-shadow: none !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
       }
     </style>
 </head>
@@ -28,18 +29,13 @@
         </nav>
     </header>
 
-    <main>
-        <section>
-            <h1>My Course Certificate</h1>
-            <p>Congratulations on completing your course!</p>
-            <p>Your official certificate is available after successfully passing the final assessment.</p>
-        </section>
+    <main class="certificate-page">
+        <h1>Congratulations!</h1>
+        <p>Your LearnSpace course certificate is ready.</p>
 
         <section id="sample-certificate">
-            <h2>Certificate Preview</h2>
-            <p>Your official LearnSpace certificate.</p>
             <article class="sample-certificate-card">
-                <p class="sample-certificate-brand">LEARNSPACE</p>
+                <p class="sample-certificate-brand">LearnSpace</p>
                 <h3>Certificate of Completion</h3>
                 <p class="sample-certificate-intro">This certificate is proudly presented to</p>
                 <h2 class="sample-certificate-student">[Student Full Name]</h2>
@@ -47,28 +43,15 @@
                 <h2 class="sample-certificate-course">[Course Name]</h2>
                 <p>and meeting the required course completion and final assessment criteria.</p>
                 <p><strong>Successfully Completed</strong></p>
-                <p class="sample-certificate-date"><strong>Completion Date:</strong> [Completion Date]</p>
-                <p><strong>Certificate ID:</strong> [Unique Certificate ID]</p>
-                <p class="sample-certificate-watermark" aria-hidden="true">LEARNSPACE</p>
+                <p class="sample-certificate-date">[Completion Date]</p>
+                <p class="sample-certificate-watermark" aria-hidden="true">LearnSpace</p>
             </article>
         </section>
 
-        <section>
-            <h2>Certificate Details</h2>
-            <p><strong>Student Name:</strong> [Student Full Name]</p>
-            <p><strong>Course Name:</strong> [Course Name]</p>
-            <p><strong>Assessment Status:</strong> [Pass Status]</p>
-            <p><strong>Completion Date:</strong> [Completion Date]</p>
-            <p><strong>Certificate ID:</strong> [Unique Certificate ID]</p>
-        </section>
-
-        <section>
-            <button type="button">Download Certificate PDF</button>
-            <br><br>
-            <a href="my-courses.html">Back to My Courses</a>
-            <br><br>
-            <a href="student-dashboard.html">Go to Dashboard</a>
-        </section>
+        <div class="certificate-actions">
+            <button type="button" id="download-certificate">Download Certificate</button>
+            <a class="button-link" href="my-courses.html">Back to My Courses</a>
+        </div>
     </main>
 
     <footer>
