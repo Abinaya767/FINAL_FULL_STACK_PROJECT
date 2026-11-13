@@ -4,7 +4,13 @@
 <body>
 <header><h1>LearnSpace</h1><nav><a href="student-dashboard.html">Dashboard</a><a href="my-courses.html">My Courses</a><a id="back-to-course-link" href="course-learning.html">Course Overview</a><a href="login.html">Logout</a></nav></header>
 <main class="module-learning-page">
-<section><p id="module-course-name">Course</p><h2 id="module-title">Module Lessons</h2><p id="module-description">Complete each lesson in order.</p><progress id="module-progress-bar" value="0" max="100"></progress><p id="module-progress-label">0% completed</p></section>
+<section class="module-progress-sticky" aria-label="Learning progress">
+<p id="module-course-name">Course</p>
+<h2 id="module-title">Module Lessons</h2>
+<p id="module-description">Complete each lesson in order.</p>
+<div class="sticky-progress-item"><div class="sticky-progress-heading"><strong>Module completion</strong><strong id="module-progress-label">0% completed</strong></div><progress id="module-progress-bar" value="0" max="100"></progress></div>
+<div class="sticky-progress-item"><div class="sticky-progress-heading"><strong>Overall course completion</strong><strong id="sticky-course-progress-label">0% completed</strong></div><progress id="sticky-course-progress-bar" value="0" max="100"></progress></div>
+</section>
 <section class="module-learning-layout">
 <aside class="lesson-sidebar" aria-label="Module lessons"><h3>Lessons</h3><ol id="lesson-navigation"></ol></aside>
 <article class="lesson-reader"><p id="lesson-position"></p><h2 id="lesson-title">Select your first lesson</h2><div id="lesson-body" class="lesson-body">Your lesson content will appear here.</div><p id="lesson-status" role="status" aria-live="polite"></p>
