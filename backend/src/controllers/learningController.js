@@ -910,14 +910,19 @@ export const submitFinalAssessment = asyncHandler(async (request, response) => {
     assessment: assessment._id,
     terminated: true,
   }).sort({ attemptedAt: -1 }).limit(2);
-  const activeLock = recentTerminations.find((attempt) => attempt.lockUntil && attempt.lockUntil > new Date());
-  if (activeLock && request.body?.terminated !== true) {
+  const latestTermination = recentTerminations[0];
+  const activeLock = latestTermination?.lockUntil && latestTermination.lockUntil > new Date()
+    ? latestTermination
+    : null;
+  if (activeLock) {
     throw forbidden(`Final assessment is locked until ${activeLock.lockUntil.toISOString()} after two terminated attempts.`);
   }
 
   if (request.body?.terminated === true) {
     const now = new Date();
-    const terminationCount = recentTerminations.filter((attempt) => !attempt.lockUntil || attempt.lockUntil <= now).length;
+    const terminationCount = latestTermination?.lockUntil
+      ? (latestTermination.lockUntil <= now ? 0 : 2)
+      : recentTerminations.length;
     const lockUntil = terminationCount >= 1 ? new Date(now.getTime() + 24 * 60 * 60 * 1000) : null;
     await AssessmentAttempt.create({
       enrollment: enrollment._id,
