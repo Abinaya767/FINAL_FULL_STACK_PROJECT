@@ -66,7 +66,7 @@ export default function HomePage() {
         <section id="contact">
           <h2>Contact Us</h2>
           <p>Have questions or need assistance? Get in touch with the LearnSpace team.</p>
-          <p>Email: support@learnspace.com</p>
+          <p>Email: <a href="mailto:haskido2k@gmail.com">haskido2k@gmail.com</a></p>
         </section>
       </main>
       <Footer />
