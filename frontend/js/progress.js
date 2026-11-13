@@ -638,6 +638,10 @@ export async function initializeFinalAssessment() {
         return;
       }
       assessmentStarted = true;
+      assessmentEnded = false;
+      assessmentSubmitted = false;
+      form.reset();
+      form.querySelectorAll("input, button").forEach((control) => { control.disabled = false; });
       startButton.hidden = true;
       questionNavigation.nav.hidden = false;
       form.hidden = false;
