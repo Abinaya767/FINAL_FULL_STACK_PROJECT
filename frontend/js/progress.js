@@ -410,12 +410,17 @@ export async function initializeModuleQuiz() {
       return;
     }
     if (progress?.quizPassed) {
-      status.textContent = "You have passed this module quiz.";
+      status.textContent = "You have passed this module quiz. This quiz is now complete.";
       status.dataset.state = "success";
+      form.querySelectorAll("fieldset").forEach((fieldset) => { fieldset.hidden = true; });
+      submitButton.hidden = true;
+      const placeholder = [...document.querySelectorAll("main > section p")]
+        .find((paragraph) => paragraph.textContent.includes("Quiz results and remaining attempts"));
+      placeholder?.remove();
       const continueLink = document.createElement("a");
       continueLink.className = "button-link";
       continueLink.textContent = "Continue to Course";
-      continueLink.href = "/course-learning?course=" + encodeURIComponent(courseId);
+      continueLink.href = "course-learning.html?course=" + encodeURIComponent(courseId);
       status.after(continueLink);
       return;
     }
@@ -467,10 +472,12 @@ export async function initializeModuleQuiz() {
         status.dataset.state = result.passed ? "success" : "notice";
         submitButton.disabled = result.passed || result.attemptsRemaining === 0;
         if (result.passed) {
+          form.querySelectorAll("fieldset").forEach((fieldset) => { fieldset.hidden = true; });
+          submitButton.hidden = true;
           const continueLink = document.createElement("a");
           continueLink.className = "button-link";
           continueLink.textContent = "Continue to Course";
-          continueLink.href = "/course-learning?course=" + encodeURIComponent(courseId);
+          continueLink.href = "course-learning.html?course=" + encodeURIComponent(courseId);
           status.after(continueLink);
         }
       } catch (error) {
