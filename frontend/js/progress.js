@@ -141,7 +141,7 @@ export async function initializeLearningProgress() {
         if (startButton) startButton.hidden = true;
         if (nextLabel) nextLabel.textContent = "All modules and quizzes completed. Your final assessment is ready.";
         if (finalButton) {
-          finalButton.href = "/final-assessment?course=" + encodeURIComponent(courseId);
+          finalButton.href = "final-assessment.html?course=" + encodeURIComponent(courseId);
           finalButton.hidden = false;
         }
       }
@@ -158,7 +158,7 @@ export async function initializeLearningProgress() {
     set("#module-title", "Module " + module.order + ": " + module.title);
     set("#module-description", module.description || "Complete each lesson in order.");
     set("#module-course-name", course.title);
-    const overview = "/course-learning?course=" + encodeURIComponent(courseId);
+    const overview = "course-learning.html?course=" + encodeURIComponent(courseId);
     const back = document.querySelector("#module-back-link");
     const backNav = document.querySelector("#back-to-course-link");
     if (back) back.href = overview;
@@ -196,7 +196,7 @@ export async function initializeLearningProgress() {
       const allDone = lessons.every((item) => completed.has(item.id));
       if (quizButton) {
         quizButton.hidden = !allDone;
-        quizButton.href = "/module-quiz?course=" + encodeURIComponent(courseId) + "&module=" + encodeURIComponent(module.id);
+        quizButton.href = "module-quiz.html?course=" + encodeURIComponent(courseId) + "&module=" + encodeURIComponent(module.id);
       }
       if (lessonStatus) {
         lessonStatus.textContent = done ? "You have completed this lesson." : "Read the lesson and mark it as completed to continue.";
