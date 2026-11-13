@@ -213,7 +213,7 @@ export async function initializeMyCourses() {
       const percent = records.length
         ? Math.round(records.reduce((total, record) => total + record.completionPercentage, 0) / records.length)
         : 0;
-      const article = renderCourseCard(course, true);
+      const article = renderCourseCard(course, enrollment);
       const label = document.createElement("p");
       const bar = document.createElement("progress");
       label.textContent = `Course progress: ${percent}%`;
@@ -239,7 +239,7 @@ export async function initializeDashboard() {
   try {
     const [enrollments, progress] = await Promise.all([getEnrollments(), getProgress()]);
     const name = session?.user?.name || "student";
-    status.textContent = `Welcome, ${name}. You have ${enrollments.length} enrolled course${enrollments.length === 1 ? "" : "s"} and ${progress.filter((record) => record.status === "completed").length} completed modules.`;
+    status.textContent = `Welcome, ${name}. Pick up where you left off in your learning journey.`;
     status.dataset.state = "success";
   } catch (error) {
     status.textContent = error.message;
