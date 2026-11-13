@@ -177,9 +177,43 @@ export async function initializeLearningProgress() {
     const nextButton = document.querySelector("#next-lesson-button");
     const quizButton = document.querySelector("#module-quiz-button");
     const completed = new Set(progress?.completedLessons || []);
+    const readingProgress = new Map();
+    const readingStorageKey = (lessonId) => `learnspace:reading:${progress.id}:${lessonId}`;
+    lessons.forEach((lesson) => {
+      let savedPercent = 0;
+      try {
+        savedPercent = Number(localStorage.getItem(readingStorageKey(lesson.id))) || 0;
+      } catch {
+        savedPercent = 0;
+      }
+      readingProgress.set(lesson.id, completed.has(lesson.id) ? 100 : Math.min(99, Math.max(0, savedPercent)));
+    });
     if (moduleBar) moduleBar.value = progress?.completionPercentage || 0;
     let active = Math.max(0, lessons.findIndex((lesson) => !completed.has(lesson.id)));
     if (lessons.every((lesson) => completed.has(lesson.id))) active = lessons.length - 1;
+
+    const getCoursePercent = (modulePercent) => modules.length ? Math.round(modules.reduce((sum, item) => {
+      const itemProgress = progressMap.get(item.id) || item.progress;
+      return sum + (item.id === module.id ? modulePercent : (itemProgress?.completionPercentage || 0));
+    }, 0) / modules.length) : 0;
+
+    const updateProgressBars = () => {
+      const currentLesson = lessons[active];
+      const currentPercent = completed.has(currentLesson.id) ? 100 : (readingProgress.get(currentLesson.id) || 0);
+      const liveModulePercent = Math.round((completed.size + currentPercent / 100) / lessons.length * 100);
+      const liveCoursePercent = getCoursePercent(liveModulePercent);
+      if (moduleBar) moduleBar.value = liveModulePercent;
+      if (moduleLabel) moduleLabel.textContent = liveModulePercent + "% completed (" + completed.size + " of " + lessons.length + " lessons finished).";
+      if (stickyCourseBar) stickyCourseBar.value = liveCoursePercent;
+      if (stickyCourseLabel) stickyCourseLabel.textContent = liveCoursePercent + "% completed";
+    };
+
+    const scrollReaderToTop = () => {
+      const reader = document.querySelector(".lesson-reader");
+      if (!reader) return;
+      const top = reader.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({ top: Math.max(0, top - 170), behavior: "auto" });
+    };
 
     const render = () => {
       const lesson = lessons[active];
@@ -189,8 +223,9 @@ export async function initializeLearningProgress() {
       if (lessonBody) renderLessonMarkdown(lessonBody, lesson.content);
       const readingBar = document.querySelector("#lesson-reading-progress");
       const readingLabel = document.querySelector("#lesson-reading-progress-label");
-      if (readingBar) readingBar.value = done ? 100 : 0;
-      if (readingLabel) readingLabel.textContent = (done ? 100 : 0) + "%";
+      const percent = done ? 100 : (readingProgress.get(lesson.id) || 0);
+      if (readingBar) readingBar.value = percent;
+      if (readingLabel) readingLabel.textContent = percent + "%";
       if (nextButton) {
         nextButton.hidden = !done || active === lessons.length - 1;
         nextButton.disabled = !done || active === lessons.length - 1;
@@ -201,21 +236,17 @@ export async function initializeLearningProgress() {
         quizButton.href = "module-quiz.html?course=" + encodeURIComponent(courseId) + "&module=" + encodeURIComponent(module.id);
       }
       if (lessonStatus) {
-        lessonStatus.textContent = done ? "You have completed this lesson. Continue to the next lesson below." : "Scroll through the lesson. Your reading progress will update automatically.";
+        lessonStatus.textContent = done
+          ? "Lesson completed! You can continue to the next lesson."
+          : percent > 0
+            ? "Reading progress saved at " + percent + "%. Continue from where you stopped."
+            : "Scroll through the entire lesson. Your progress only moves forward.";
         lessonStatus.dataset.state = done ? "success" : "notice";
       }
-      if (moduleLabel) moduleLabel.textContent = completed.size / lessons.length * 100 + "% completed (" + completed.size + " of " + lessons.length + " lessons).";
-      const modulePercent = Math.round(completed.size / lessons.length * 100);
-      const coursePercent = modules.length ? Math.round(modules.reduce((sum, item) => {
-        const itemProgress = progressMap.get(item.id) || item.progress;
-        return sum + (item.id === module.id ? modulePercent : (itemProgress?.completionPercentage || 0));
-      }, 0) / modules.length) : 0;
-      if (moduleBar) moduleBar.value = modulePercent;
-      if (moduleLabel) moduleLabel.textContent = modulePercent + "% completed (" + completed.size + " of " + lessons.length + " lessons).";
-      if (stickyCourseBar) stickyCourseBar.value = coursePercent;
-      if (stickyCourseLabel) stickyCourseLabel.textContent = coursePercent + "% completed";
+      updateProgressBars();
       moduleNavRender();
     };
+
     const moduleNavRender = () => {
       lessonNav.replaceChildren();
       lessons.forEach((item, index) => {
@@ -228,73 +259,96 @@ export async function initializeLearningProgress() {
         button.textContent = (index + 1) + ". " + item.title + (done ? " ✓" : "");
         button.disabled = !priorDone;
         button.setAttribute("aria-current", index === active ? "step" : "false");
-        button.addEventListener("click", () => { active = index; render(); scheduleReadingProgress(); });
+        button.addEventListener("click", () => {
+          if (!priorDone) return;
+          active = index;
+          render();
+          scrollReaderToTop();
+          scheduleReadingProgress();
+        });
         li.append(button);
         lessonNav.append(li);
       });
     };
-    render();
-    let saveInProgress = false;
+
     let scrollFrame = 0;
+    const savingLessons = new Set();
     const updateReadingProgress = () => {
       scrollFrame = 0;
       const lesson = lessons[active];
-      const reader = document.querySelector(".lesson-reader");
       const body = document.querySelector("#lesson-body");
       const bar = document.querySelector("#lesson-reading-progress");
       const label = document.querySelector("#lesson-reading-progress-label");
-      if (!reader || !body || !bar || !label || !lesson) return;
+      if (!body || !bar || !label || !lesson) return;
+
       if (completed.has(lesson.id)) {
         bar.value = 100;
         label.textContent = "100%";
         return;
       }
+
       const rect = body.getBoundingClientRect();
       const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
-      const startY = Math.max(0, rect.top + window.scrollY - viewportHeight * 0.35);
-      const endY = Math.max(startY + 1, rect.bottom + window.scrollY - viewportHeight * 0.65);
-      const distance = Math.max(0, window.scrollY - startY);
-      const percent = Math.min(100, Math.max(0, Math.round(distance / (endY - startY) * 100)));
+      const bodyTop = rect.top + window.scrollY;
+      const bodyBottom = rect.bottom + window.scrollY;
+      const startY = Math.max(0, bodyTop - viewportHeight * 0.35);
+      const endY = Math.max(startY + 1, bodyBottom - viewportHeight * 0.65);
+      const rawPercent = Math.min(100, Math.max(0, Math.round(((window.scrollY - startY) / (endY - startY)) * 100)));
+
+      // Reading progress is monotonic per lesson: scrolling upward never reduces it.
+      const percent = Math.max(readingProgress.get(lesson.id) || 0, rawPercent);
+      readingProgress.set(lesson.id, percent);
+      try {
+        localStorage.setItem(readingStorageKey(lesson.id), String(percent));
+      } catch {
+        // Completion is still saved by the API even if browser storage is unavailable.
+      }
       bar.value = percent;
       label.textContent = percent + "%";
-      const liveModulePercent = Math.round((completed.size + percent / 100) / lessons.length * 100);
-      const liveCoursePercent = modules.length ? Math.round(modules.reduce((sum, item) => {
-        const itemProgress = progressMap.get(item.id) || item.progress;
-        return sum + (item.id === module.id ? liveModulePercent : (itemProgress?.completionPercentage || 0));
-      }, 0) / modules.length) : 0;
-      if (moduleBar) moduleBar.value = liveModulePercent;
-      if (moduleLabel) moduleLabel.textContent = liveModulePercent + "% completed (" + completed.size + " of " + lessons.length + " lessons finished; current lesson " + percent + "% read).";
-      if (stickyCourseBar) stickyCourseBar.value = liveCoursePercent;
-      if (stickyCourseLabel) stickyCourseLabel.textContent = liveCoursePercent + "% completed";
-      if (percent >= 100 && !saveInProgress) {
-        saveInProgress = true;
+      updateProgressBars();
+
+      if (percent >= 100 && !savingLessons.has(lesson.id)) {
+        savingLessons.add(lesson.id);
         if (lessonStatus) lessonStatus.textContent = "Lesson fully read. Saving your completion...";
         completeLesson(progress.id, lesson.id).then((updated) => {
-          updated.completedLessons.forEach((id) => completed.add(id));
+          (updated.completedLessons || []).forEach((id) => completed.add(id));
+          readingProgress.set(lesson.id, 100);
+          progress.completionPercentage = updated.completionPercentage;
+          progressMap.set(module.id, { ...progress, completionPercentage: updated.completionPercentage });
+          try {
+            localStorage.setItem(readingStorageKey(lesson.id), "100");
+          } catch {
+            // Ignore unavailable browser storage; server completion remains authoritative.
+          }
           render();
           if (lessonStatus) {
-            lessonStatus.textContent = "Lesson completed! You can continue to the next lesson.";
+            lessonStatus.textContent = "Lesson completed and saved! Next lesson is now unlocked.";
             lessonStatus.dataset.state = "success";
           }
         }).catch((error) => {
-          saveInProgress = false;
+          savingLessons.delete(lesson.id);
           if (lessonStatus) {
-            lessonStatus.textContent = "Could not save lesson completion: " + error.message + ". Keep scrolling or refresh to retry.";
+            lessonStatus.textContent = "Could not save lesson completion: " + error.message + ". Your 100% reading progress is kept; scroll slightly or retry to save again.";
             lessonStatus.dataset.state = "error";
           }
         });
       }
     };
+
     const scheduleReadingProgress = () => {
       if (!scrollFrame) scrollFrame = window.requestAnimationFrame(updateReadingProgress);
     };
+
+    render();
     window.addEventListener("scroll", scheduleReadingProgress, { passive: true });
     window.addEventListener("resize", scheduleReadingProgress);
     updateReadingProgress();
+
     nextButton.addEventListener("click", () => {
       if (active < lessons.length - 1 && completed.has(lessons[active].id)) {
         active += 1;
         render();
+        scrollReaderToTop();
         scheduleReadingProgress();
       }
     });
