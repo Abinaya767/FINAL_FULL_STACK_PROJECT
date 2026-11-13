@@ -110,7 +110,7 @@ export default function LegacyPage({ title }) {
         frame.contentDocument.removeEventListener("click", frame.__learnSpaceLinkHandler);
       }
     };
-  }, [legacyPath, location.search, navigate]);
+  }, [legacyPath, location.pathname, location.search, location.hash, navigate]);
 
   return (
     <iframe
