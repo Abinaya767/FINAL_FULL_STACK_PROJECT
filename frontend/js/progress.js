@@ -161,7 +161,7 @@ export async function initializeLearningProgress() {
           if (finalButton) finalButton.hidden = true;
           if (nextLabel) nextLabel.textContent = "Course completed. You have passed the final assessment.";
         } else {
-          if (nextLabel) nextLabel.textContent = "All modules and quizzes completed. Your final assessment is ready.";
+          if (nextLabel) nextLabel.hidden = true;
           if (finalButton) {
             finalButton.href = "final-assessment.html?course=" + encodeURIComponent(courseId);
             finalButton.hidden = false;
