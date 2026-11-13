@@ -578,12 +578,21 @@ export async function initializeFinalAssessment() {
     });
     const questionNavigation = createQuestionNavigation(form, assessment.questions);
     questionNavigation.nav.hidden = true;
-    status.textContent = `${assessment.totalQuestions} questions · Pass mark ${assessment.passingPercentage}%. No attempt cap or quiz cooldown applies. ${attempts.length} previous attempt(s) recorded.`;
+    const terminatedAttempts = attempts.filter((attempt) => attempt.terminated);
+    const latestTermination = terminatedAttempts[0];
+    const activeLockUntil = latestTermination?.lockUntil ? new Date(latestTermination.lockUntil) : null;
+    const isLocked = activeLockUntil && activeLockUntil > new Date();
+    status.textContent = `${assessment.totalQuestions} questions · Pass mark ${assessment.passingPercentage}%. ${attempts.length} previous attempt(s) recorded.`;
     status.dataset.state = "success";
     const startButton = document.createElement("button");
     startButton.type = "button";
     startButton.textContent = "Start Final Assessment";
     assessmentStage?.before(startButton);
+    if (isLocked) {
+      startButton.disabled = true;
+      status.textContent = `Final assessment locked after two terminated attempts. You can try again after ${activeLockUntil.toLocaleString()}.`;
+      status.dataset.state = "error";
+    }
     let assessmentStarted = false;
     let assessmentEnded = false;
     let assessmentSubmitted = false;
@@ -601,7 +610,15 @@ export async function initializeFinalAssessment() {
         try { await document.exitFullscreen(); } catch { /* Browser may already have exited fullscreen. */ }
       }
       try {
-        await submitCourseAssessment(courseId, [], { terminated: true });
+        const terminationResult = await submitCourseAssessment(courseId, [], { terminated: true });
+        if (terminationResult.lockUntil) {
+          status.textContent = `Second attempt terminated. Final assessment locked for 24 hours, until ${new Date(terminationResult.lockUntil).toLocaleString()}.`;
+        } else {
+          status.textContent = "First attempt terminated. You have one more attempt. If you leave the next attempt, the assessment will be locked for 24 hours.";
+          startButton.hidden = false;
+          startButton.disabled = false;
+          startButton.textContent = "Start Second Attempt";
+        }
       } catch (error) {
         status.textContent += " The termination could not be saved to the server: " + error.message;
       }
