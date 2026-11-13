@@ -63,7 +63,8 @@ function setNavigationCourse(link, courseId, moduleId) {
 
 function renderLessonMarkdown(container, markdown) {
   container.replaceChildren();
-  const lines = String(markdown || "").replace(/\r\n/g, "\n").split("\n");
+  const normalized = String(markdown || "").replace(/\r\n/g, "\n").replace(/\\([#*])/g, "$1").replace(/\\\x60/g, String.fromCharCode(96));
+  const lines = normalized.split("\n");
   let list = null;
   let code = null;
   const flush = () => { if (list) container.append(list); list = null; };
