@@ -64,6 +64,7 @@ export default function App() {
       <Route path="/student-dashboard" element={protectedStudentPage(<StudentDashboardPage />)} />
       <Route path="/my-courses" element={protectedStudentPage(<MyCoursesPage />)} />
       <Route path="/course-learning" element={protectedStudentPage(<CourseLearningPage />)} />
+      <Route path="/module-learning" element={protectedStudentPage(<LegacyPage title="Module Lessons" />)} />
       <Route path="/module-quiz" element={protectedStudentPage(<ModuleQuizPage />)} />
       <Route path="/final-assessment" element={protectedStudentPage(<FinalAssessmentPage />)} />
       <Route path="/certificate" element={protectedStudentPage(<CertificatePage />)} />
