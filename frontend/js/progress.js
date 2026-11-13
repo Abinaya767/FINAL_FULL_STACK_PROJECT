@@ -495,15 +495,15 @@ export async function initializeModuleQuiz() {
         status.textContent = "Attempt " + (history?.quizAttemptHistory?.length ?? attempts + 1) + " recorded.";
         status.dataset.state = result.passed ? "success" : "notice";
         submitButton.disabled = result.passed || result.attemptsRemaining === 0;
-        if (result.passed) {
+        if (result.passed || result.attemptsRemaining === 0) {
           form.querySelectorAll("fieldset").forEach((fieldset) => { fieldset.hidden = true; });
           submitButton.hidden = true;
-          const continueLink = document.createElement("a");
-          continueLink.className = "button-link";
-          continueLink.textContent = "Continue to Course";
-          continueLink.href = "course-learning.html?course=" + encodeURIComponent(courseId);
-          status.after(continueLink);
         }
+        const continueLink = document.createElement("a");
+        continueLink.className = "button-link quiz-continue-button";
+        continueLink.textContent = "Continue";
+        continueLink.href = "course-learning.html?course=" + encodeURIComponent(courseId);
+        resultCard.append(continueLink);
       } catch (error) {
         status.textContent = error.message;
         status.dataset.state = "error";
@@ -816,6 +816,27 @@ export async function initializeFinalAssessment() {
         }
         if (result.passed && result.certificate) {
           showFinalAssessmentCertificate(main, course, result);
+          const certificateLink = document.createElement("a");
+          certificateLink.className = "button-link";
+          certificateLink.href = "certificate.html?course=" + encodeURIComponent(courseId);
+          certificateLink.textContent = "View Your Certificate";
+          resultPanel?.append(certificateLink);
+        } else {
+          const finalResult = document.createElement("section");
+          finalResult.className = "final-result-card";
+          const resultHeading = document.createElement("h2");
+          resultHeading.textContent = result.passed ? "Congratulations!" : "Try Next Time";
+          const score = document.createElement("p");
+          score.className = "final-result-score";
+          score.textContent = "Your score: " + result.scorePercentage + "%";
+          const message = document.createElement("p");
+          message.textContent = result.passed
+            ? "You passed the final assessment. Your certificate is ready."
+            : result.lockUntil
+              ? "Both attempts are used. You can try again after " + new Date(result.lockUntil).toLocaleString() + "."
+              : "You did not reach the passing score. " + result.attemptsRemaining + " attempt remaining.";
+          finalResult.append(resultHeading, score, message);
+          resultPanel?.append(finalResult);
         }
         if (document.fullscreenElement) {
           try { await document.exitFullscreen(); } catch { /* Assessment result remains available. */ }
