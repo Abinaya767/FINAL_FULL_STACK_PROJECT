@@ -28,7 +28,7 @@ export const getMessageContacts = asyncHandler(async (request, response) => {
 
 export const getConversation = asyncHandler(async (request, response) => {
   const otherId = requireObjectId(request.params.userId, "Contact ID");
-  if (otherId.equals(request.user.id)) throw badRequest("You cannot open a conversation with yourself.");
+  if (otherId === request.user.id) throw badRequest("You cannot open a conversation with yourself.");
   const other = await User.findById(otherId).select("_id role");
   if (!other) throw notFound("Chat contact not found.");
   const allowedRole = request.user.role === "admin" ? "student" : "admin";
@@ -46,7 +46,7 @@ export const getConversation = asyncHandler(async (request, response) => {
 
 export const sendMessage = asyncHandler(async (request, response) => {
   const recipientId = requireObjectId(request.params.userId, "Contact ID");
-  if (recipientId.equals(request.user.id)) throw badRequest("You cannot send a message to yourself.");
+  if (recipientId === request.user.id) throw badRequest("You cannot send a message to yourself.");
   const content = request.body?.content;
   if (typeof content !== "string" || !content.trim()) throw badRequest("Message content is required.");
   if (content.trim().length > 2000) throw badRequest("Messages cannot exceed 2000 characters.");
