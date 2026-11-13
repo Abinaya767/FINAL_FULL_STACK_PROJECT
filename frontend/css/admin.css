@@ -657,3 +657,18 @@ body:has(main > section > form input[type="password"]) main > section:has(> form
     transition-duration: 0.01ms !important;
   }
 }
+
+
+/* Professional admin portal theme */
+:root{--cream:#f4f6f8;--cream-deep:#e9eef3;--peach:#e7f0f8;--peach-light:#f2f6fa;--lavender:#dce8f2;--lavender-light:#edf4f9;--rose:#477fa8;--rose-deep:#315f82;--rose-light:#e4eff7;--plum:#263746;--plum-soft:#536879;--charcoal:#344554;--muted:#687b8b;--line:#d9e2e9;--shadow:0 18px 45px rgba(35,57,75,.09);--shadow-soft:0 8px 24px rgba(35,57,75,.06);}
+html,body,button,input,select,textarea{font-family:'Inter','Segoe UI',Arial,sans-serif;}
+body{background:#f4f6f8;color:#344554;}
+h1,h2,h3,h4{font-family:'Inter','Segoe UI',Arial,sans-serif;color:#263746;font-weight:700;letter-spacing:-.025em;}
+body>header{background:#fff;border-color:#dce5ec;box-shadow:0 4px 18px rgba(35,57,75,.05);}
+body>footer{background:#eaf0f5;color:#30485b;border-color:#d9e2e9;}
+main>section,article,fieldset{border-color:#dce5ec;background:#fff;box-shadow:var(--shadow-soft);}
+button,input[type=submit],input[type=button]{background:#477fa8;border-color:#477fa8;border-radius:10px;}
+button:hover,input[type=submit]:hover,input[type=button]:hover{background:#315f82;border-color:#315f82;}
+input:not([type=radio]):not([type=checkbox]):not([type=submit]):not([type=button]),select,textarea{border-color:#d5e0e9;border-radius:10px;}
+table th{background:#eaf2f8;color:#263746;}
+tbody tr:nth-child(even){background:#f7f9fb;}
