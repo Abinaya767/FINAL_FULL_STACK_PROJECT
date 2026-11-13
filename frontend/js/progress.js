@@ -693,7 +693,7 @@ export async function initializeFinalAssessment() {
     status.dataset.state = "success";
     const startButton = document.createElement("button");
     startButton.type = "button";
-    startButton.textContent = "Start Final Assessment";
+    startButton.textContent = "Go to Final Assessment";
     assessmentStage.before(startButton);
     if (isLocked) {
       startButton.disabled = true;
