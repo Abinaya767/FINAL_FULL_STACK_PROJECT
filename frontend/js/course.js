@@ -48,7 +48,15 @@ function renderCourseCard(course, enrollment = null) {
   detailsLink.textContent = "Course Details";
   article.append(heading, description, detailsLink);
 
-  if (enrolled) {
+  if (enrollment?.status === "completed") {
+    const completed = document.createElement("p");
+    completed.className = "course-completed-status";
+    completed.textContent = "Completed";
+    const certificateLink = document.createElement("a");
+    certificateLink.href = "certificate.html?course=" + encodeURIComponent(course.id);
+    certificateLink.textContent = "View Certificate";
+    article.append(completed, certificateLink);
+  } else if (enrollment && enrollment.status !== "cancelled") {
     const learningLink = document.createElement("a");
     learningLink.href = courseLink("course-learning.html", course.id);
     learningLink.textContent = "Continue Learning";
