@@ -1,124 +1,26 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Course Learning | LearnSpace</title>
-    <link rel="stylesheet" href="/css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Course Learning | LearnSpace</title>
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-
-    <header>
-        <h1>LearnSpace</h1>
-
-        <nav>
-            <a href="student-dashboard.html">Dashboard</a>
-            <a href="courses.html">Explore Courses</a>
-            <a href="my-courses.html">My Courses</a>
-            <a href="notifications.html">Notifications</a>
-            <a href="login.html">Logout</a>
-        </nav>
-    </header>
-
-    <main>
-
-        <section>
-            <h2>Web Development</h2>
-            <p>Learn web development step by step through structured modules and lessons.</p>
-        </section>
-
-        <section>
-            <h2>Course Progress</h2>
-            <progress value="0" max="100"></progress>
-            <p>0% Completed</p>
-        </section>
-
-        <section>
-            <h2>Course Modules</h2>
-
-            <article>
-                <h3>Module 1: Introduction to Web Development</h3>
-                <p>Understand the basics of web development and how websites work.</p>
-                <ul>
-                    <li>Introduction to Websites</li>
-                    <li>How the Web Works</li>
-                    <li>Frontend and Backend Overview</li>
-                </ul>
-                <a href="#module-1">View Module 1</a>
-                <a href="module-quiz.html">Module 1 Quiz</a>
-            </article>
-
-            <article>
-                <h3>Module 2: HTML Fundamentals</h3>
-                <p>Learn HTML elements, tags, forms and page structure.</p>
-                <ul>
-                    <li>HTML Basics</li>
-                    <li>HTML Elements and Attributes</li>
-                    <li>HTML Forms and Tables</li>
-                </ul>
-                <p>Complete Module 1 to unlock this module.</p>
-            </article>
-
-            <article>
-                <h3>Module 3: CSS Fundamentals</h3>
-                <p>Learn styling, layouts, colors and responsive design.</p>
-                <ul>
-                    <li>CSS Selectors</li>
-                    <li>CSS Box Model</li>
-                    <li>Flexbox and Grid</li>
-                </ul>
-                <p>Complete the previous module to unlock this module.</p>
-            </article>
-
-            <article>
-                <h3>Module 4: JavaScript Fundamentals</h3>
-                <p>Understand JavaScript programming and interactive web pages.</p>
-                <ul>
-                    <li>JavaScript Variables</li>
-                    <li>Functions and Events</li>
-                    <li>DOM Manipulation</li>
-                </ul>
-                <p>Complete the previous module to unlock this module.</p>
-            </article>
-
-            <article>
-                <h3>Module 5: Building a Website</h3>
-                <p>Apply your knowledge to develop a complete website.</p>
-                <ul>
-                    <li>Website Structure</li>
-                    <li>Combining HTML, CSS and JavaScript</li>
-                    <li>Website Development</li>
-                </ul>
-                <p>Complete the previous module to unlock this module.</p>
-            </article>
-
-        </section>
-
-        <section id="module-1">
-            <h2>Lesson Content</h2>
-            <h3>Introduction to Web Development</h3>
-            <p>Select a lesson from the module list to access its learning content.</p>
-
-            <button type="button">Mark Lesson as Completed</button>
-        </section>
-
-        <section>
-            <h2>Final Assessment</h2>
-            <p>Complete all course modules and quizzes to access the final assessment.</p>
-            <a href="final-assessment.html">Go to Final Assessment</a>
-        </section>
-
-        <p>
-            <a href="my-courses.html">Back to My Courses</a>
-        </p>
-
-    </main>
-
-    <footer>
-        <p>&copy; 2026 LearnSpace. Keep growing.</p>
-    </footer>
-
-    <script type="module" src="/js/main.js"></script>
-</body>
-</html>
+  <header><h1>LearnSpace</h1><nav>
+    <a href="student-dashboard.html">Dashboard</a><a href="courses.html">Explore Courses</a>
+    <a href="my-courses.html">My Courses</a><a href="notifications.html">Notifications</a><a href="login.html">Logout</a>
+  </nav></header>
+  <main>
+    <section><h2 id="course-title">Course</h2><p id="course-description">Your course learning journey starts here.</p></section>
+    <section><h2>Course Progress</h2><progress id="course-progress-bar" value="0" max="100"></progress><p id="course-progress-label">0% completed</p></section>
+    <section id="course-start-section">
+      <h2>Continue Learning</h2><p id="course-next-module">Your next module will appear here.</p>
+      <a id="start-module-button" class="button-link" href="#" hidden>Start Module 1</a>
+      <a id="final-assessment-button" class="button-link" href="#" hidden>Go to Final Assessment</a>
+    </section>
+    <p><a href="my-courses.html">Back to My Courses</a></p>
+  </main>
+  <footer><p>&copy; 2026 LearnSpace. Keep growing.</p></footer>
+  <script type="module" src="/js/main.js"></script>
+</body></html>
