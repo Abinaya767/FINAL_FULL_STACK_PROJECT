@@ -228,7 +228,7 @@ export async function initializeLearningProgress() {
         button.textContent = (index + 1) + ". " + item.title + (done ? " ✓" : "");
         button.disabled = !priorDone;
         button.setAttribute("aria-current", index === active ? "step" : "false");
-        button.addEventListener("click", () => { active = index; render(); });
+        button.addEventListener("click", () => { active = index; render(); scheduleReadingProgress(); });
         li.append(button);
         lessonNav.append(li);
       });
@@ -257,6 +257,15 @@ export async function initializeLearningProgress() {
       const percent = Math.min(100, Math.max(0, Math.round(distance / (endY - startY) * 100)));
       bar.value = percent;
       label.textContent = percent + "%";
+      const liveModulePercent = Math.round((completed.size + percent / 100) / lessons.length * 100);
+      const liveCoursePercent = modules.length ? Math.round(modules.reduce((sum, item) => {
+        const itemProgress = progressMap.get(item.id) || item.progress;
+        return sum + (item.id === module.id ? liveModulePercent : (itemProgress?.completionPercentage || 0));
+      }, 0) / modules.length) : 0;
+      if (moduleBar) moduleBar.value = liveModulePercent;
+      if (moduleLabel) moduleLabel.textContent = liveModulePercent + "% completed (" + completed.size + " of " + lessons.length + " lessons finished; current lesson " + percent + "% read).";
+      if (stickyCourseBar) stickyCourseBar.value = liveCoursePercent;
+      if (stickyCourseLabel) stickyCourseLabel.textContent = liveCoursePercent + "% completed";
       if (percent >= 100 && !saveInProgress) {
         saveInProgress = true;
         if (lessonStatus) lessonStatus.textContent = "Lesson fully read. Saving your completion...";
@@ -286,6 +295,7 @@ export async function initializeLearningProgress() {
       if (active < lessons.length - 1 && completed.has(lessons[active].id)) {
         active += 1;
         render();
+        scheduleReadingProgress();
       }
     });
   } catch (error) {
