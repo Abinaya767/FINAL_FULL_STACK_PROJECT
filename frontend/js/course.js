@@ -111,12 +111,19 @@ export async function initializeCoursePage() {
     status.textContent = "Loading courses...";
     try {
       const courses = await getCourses();
-      render(courses);
+      const session = getAuthSession();
+      const enrollments = session?.token && session.user?.role === "student" ? await getEnrollments() : [];
+      const enrollmentByCourse = new Map(enrollments.map((item) => [item.courseId, item]));
+      const catalogCourses = courses.map((course) => ({
+        ...course,
+        enrollment: enrollmentByCourse.get(course.databaseId || course.id) || null,
+      }));
+      render(catalogCourses);
       searchForm?.addEventListener("submit", (event) => {
         event.preventDefault();
-        render(courses);
+        render(catalogCourses);
       });
-      searchInput?.addEventListener("input", () => render(courses));
+      searchInput?.addEventListener("input", () => render(catalogCourses));
     } catch (error) {
       status.textContent = error.message;
       status.dataset.state = "error";
