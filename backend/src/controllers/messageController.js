@@ -67,15 +67,22 @@ export const sendMessage = asyncHandler(async (request, response) => {
   const recipientStudent = recipient.role === "student"
     ? await Student.findOne({ user: recipientId }).select("_id").lean()
     : null;
-  const notification = await Notification.create({
-    ...(recipientStudent ? { student: recipientStudent._id } : {}),
-    recipientUser: recipientId,
-    senderUser: new mongoose.Types.ObjectId(request.user.id),
-    title: `New message from ${message.sender.name}`,
-    message: content.trim(),
-    type: "message",
-    link: "/chat",
-  });
+  let notification;
+  try {
+    notification = await Notification.create({
+      ...(recipientStudent ? { student: recipientStudent._id } : {}),
+      recipientUser: recipientId,
+      senderUser: new mongoose.Types.ObjectId(request.user.id),
+      title: `New message from ${message.sender.name}`,
+      message: content.trim(),
+      type: "message",
+      link: "/chat",
+    });
+  } catch (error) {
+    // Do not leave a sent message without its promised inbox notification.
+    await Message.deleteOne({ _id: message._id });
+    throw error;
+  }
   const notificationDto = {
     _id: notification._id.toString(),
     title: notification.title,
