@@ -36,7 +36,7 @@ function requireStudentLogin() {
   return false;
 }
 
-function renderCourseCard(course, enrolled = false) {
+function renderCourseCard(course, enrollment = null) {
   const article = document.createElement("article");
   const heading = document.createElement("h3");
   const description = document.createElement("p");
@@ -105,7 +105,7 @@ export async function initializeCoursePage() {
         return;
       }
       status.textContent = "";
-      filtered.forEach((course) => catalogSection.append(renderCourseCard(course)));
+      filtered.forEach((course) => catalogSection.append(renderCourseCard(course, course.enrollment)));
     };
 
     status.textContent = "Loading courses...";
