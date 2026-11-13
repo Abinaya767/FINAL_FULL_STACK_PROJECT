@@ -163,13 +163,34 @@ export async function initializeCoursePage() {
   status.textContent = "Loading course details...";
   try {
     const course = await getCourse(courseId);
+    const session = getAuthSession();
+    const enrollments = session?.token && session.user?.role === "student" ? await getEnrollments() : [];
+    const existingEnrollment = enrollments.find((item) => item.courseId === (course.databaseId || course.id));
     if (heading) heading.textContent = course.title;
     if (description) description.textContent = course.description;
     const meta = document.createElement("p");
     meta.textContent = [course.category, course.level, course.duration].filter(Boolean).join(" · ");
     status.before(meta);
     status.textContent = "";
-    if (button) {
+    if (existingEnrollment?.status === "completed") {
+      status.textContent = "You have already completed this course. You can view your certificate.";
+      status.dataset.state = "success";
+      button?.remove();
+      const certificateLink = document.createElement("a");
+      certificateLink.className = "button-link";
+      certificateLink.href = "certificate.html?course=" + encodeURIComponent(course.id);
+      certificateLink.textContent = "View Certificate";
+      status.after(certificateLink);
+    } else if (existingEnrollment && existingEnrollment.status !== "cancelled") {
+      status.textContent = "You are already enrolled in this course.";
+      status.dataset.state = "success";
+      button?.remove();
+      const continueLink = document.createElement("a");
+      continueLink.className = "button-link";
+      continueLink.href = courseLink("course-learning.html", course.id);
+      continueLink.textContent = "Continue Learning";
+      status.after(continueLink);
+    } else if (button) {
       button.addEventListener("click", async () => {
         if (!requireStudentLogin()) {
           status.textContent = "Please sign in with your student account to enroll.";
