@@ -972,7 +972,8 @@ export const submitFinalAssessment = asyncHandler(async (request, response) => {
     attemptedAt: new Date(),
     scorePercentage,
     passed,
-    lockUntil: !passed ? lockUntilForFailure : null,
+    terminated: false,
+    lockUntil: null,
   });
 
   if (passed) {
@@ -1010,8 +1011,8 @@ export const submitFinalAssessment = asyncHandler(async (request, response) => {
   response.status(200).json(apiResponse(passed ? "Final assessment passed." : "Final assessment attempt recorded.", {
     scorePercentage,
     passed,
-    attemptsRemaining: passed ? 0 : Math.max(0, 2 - nextAttemptNumber),
-    lockUntil: !passed ? lockUntilForFailure : null,
+    attemptsRemaining: null,
+    lockUntil: null,
     certificate: certificate ? {
       id: certificate.certificateId,
       issuedAt: certificate.issuedAt,
