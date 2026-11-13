@@ -547,22 +547,64 @@ export async function initializeFinalAssessment() {
     startButton.type = "button";
     startButton.textContent = "Start Final Assessment";
     form.before(startButton);
+    let assessmentStarted = false;
+    let assessmentEnded = false;
+    let assessmentSubmitted = false;
+
+    const endAssessmentForFocusLoss = async (reason) => {
+      if (!assessmentStarted || assessmentEnded || assessmentSubmitted) return;
+      assessmentEnded = true;
+      form.querySelectorAll("input, button").forEach((control) => { control.disabled = true; });
+      form.hidden = true;
+      status.textContent = reason + " Your final assessment has been terminated and recorded as not passed (0%). You may start a new attempt.";
+      status.dataset.state = "error";
+      if (document.fullscreenElement) {
+        try { await document.exitFullscreen(); } catch { /* Browser may already have exited fullscreen. */ }
+      }
+      try {
+        await submitCourseAssessment(courseId, [], { terminated: true });
+      } catch (error) {
+        status.textContent += " The termination could not be saved to the server: " + error.message;
+      }
+    };
+
     startButton.addEventListener("click", async () => {
+      if (typeof document.documentElement.requestFullscreen !== "function") {
+        status.textContent = "This browser does not support full-screen assessment mode. Please use a supported desktop browser.";
+        status.dataset.state = "error";
+        return;
+      }
+      try {
+        await document.documentElement.requestFullscreen();
+      } catch {
+        status.textContent = "Full-screen permission is required. Please allow full-screen mode and click Start Final Assessment again.";
+        status.dataset.state = "error";
+        return;
+      }
+      assessmentStarted = true;
       startButton.hidden = true;
       form.hidden = false;
       const section = form.closest("section");
       section?.classList.add("assessment-active");
-      if (typeof section?.requestFullscreen === "function") {
-        try {
-          await section.requestFullscreen();
-        } catch {
-          status.textContent = "Full-screen mode was not granted; you can continue in this page.";
-        }
+      status.textContent = "Assessment started. Do not switch tabs or exit full-screen mode. Leaving this page will terminate the assessment.";
+      status.dataset.state = "success";
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") {
+        void endAssessmentForFocusLoss("You switched tabs or left the assessment page.");
+      }
+    });
+
+    document.addEventListener("fullscreenchange", () => {
+      if (assessmentStarted && !document.fullscreenElement) {
+        void endAssessmentForFocusLoss("You exited full-screen mode.");
       }
     });
     submitButton.disabled = false;
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
+      if (!assessmentStarted || assessmentEnded || assessmentSubmitted) return;
       const answers = assessment.questions.map((question, index) => ({
         questionId: question.id,
         answerIndex: Number(form.querySelector(`input[name="final-q${index + 1}"]:checked`)?.value),
@@ -572,6 +614,7 @@ export async function initializeFinalAssessment() {
         status.dataset.state = "error";
         return;
       }
+      assessmentSubmitted = true;
       submitButton.disabled = true;
       status.textContent = "Submitting final assessment...";
       try {
@@ -597,8 +640,13 @@ export async function initializeFinalAssessment() {
           history.className = "api-assessment-history";
           resultPanel.append(history);
         }
-        submitButton.disabled = false;
+        if (document.fullscreenElement) {
+          try { await document.exitFullscreen(); } catch { /* Assessment result remains available. */ }
+        }
+        form.hidden = true;
+        submitButton.disabled = true;
       } catch (error) {
+        assessmentSubmitted = false;
         status.textContent = error.message;
         status.dataset.state = "error";
         submitButton.disabled = false;
