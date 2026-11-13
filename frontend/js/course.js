@@ -23,6 +23,19 @@ function courseLink(path, courseId) {
   return `${path}?course=${encodeURIComponent(courseId)}`;
 }
 
+function requireStudentLogin() {
+  const session = getAuthSession();
+  if (session?.token && session.user?.role === "student") return true;
+
+  const returnTo = window.location.pathname + window.location.search;
+  if (window.parent !== window) {
+    window.parent.postMessage({ type: "learnspace:auth-required", returnTo }, window.location.origin);
+  } else {
+    window.location.href = `/login?returnTo=${encodeURIComponent(returnTo)}`;
+  }
+  return false;
+}
+
 function renderCourseCard(course, enrolled = false) {
   const article = document.createElement("article");
   const heading = document.createElement("h3");
