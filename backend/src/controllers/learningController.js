@@ -830,6 +830,8 @@ export const submitModuleQuiz = asyncHandler(async (request, response) => {
 
   response.status(200).json(apiResponse(passed ? "Quiz passed. The next module is now unlocked." : "Quiz attempt recorded.", {
     scorePercentage,
+    correctAnswers: Math.round((scorePercentage / 100) * quiz.questions.length),
+    totalQuestions: quiz.questions.length,
     passed,
     attemptsRemaining: passed ? 0 : Math.max(0, QUIZ_ATTEMPT_LIMIT - updatedProgress.quizAttempts.length),
     lockedUntil: updatedProgress.lockedUntil,
