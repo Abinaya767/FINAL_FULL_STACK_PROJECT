@@ -14,6 +14,29 @@
       <a href="my-courses.html">My Courses</a>
       <a href="notifications.html">Notifications</a>
       <a href="login.html">Logout</a>
+      <div class="student-profile-nav">
+        <button id="student-profile-trigger" class="student-profile-trigger" type="button" aria-expanded="false" aria-controls="student-profile-menu">
+          <span id="student-profile-trigger-initials" class="profile-initials" aria-hidden="true">S</span>
+          <img id="student-profile-trigger-image" alt="" hidden>
+          <span>Profile</span>
+        </button>
+        <section id="student-profile-menu" class="student-profile-menu" aria-label="Student profile" hidden>
+          <div class="student-profile-menu-head">
+            <div class="student-profile-avatar"><span id="student-profile-initials">S</span><img id="student-profile-image" alt="Your profile photo" hidden></div>
+            <div class="student-profile-heading"><strong id="student-profile-display-name">Student</strong><span id="student-profile-display-email"></span>
+              <label class="student-profile-upload" for="student-profile-photo">Change profile photo<input id="student-profile-photo" type="file" accept="image/jpeg,image/png,image/webp"></label>
+            </div>
+          </div>
+          <dl class="student-profile-details">
+            <div><dt>Phone</dt><dd id="student-profile-display-phone">—</dd></div>
+            <div><dt>College</dt><dd id="student-profile-display-college">—</dd></div>
+            <div><dt>Department</dt><dd id="student-profile-display-department">—</dd></div>
+            <div><dt>Year of study</dt><dd id="student-profile-display-year">—</dd></div>
+          </dl>
+          <div class="student-profile-actions"><a href="#student-profile-form" id="student-profile-edit-link">Edit profile details</a></div>
+          <p id="student-profile-photo-status" class="student-profile-status" role="status" aria-live="polite"></p>
+        </section>
+      </div>
     </nav>
   </header>
 

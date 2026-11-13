@@ -672,3 +672,11 @@ button:hover,input[type=submit]:hover,input[type=button]:hover{background:#315f8
 input:not([type=radio]):not([type=checkbox]):not([type=submit]):not([type=button]),select,textarea{border-color:#d5e0e9;border-radius:10px;}
 table th{background:#eaf2f8;color:#263746;}
 tbody tr:nth-child(even){background:#f7f9fb;}
+
+
+/* Professional light-blue/grey controls for the admin workspace */
+body.admin-dashboard-page,body[class*="admin"] {font-family:Inter,"Segoe UI",Arial,sans-serif;color:#354454;background:#f3f6f8;}
+.admin-dashboard-page button,.admin-dashboard-page input[type="submit"],.admin-dashboard-page input[type="button"],body[class*="admin"] button {border-radius:3px!important;box-shadow:none;}
+.admin-dashboard-page button:hover,.admin-dashboard-page input[type="submit"]:hover,body[class*="admin"] button:hover {transform:none;box-shadow:none;}
+.admin-dashboard-page main>section,body[class*="admin"] main>section {border-color:#dce5ec;border-radius:8px;box-shadow:0 4px 14px rgba(35,57,75,.035);}
+.admin-dashboard-page article,body[class*="admin"] article {border-radius:6px;box-shadow:none;}
