@@ -14,6 +14,7 @@ import QuizAttempt from "../models/QuizAttempt.js";
 import Student from "../models/Student.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiResponse } from "../utils/apiResponse.js";
+import { hasCompletedAllLessons } from "../utils/learningValidation.js";
 import {
   badRequest,
   conflict,
@@ -681,6 +682,16 @@ export const submitModuleQuiz = asyncHandler(async (request, response) => {
   if (!progress) throw notFound("Progress record not found.");
   if (!progress.unlockedAt) throw Object.assign(new Error("This module is locked until the previous module reaches 100% completion."), { status: 403 });
   if (progress.quizPassed) throw conflict("This module quiz has already been passed.");
+
+  const moduleLessons = await Lesson.find({ module: module._id }).select("_id").lean();
+  if (!hasCompletedAllLessons(
+    moduleLessons.map((lesson) => lesson._id),
+    progress.completedLessons,
+    progress.completionPercentage,
+  )) {
+    throw forbidden("Complete every lesson in this module before submitting its quiz.");
+  }
+
   const quiz = await Quiz.findById(module.quiz);
   if (!quiz) throw notFound("Quiz not found.");
 
