@@ -53,7 +53,7 @@ body > header {
   position: sticky;
   z-index: 20;
   top: 0;
-  border-bottom: 1px solid rgba(234, 223, 217, 0.85);
+  border-bottom: 1px solid rgba(216, 226, 235, 0.85);
   background: rgba(255, 255, 255, 0.94);
   box-shadow: 0 4px 18px rgba(38, 61, 82, 0.04);
   backdrop-filter: blur(14px);
@@ -381,7 +381,7 @@ article p {
 details {
   margin-top: 1rem;
   padding: 0.8rem 1rem;
-  border: 1px solid #e8d9dc;
+  border: 1px solid #d8e2eb;
   border-radius: var(--radius-small);
   background: var(--peach-light);
 }
@@ -442,7 +442,7 @@ progress::-webkit-progress-bar {
 
 progress::-webkit-progress-value {
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--rose), #c58491);
+  background: linear-gradient(90deg, var(--rose), #7fa7c7);
 }
 
 progress::-moz-progress-bar {
