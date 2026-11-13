@@ -13,7 +13,7 @@ const htmlEntrypoints = Object.fromEntries(
 
 const reactRoutes = new Set([
   "/", "/index.html", "/login", "/register", "/courses", "/course-details",
-  "/student-dashboard", "/my-courses", "/course-learning", "/module-quiz",
+  "/student-dashboard", "/my-courses", "/course-learning", "/module-learning", "/module-quiz",
   "/final-assessment", "/certificate", "/notifications", "/chat",
   "/admin/login", "/admin/dashboard", "/admin/manage-courses",
   "/admin/manage-students", "/admin/add-student", "/admin/manage-modules",
@@ -23,7 +23,7 @@ const reactRoutes = new Set([
 const legacyRouteRedirects = new Map([
   ["/login.html", "/login"], ["/register.html", "/register"],
   ["/admin-login.html", "/admin/login"], ["/student-dashboard.html", "/student-dashboard"],
-  ["/my-courses.html", "/my-courses"], ["/course-learning.html", "/course-learning"],
+  ["/my-courses.html", "/my-courses"], ["/course-learning.html", "/course-learning"], ["/module-learning.html", "/module-learning"],
   ["/module-quiz.html", "/module-quiz"], ["/final-assessment.html", "/final-assessment"],
   ["/certificate.html", "/certificate"], ["/notifications.html", "/notifications"],
   ["/admin-dashboard.html", "/admin/dashboard"], ["/manage-courses.html", "/admin/manage-courses"],

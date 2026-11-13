@@ -11,6 +11,7 @@ const legacyPathByRoute = {
   "/student-dashboard": "/student-dashboard.html",
   "/my-courses": "/my-courses.html",
   "/course-learning": "/course-learning.html",
+  "/module-learning": "/module-learning.html",
   "/module-quiz": "/module-quiz.html",
   "/final-assessment": "/final-assessment.html",
   "/certificate": "/certificate.html",
