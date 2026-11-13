@@ -537,7 +537,7 @@ function createQuestionNavigation(form, questions) {
   previous.addEventListener("click", () => showQuestion(currentIndex - 1));
   next.addEventListener("click", () => showQuestion(currentIndex + 1));
   showQuestion(0);
-  return { showQuestion };
+  return { showQuestion, nav };
 }
 
 export async function initializeFinalAssessment() {
@@ -574,7 +574,8 @@ export async function initializeFinalAssessment() {
       renderQuestion(form, question, index, "final-q");
       form.querySelectorAll("fieldset")[index].id = `final-question-${index + 1}`;
     });
-    createQuestionNavigation(form, assessment.questions);
+    const questionNavigation = createQuestionNavigation(form, assessment.questions);
+    questionNavigation.nav.hidden = true;
     status.textContent = `${assessment.totalQuestions} questions · Pass mark ${assessment.passingPercentage}%. No attempt cap or quiz cooldown applies. ${attempts.length} previous attempt(s) recorded.`;
     status.dataset.state = "success";
     const startButton = document.createElement("button");
@@ -590,6 +591,7 @@ export async function initializeFinalAssessment() {
       assessmentEnded = true;
       form.querySelectorAll("input, button").forEach((control) => { control.disabled = true; });
       form.hidden = true;
+      questionNavigation.nav.hidden = true;
       status.textContent = reason + " Your final assessment has been terminated and recorded as not passed (0%). You may start a new attempt.";
       status.dataset.state = "error";
       if (document.fullscreenElement) {
@@ -617,6 +619,7 @@ export async function initializeFinalAssessment() {
       }
       assessmentStarted = true;
       startButton.hidden = true;
+      questionNavigation.nav.hidden = false;
       form.hidden = false;
       const section = form.closest("section");
       section?.classList.add("assessment-active");
@@ -678,6 +681,7 @@ export async function initializeFinalAssessment() {
           try { await document.exitFullscreen(); } catch { /* Assessment result remains available. */ }
         }
         form.hidden = true;
+        questionNavigation.nav.hidden = true;
         submitButton.disabled = true;
       } catch (error) {
         assessmentSubmitted = false;
