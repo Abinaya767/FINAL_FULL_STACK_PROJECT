@@ -291,6 +291,11 @@ export async function initializeModuleQuiz() {
     if (!quiz) throw new Error("This module does not have a quiz yet.");
     const module = (await getCourseModules(courseId)).find((item) => item.id === moduleId);
     if (!module) throw new Error("This module is not part of the selected course.");
+    const courseBackLink = [...document.querySelectorAll("a")].find((link) =>
+      link.textContent.trim().toLowerCase() === "back to course learning"
+      || link.getAttribute("href")?.includes("course-learning")
+    );
+    if (courseBackLink) setNavigationCourse(courseBackLink, courseId);
     const headerParagraph = header?.querySelector("p");
     if (headerParagraph) headerParagraph.textContent = `${course.title} · ${module.title} · ${quiz.title || "Module Quiz"} · ${quiz.questions.length} questions · maximum 2 attempts per 24-hour window.`;
     const progress = progressRecords.find((record) => record.moduleId === moduleId);
@@ -305,6 +310,11 @@ export async function initializeModuleQuiz() {
     if (progress?.quizPassed) {
       status.textContent = "You have passed this module quiz.";
       status.dataset.state = "success";
+      const continueLink = document.createElement("a");
+      continueLink.className = "button-link";
+      continueLink.textContent = "Continue to Course";
+      continueLink.href = "/course-learning?course=" + encodeURIComponent(courseId);
+      status.after(continueLink);
       return;
     }
     if (progress?.lockedUntil && new Date(progress.lockedUntil) > new Date()) {
@@ -333,6 +343,13 @@ export async function initializeModuleQuiz() {
         status.textContent = `Score: ${result.scorePercentage}%. ${result.passed ? "Passed." : "Not passed."} ${result.attemptsRemaining} attempt(s) remain.${result.lockedUntil ? ` Locked until ${new Date(result.lockedUntil).toLocaleString()}.` : ""} History: ${history?.quizAttemptHistory?.length ?? attempts + 1} attempt(s) recorded.`;
         status.dataset.state = result.passed ? "success" : "notice";
         submitButton.disabled = result.passed || result.attemptsRemaining === 0;
+        if (result.passed) {
+          const continueLink = document.createElement("a");
+          continueLink.className = "button-link";
+          continueLink.textContent = "Continue to Course";
+          continueLink.href = "/course-learning?course=" + encodeURIComponent(courseId);
+          status.after(continueLink);
+        }
       } catch (error) {
         status.textContent = error.message;
         status.dataset.state = "error";
