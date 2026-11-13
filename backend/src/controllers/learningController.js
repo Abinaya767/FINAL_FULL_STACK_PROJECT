@@ -905,25 +905,35 @@ export const submitFinalAssessment = asyncHandler(async (request, response) => {
   const assessment = await Assessment.findOne({ course: course._id });
   if (!assessment) throw notFound("Assessment not found.");
 
-  const recentTerminations = await AssessmentAttempt.find({
+  const history = await AssessmentAttempt.find({
     enrollment: enrollment._id,
     assessment: assessment._id,
-    terminated: true,
-  }).sort({ attemptedAt: -1 }).limit(2);
-  const latestTermination = recentTerminations[0];
-  const activeLock = latestTermination?.lockUntil && latestTermination.lockUntil > new Date()
-    ? latestTermination
-    : null;
-  if (activeLock) {
-    throw forbidden(`Final assessment is locked until ${activeLock.lockUntil.toISOString()} after two terminated attempts.`);
+  }).sort({ attemptedAt: -1 }).limit(100).lean();
+  if (history.some((attempt) => attempt.passed)) {
+    throw conflict("You have already passed this final assessment. Your certificate is available.");
   }
+
+  const latestAttempt = history[0];
+  if (latestAttempt?.lockUntil && latestAttempt.lockUntil > new Date()) {
+    throw forbidden(`Final assessment is locked until ${latestAttempt.lockUntil.toISOString()}.`);
+  }
+  // A completed 24-hour cooldown starts a fresh two-attempt window.
+  const windowAttempts = latestAttempt?.lockUntil && latestAttempt.lockUntil <= new Date()
+    ? history.filter((attempt) => new Date(attempt.attemptedAt) > new Date(latestAttempt.lockUntil))
+    : history;
+
+  if (windowAttempts.length >= 2) {
+    const lockUntil = new Date(new Date(windowAttempts[0].attemptedAt).getTime() + 24 * 60 * 60 * 1000);
+    throw forbidden(`Final assessment is locked until ${lockUntil.toISOString()}.`);
+  }
+
+  const nextAttemptNumber = windowAttempts.length + 1;
+  const lockUntilForFailure = nextAttemptNumber >= 2
+    ? new Date(Date.now() + 24 * 60 * 60 * 1000)
+    : null;
 
   if (request.body?.terminated === true) {
     const now = new Date();
-    const terminationCount = latestTermination?.lockUntil
-      ? (latestTermination.lockUntil <= now ? 0 : 2)
-      : recentTerminations.length;
-    const lockUntil = terminationCount >= 1 ? new Date(now.getTime() + 24 * 60 * 60 * 1000) : null;
     await AssessmentAttempt.create({
       enrollment: enrollment._id,
       student: student._id,
@@ -933,11 +943,20 @@ export const submitFinalAssessment = asyncHandler(async (request, response) => {
       scorePercentage: 0,
       passed: false,
       terminated: true,
-      lockUntil,
+      lockUntil: lockUntilForFailure,
     });
     response.status(200).json(apiResponse(
-      lockUntil ? "Second final assessment termination recorded. Locked for 24 hours." : "Final assessment terminated. One more attempt is available.",
-      { scorePercentage: 0, passed: false, terminated: true, terminations: terminationCount + 1, lockUntil, certificate: null },
+      lockUntilForFailure
+        ? "Both final assessment attempts are used. Locked for 24 hours."
+        : "Final assessment terminated. One more attempt is available.",
+      {
+        scorePercentage: 0,
+        passed: false,
+        terminated: true,
+        attemptsRemaining: Math.max(0, 2 - nextAttemptNumber),
+        lockUntil: lockUntilForFailure,
+        certificate: null,
+      },
     ));
     return;
   }
@@ -952,7 +971,9 @@ export const submitFinalAssessment = asyncHandler(async (request, response) => {
     attemptedAt: new Date(),
     scorePercentage,
     passed,
+    lockUntil: !passed ? lockUntilForFailure : null,
   });
+
   if (passed) {
     await Enrollment.updateOne(
       { _id: enrollment._id },
@@ -961,7 +982,7 @@ export const submitFinalAssessment = asyncHandler(async (request, response) => {
   }
 
   let certificate = null;
-  if (passed && progresses.every((progress) => progress.completionPercentage === 100) && scorePercentage >= 50) {
+  if (passed && progresses.every((progress) => progress.completionPercentage === 100)) {
     certificate = await Certificate.findOne({ student: student._id, course: course._id });
     if (!certificate) {
       try {
@@ -984,9 +1005,12 @@ export const submitFinalAssessment = asyncHandler(async (request, response) => {
       await certificate.save();
     }
   }
+
   response.status(200).json(apiResponse(passed ? "Final assessment passed." : "Final assessment attempt recorded.", {
     scorePercentage,
     passed,
+    attemptsRemaining: passed ? 0 : Math.max(0, 2 - nextAttemptNumber),
+    lockUntil: !passed ? lockUntilForFailure : null,
     certificate: certificate ? {
       id: certificate.certificateId,
       issuedAt: certificate.issuedAt,
