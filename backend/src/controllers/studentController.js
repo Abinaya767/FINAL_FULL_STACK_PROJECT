@@ -29,6 +29,7 @@ const studentFields = new Set([
   "college",
   "department",
   "yearOfStudy",
+  "avatarData",
 ]);
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const routeIdPattern = /^[A-Za-z0-9_-]{1,128}$/;
@@ -78,6 +79,12 @@ function parseStudentBody(body, { partial = false } = {}) {
       }
       fields[field] = body[field].trim();
     }
+  }
+  if (body.avatarData !== undefined) {
+    if (typeof body.avatarData !== "string" || body.avatarData.length > 120000 || (body.avatarData !== "" && !/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(body.avatarData))) {
+      throw badRequest("Profile photo must be a valid JPEG, PNG or WEBP image under the allowed size.");
+    }
+    fields.avatarData = body.avatarData;
   }
   if (body.yearOfStudy !== undefined) {
     if (!Number.isInteger(body.yearOfStudy) || body.yearOfStudy < 1 || body.yearOfStudy > 20) {
@@ -134,6 +141,7 @@ function studentDto(student) {
     college: student.profile?.college ?? "",
     department: student.profile?.department ?? "",
     ...(student.profile?.yearOfStudy ? { yearOfStudy: student.profile.yearOfStudy } : {}),
+    avatarData: student.profile?.avatarData ?? "",
   };
 }
 
@@ -208,7 +216,7 @@ async function updateStudentRecord(request, response, replacement) {
   if (fields.email !== undefined) userUpdate.email = fields.email;
   if (fields.password !== undefined) userUpdate.passwordHash = fields.password;
   const profileUpdate = {};
-  for (const field of ["college", "department", "yearOfStudy"]) {
+  for (const field of ["college", "department", "yearOfStudy", "avatarData"]) {
     if (fields[field] !== undefined) profileUpdate[`profile.${field}`] = fields[field];
   }
   if (replacement && student.profile) {
@@ -253,6 +261,7 @@ export const patchStudent = asyncHandler(async (request, response) => {
       "college",
       "department",
       "yearOfStudy",
+      "avatarData",
     ].includes(field))
   ) {
     throw Object.assign(new Error("Students may update only their own profile fields."), { status: 403 });

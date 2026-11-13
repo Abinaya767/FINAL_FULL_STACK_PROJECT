@@ -5,6 +5,7 @@ const profileSchema = new mongoose.Schema({
   college: { type: String, trim: true, maxlength: 200 },
   department: { type: String, trim: true, maxlength: 200 },
   yearOfStudy: { type: Number, min: 1, max: 20 },
+  avatarData: { type: String, maxlength: 120000 },
 }, { _id: false });
 
 const studentSchema = new mongoose.Schema({
