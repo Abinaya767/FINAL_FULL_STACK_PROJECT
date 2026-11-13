@@ -545,8 +545,13 @@ function createQuestionNavigation(form, questions) {
 export async function initializeFinalAssessment() {
   const main = document.querySelector("main");
   if (!document.title.toLowerCase().includes("final assessment")) return;
-  const form = document.querySelector("main section form");
+  const form = document.querySelector("#final-assessment-stage form");
   if (!main || !form) return;
+  const assessmentStage = form.closest("#final-assessment-stage");
+  if (!assessmentStage) return;
+  // Hide the complete question area immediately, before any API request or DOM updates.
+  assessmentStage.hidden = true;
+  assessmentStage.setAttribute("aria-hidden", "true");
   const courseId = selectedCourseId();
   const header = main.querySelector("section");
   const status = addStatus(header, "api-assessment-status");
@@ -567,8 +572,13 @@ export async function initializeFinalAssessment() {
     ]);
     const enrollment = enrollments.find((item) => item.courseId === assessment.courseId);
     const attempts = enrollment?.finalAssessmentAttempts ?? [];
-    const info = header.querySelectorAll("p");
-    if (info[0]) info[0].textContent = `Course: ${course.title}`;
+    const courseTitle = header.querySelector(".final-assessment-course-title");
+    if (courseTitle) courseTitle.innerHTML = "";
+    if (courseTitle) {
+      const label = document.createElement("strong");
+      label.textContent = "Course: ";
+      courseTitle.append(label, document.createTextNode(course.title));
+    }
     const eligibility = [...info].find((paragraph) => paragraph.textContent.includes("Eligibility"));
     if (eligibility) eligibility.textContent = "Eligibility: Course modules are complete.";
     form.querySelectorAll("fieldset").forEach((fieldset) => fieldset.remove());
@@ -587,7 +597,7 @@ export async function initializeFinalAssessment() {
     const startButton = document.createElement("button");
     startButton.type = "button";
     startButton.textContent = "Start Final Assessment";
-    assessmentStage?.before(startButton);
+    assessmentStage.before(startButton);
     if (isLocked) {
       startButton.disabled = true;
       status.textContent = `Final assessment locked after two terminated attempts. You can try again after ${activeLockUntil.toLocaleString()}.`;
@@ -602,7 +612,8 @@ export async function initializeFinalAssessment() {
       assessmentEnded = true;
       form.querySelectorAll("input, button").forEach((control) => { control.disabled = true; });
       form.hidden = true;
-      if (assessmentStage) assessmentStage.hidden = true;
+      assessmentStage.hidden = true;
+      assessmentStage.setAttribute("aria-hidden", "true");
       questionNavigation.nav.hidden = true;
       status.textContent = reason + " Your final assessment has been terminated and recorded as not passed (0%). You may start a new attempt.";
       status.dataset.state = "error";
@@ -645,7 +656,8 @@ export async function initializeFinalAssessment() {
       startButton.hidden = true;
       questionNavigation.nav.hidden = false;
       form.hidden = false;
-      if (assessmentStage) assessmentStage.hidden = false;
+      assessmentStage.hidden = false;
+      assessmentStage.setAttribute("aria-hidden", "false");
       const section = form.closest("section");
       section?.classList.add("assessment-active");
       status.textContent = "Assessment started. Do not switch tabs or exit full-screen mode. Leaving this page will terminate the assessment.";
@@ -706,7 +718,8 @@ export async function initializeFinalAssessment() {
           try { await document.exitFullscreen(); } catch { /* Assessment result remains available. */ }
         }
         form.hidden = true;
-        if (assessmentStage) assessmentStage.hidden = true;
+        assessmentStage.hidden = true;
+        assessmentStage.setAttribute("aria-hidden", "true");
         questionNavigation.nav.hidden = true;
         submitButton.disabled = true;
       } catch (error) {
