@@ -110,18 +110,35 @@ export async function initializeLearningProgress() {
   const status = addStatus(document.querySelector("main"), "learning-page-status");
   status.textContent = "Loading your learning progress...";
   try {
-    const [modules, records, course] = await Promise.all([getCourseModules(courseId), getProgress(), getCourse(courseId)]);
+    const [modules, records, course, enrollments] = await Promise.all([
+      getCourseModules(courseId),
+      getProgress(),
+      getCourse(courseId),
+      getEnrollments(),
+    ]);
     const progressMap = new Map(records.map((record) => [record.moduleId, record]));
+    const enrollment = enrollments.find((item) => item.courseId === courseId);
+    const finalAssessmentPassed = (enrollment?.finalAssessmentAttempts || [])
+      .some((attempt) => attempt.passed === true && !attempt.terminated);
     const title = document.querySelector("#course-title");
     if (title) title.textContent = course.title;
     const description = document.querySelector("#course-description");
     if (description) description.textContent = course.description || "";
     const bar = document.querySelector("#course-progress-bar");
     const label = document.querySelector("#course-progress-label");
-    const pct = modules.length ? Math.round(modules.reduce((sum, module) => sum + ((progressMap.get(module.id) || module.progress)?.completionPercentage || 0), 0) / modules.length) : 0;
+    const modulePercent = modules.length
+      ? Math.round(modules.reduce((sum, module) => sum + ((progressMap.get(module.id) || module.progress)?.completionPercentage || 0), 0) / modules.length)
+      : 0;
     const passed = modules.filter((module) => (progressMap.get(module.id) || module.progress)?.quizPassed).length;
+    const allModulesPassed = modules.length > 0 && passed === modules.length;
+    // The course is not 100% complete until its final assessment is passed.
+    const pct = allModulesPassed && finalAssessmentPassed ? 100 : Math.min(99, modulePercent);
     if (bar) bar.value = pct;
-    if (label) label.textContent = pct + "% completed (" + passed + " of " + modules.length + " modules passed).";
+    if (label) {
+      label.textContent = finalAssessmentPassed && allModulesPassed
+        ? "100% completed — final assessment passed."
+        : pct + "% completed (" + passed + " of " + modules.length + " modules passed).";
+    }
     status.textContent = "";
 
     if (!lessonNav) {
@@ -140,10 +157,15 @@ export async function initializeLearningProgress() {
         if (nextLabel) nextLabel.textContent = "Your next step: Module " + next.order + " — " + next.title;
       } else {
         if (startButton) startButton.hidden = true;
-        if (nextLabel) nextLabel.textContent = "All modules and quizzes completed. Your final assessment is ready.";
-        if (finalButton) {
-          finalButton.href = "final-assessment.html?course=" + encodeURIComponent(courseId);
-          finalButton.hidden = false;
+        if (finalAssessmentPassed) {
+          if (finalButton) finalButton.hidden = true;
+          if (nextLabel) nextLabel.textContent = "Course completed. You have passed the final assessment.";
+        } else {
+          if (nextLabel) nextLabel.textContent = "All modules and quizzes completed. Your final assessment is ready.";
+          if (finalButton) {
+            finalButton.href = "final-assessment.html?course=" + encodeURIComponent(courseId);
+            finalButton.hidden = false;
+          }
         }
       }
       return;
