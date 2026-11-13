@@ -520,6 +520,30 @@ body > footer p {
   margin: 0;
 }
 
+/* Final assessment focus mode */
+.assessment-active {
+  width: min(1100px, calc(100% - 2rem));
+  max-height: 100vh;
+  margin: 0 auto;
+  overflow-y: auto;
+  padding: clamp(1rem, 3vw, 2rem);
+  background: var(--cream);
+}
+.assessment-active form {
+  max-width: 100%;
+}
+.assessment-active fieldset {
+  break-inside: avoid;
+}
+:fullscreen {
+  overflow-y: auto;
+  background: var(--cream);
+}
+:fullscreen body {
+  min-height: 100vh;
+  overflow-y: auto;
+}
+
 /* Homepage */
 #home {
   display: grid;
