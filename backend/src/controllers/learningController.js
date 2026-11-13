@@ -725,84 +725,74 @@ export const submitModuleQuiz = asyncHandler(async (request, response) => {
     scorePercentage,
     passed,
   };
-  // The conditional update is atomic and enforces the two-attempt/cooldown
-  // rules. Avoid requiring a MongoDB replica-set transaction for quiz submits.
-  const currentAttempts = { $ifNull: ["$quizAttempts", []] };
-  const lockExpired = {
-    $and: [
-      { $ne: [{ $ifNull: ["$lockedUntil", null] }, null] },
-      { $lte: ["$lockedUntil", now] },
-    ],
-  };
+  // Reset an expired 24-hour attempt window before accepting a new attempt.
+  // This is a single-document update and does not require MongoDB transactions.
+  if (progress.lockedUntil && progress.lockedUntil <= now) {
+    await Progress.updateOne(
+      { _id: progress._id, lockedUntil: { $lte: now } },
+      { $set: { quizAttempts: [], lockedUntil: null } },
+    );
+  }
+
+  const latestProgress = await Progress.findById(progress._id);
+  if (!latestProgress) throw notFound("Progress record not found.");
+  if (latestProgress.quizPassed) throw conflict("This module quiz has already been passed.");
+  if (latestProgress.lockedUntil && latestProgress.lockedUntil > now) {
+    throw Object.assign(new Error(`This quiz is locked until ${latestProgress.lockedUntil.toISOString()}.`), { status: 423 });
+  }
+
+  const attemptsBeforeSubmit = latestProgress.quizAttempts.length;
+  if (attemptsBeforeSubmit >= QUIZ_ATTEMPT_LIMIT) {
+    throw Object.assign(new Error("This quiz is locked until its 24-hour cooldown expires."), { status: 423 });
+  }
+
+  // Compare the observed attempt count in the update filter. Concurrent
+  // submissions cannot both consume the same remaining attempt.
   const updatedProgress = await Progress.findOneAndUpdate(
     {
-      _id: progress._id,
+      _id: latestProgress._id,
       student: student._id,
       course: module.course,
       module: module._id,
       unlockedAt: { $ne: null },
       quizPassed: { $ne: true },
-      $or: [{ lockedUntil: null }, { lockedUntil: { $lte: now } }],
+      lockedUntil: null,
       $expr: {
-        $or: [
-          { $lt: [{ $size: currentAttempts }, QUIZ_ATTEMPT_LIMIT] },
-          lockExpired,
+        $eq: [
+          { $size: { $ifNull: ["$quizAttempts", []] } },
+          attemptsBeforeSubmit,
         ],
       },
     },
-    [{
-      $set: {
+    {
+      $push: {
         quizAttempts: {
-          $let: {
-            vars: { currentAttempts, lockExpired },
-            in: {
-              $concatArrays: [
-                { $cond: ["$$lockExpired", [], "$$currentAttempts"] },
-                [{ $literal: {
-                  _id: attemptId,
-                  attemptedAt: now,
-                  scorePercentage,
-                  passed,
-                } }],
-              ],
-            },
-          },
+          attemptedAt: now,
+          scorePercentage,
+          passed,
         },
-        quizPassed: { $literal: passed },
-        lockedUntil: {
-          $let: {
-            vars: { currentAttempts, lockExpired },
-            in: {
-              $cond: [
-                { $literal: passed },
-                null,
-                {
-                  $cond: [
-                    {
-                      $gte: [
-                        {
-                          $add: [
-                            { $cond: ["$$lockExpired", 0, { $size: "$$currentAttempts" }] },
-                            1,
-                          ],
-                        },
-                        QUIZ_ATTEMPT_LIMIT,
-                      ],
-                    },
-                    new Date(now.getTime() + QUIZ_COOLDOWN_MS),
-                    null,
-                  ],
-                },
-              ],
-            },
-          },
-        },
+      },
+      $set: {
+        quizPassed: passed,
+        lockedUntil: !passed && attemptsBeforeSubmit + 1 >= QUIZ_ATTEMPT_LIMIT
+          ? new Date(now.getTime() + QUIZ_COOLDOWN_MS)
+          : null,
         updatedAt: now,
       },
-    }],
-    { returnDocument: "after", timestamps: false },
+    },
+    { new: true, runValidators: true },
   );
-  if (updatedProgress) await QuizAttempt.create(attempt);
+
+  if (updatedProgress) {
+    // The Progress document is the authoritative attempt record. The
+    // separate history collection is supplementary and must not invalidate
+    // a quiz result if its write fails.
+    try {
+      await QuizAttempt.create(attempt);
+    } catch (historyError) {
+      console.error("Quiz attempt history could not be saved:", historyError?.stack || historyError);
+    }
+  }
 
   if (!updatedProgress) {
     const latestProgress = await Progress.findById(progress._id);
