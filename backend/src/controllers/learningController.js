@@ -902,6 +902,26 @@ export const submitFinalAssessment = asyncHandler(async (request, response) => {
   const enrollment = await getEnrollmentForStudent(student, course);
   const assessment = await Assessment.findOne({ course: course._id });
   if (!assessment) throw notFound("Assessment not found.");
+
+  if (request.body?.terminated === true) {
+    await AssessmentAttempt.create({
+      enrollment: enrollment._id,
+      student: student._id,
+      course: course._id,
+      assessment: assessment._id,
+      attemptedAt: new Date(),
+      scorePercentage: 0,
+      passed: false,
+    });
+    response.status(200).json(apiResponse("Final assessment terminated because the student left the assessment.", {
+      scorePercentage: 0,
+      passed: false,
+      terminated: true,
+      certificate: null,
+    }));
+    return;
+  }
+
   const scorePercentage = scoreAnswers(assessment.questions, request.body?.answers, "assessment");
   const passed = scorePercentage >= assessment.passingPercentage;
   await AssessmentAttempt.create({
