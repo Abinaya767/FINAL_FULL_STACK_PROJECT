@@ -370,6 +370,8 @@ export async function initializeModuleQuiz() {
   const header = document.querySelector("main > section");
   const status = addStatus(form, "api-quiz-status");
   const submitButton = form.querySelector('button[type="submit"]');
+  const assessmentStage = form.closest("#final-assessment-stage") || form.closest("section");
+  if (assessmentStage) assessmentStage.hidden = true;
   form.querySelectorAll(":scope > section, fieldset").forEach((element) => element.remove());
   const headerParagraphs = header?.querySelectorAll("p") ?? [];
   headerParagraphs.forEach((paragraph, index) => {
@@ -581,7 +583,7 @@ export async function initializeFinalAssessment() {
     const startButton = document.createElement("button");
     startButton.type = "button";
     startButton.textContent = "Start Final Assessment";
-    form.before(startButton);
+    assessmentStage?.before(startButton);
     let assessmentStarted = false;
     let assessmentEnded = false;
     let assessmentSubmitted = false;
@@ -591,6 +593,7 @@ export async function initializeFinalAssessment() {
       assessmentEnded = true;
       form.querySelectorAll("input, button").forEach((control) => { control.disabled = true; });
       form.hidden = true;
+      if (assessmentStage) assessmentStage.hidden = true;
       questionNavigation.nav.hidden = true;
       status.textContent = reason + " Your final assessment has been terminated and recorded as not passed (0%). You may start a new attempt.";
       status.dataset.state = "error";
@@ -621,6 +624,7 @@ export async function initializeFinalAssessment() {
       startButton.hidden = true;
       questionNavigation.nav.hidden = false;
       form.hidden = false;
+      if (assessmentStage) assessmentStage.hidden = false;
       const section = form.closest("section");
       section?.classList.add("assessment-active");
       status.textContent = "Assessment started. Do not switch tabs or exit full-screen mode. Leaving this page will terminate the assessment.";
@@ -681,6 +685,7 @@ export async function initializeFinalAssessment() {
           try { await document.exitFullscreen(); } catch { /* Assessment result remains available. */ }
         }
         form.hidden = true;
+        if (assessmentStage) assessmentStage.hidden = true;
         questionNavigation.nav.hidden = true;
         submitButton.disabled = true;
       } catch (error) {
