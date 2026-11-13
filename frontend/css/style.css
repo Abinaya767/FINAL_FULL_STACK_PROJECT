@@ -1390,3 +1390,38 @@ main article:has(h2:first-child)::before {
 .quiz-result-card h2 { margin:0 0 .65rem; }
 .quiz-result-card .quiz-result-score { margin:.25rem 0; font-size:1.35rem; font-weight:750; color:var(--plum); }
 .quiz-result-card .quiz-result-percentage { margin:.1rem 0 .75rem; font-size:2rem; font-weight:800; color:var(--rose-deep); font-variant-numeric:tabular-nums; }
+
+
+/* One-question-at-a-time final assessment */
+.assessment-question-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  margin: 1rem auto;
+}
+.assessment-question-nav button {
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+}
+.assessment-question-nav button.is-current,
+.assessment-step-controls button:focus-visible {
+  outline: 3px solid var(--primary, #3157a4);
+  outline-offset: 2px;
+}
+.assessment-step-controls {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 1.25rem 0;
+}
+.assessment-step-controls button {
+  min-width: 7rem;
+}
+.assessment-active form fieldset[hidden] {
+  display: none !important;
+}
+.assessment-active form fieldset:not([hidden]) {
+  display: block;
+  margin: 1rem 0;
+}
