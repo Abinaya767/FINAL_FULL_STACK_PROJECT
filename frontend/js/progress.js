@@ -167,6 +167,8 @@ export async function initializeLearningProgress() {
 
     const moduleBar = document.querySelector("#module-progress-bar");
     const moduleLabel = document.querySelector("#module-progress-label");
+    const stickyCourseBar = document.querySelector("#sticky-course-progress-bar");
+    const stickyCourseLabel = document.querySelector("#sticky-course-progress-label");
     const lessonTitle = document.querySelector("#lesson-title");
     const lessonBody = document.querySelector("#lesson-body");
     const position = document.querySelector("#lesson-position");
@@ -204,6 +206,15 @@ export async function initializeLearningProgress() {
         lessonStatus.dataset.state = done ? "success" : "notice";
       }
       if (moduleLabel) moduleLabel.textContent = completed.size / lessons.length * 100 + "% completed (" + completed.size + " of " + lessons.length + " lessons).";
+      const modulePercent = Math.round(completed.size / lessons.length * 100);
+      const coursePercent = modules.length ? Math.round(modules.reduce((sum, item) => {
+        const itemProgress = progressMap.get(item.id) || item.progress;
+        return sum + (item.id === module.id ? modulePercent : (itemProgress?.completionPercentage || 0));
+      }, 0) / modules.length) : 0;
+      if (moduleBar) moduleBar.value = modulePercent;
+      if (moduleLabel) moduleLabel.textContent = modulePercent + "% completed (" + completed.size + " of " + lessons.length + " lessons).";
+      if (stickyCourseBar) stickyCourseBar.value = coursePercent;
+      if (stickyCourseLabel) stickyCourseLabel.textContent = coursePercent + "% completed";
       moduleNavRender();
     };
     const moduleNavRender = () => {
