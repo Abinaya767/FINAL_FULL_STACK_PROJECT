@@ -1057,10 +1057,19 @@ export const getCertificate = asyncHandler(async (request, response) => {
 });
 
 export const getNotifications = asyncHandler(async (request, response) => {
-  const filter = {};
-  if (request.user.role === "student") filter.student = (await currentStudent(request))._id;
-  else if (request.query.studentId) filter.student = (await findStudentByIdentifier(request.query.studentId))._id;
-  const notifications = await Notification.find(filter).sort({ createdAt: -1 });
+  let filter;
+  if (request.user.role === "admin") {
+    filter = { recipientUser: request.user.id };
+  } else {
+    const student = await currentStudent(request);
+    filter = {
+      $or: [
+        { recipientUser: request.user.id },
+        { student: student._id, recipientUser: { $exists: false } },
+      ],
+    };
+  }
+  const notifications = await Notification.find(filter).sort({ createdAt: -1 }).limit(200);
   response.status(200).json(apiResponse("Notifications retrieved successfully.", { notifications }));
 });
 
@@ -1068,7 +1077,7 @@ export const getNotification = asyncHandler(async (request, response) => {
   requireObjectId(request.params.id, "Notification ID");
   const notification = await Notification.findById(request.params.id);
   if (!notification) throw notFound("Notification not found.");
-  await authorizeStudentResource(request, notification.student);
+  await authorizeNotificationRecipient(request, notification);
   response.status(200).json(apiResponse("Notification retrieved successfully.", { notification }));
 });
 
@@ -1078,19 +1087,36 @@ export const createNotification = asyncHandler(async (request, response) => {
   if (typeof title !== "string" || !title.trim() || typeof message !== "string" || !message.trim()) {
     throw badRequest("Notification title and message are required.");
   }
-  const notification = await Notification.create({ student: student._id, title: title.trim(), message: message.trim() });
   const recipient = await Student.findById(student._id).select("user").lean();
+  const notification = await Notification.create({
+    student: student._id,
+    recipientUser: recipient?.user,
+    title: title.trim(),
+    message: message.trim(),
+    type: "general",
+  });
   if (recipient?.user) {
     request.app.get("io")?.to(`user:${recipient.user.toString()}`).emit("notification:new", notification);
   }
   response.status(201).json(apiResponse("Notification created successfully.", { notification }));
 });
 
+async function authorizeNotificationRecipient(request, notification) {
+  if (notification.recipientUser) {
+    if (notification.recipientUser.toString() !== request.user.id) {
+      throw Object.assign(new Error("You may access only your own notifications."), { status: 403 });
+    }
+    return;
+  }
+  if (request.user.role === "admin") return;
+  await authorizeStudentResource(request, notification.student);
+}
+
 export const markNotificationRead = asyncHandler(async (request, response) => {
   requireObjectId(request.params.id, "Notification ID");
   const notification = await Notification.findById(request.params.id);
   if (!notification) throw notFound("Notification not found.");
-  await authorizeStudentResource(request, notification.student);
+  await authorizeNotificationRecipient(request, notification);
   notification.isRead = true;
   await notification.save();
   response.status(200).json(apiResponse("Notification marked as read.", { notification }));
@@ -1100,7 +1126,7 @@ export const deleteNotification = asyncHandler(async (request, response) => {
   requireObjectId(request.params.id, "Notification ID");
   const notification = await Notification.findById(request.params.id);
   if (!notification) throw notFound("Notification not found.");
-  await authorizeStudentResource(request, notification.student);
+  await authorizeNotificationRecipient(request, notification);
   await notification.deleteOne();
   response.status(200).json(apiResponse("Notification deleted successfully.", { id: request.params.id }));
 });
