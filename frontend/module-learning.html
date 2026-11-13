@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Module Lessons | LearnSpace</title><link rel="stylesheet" href="/css/style.css"></head>
+<body>
+<header><h1>LearnSpace</h1><nav><a href="student-dashboard.html">Dashboard</a><a href="my-courses.html">My Courses</a><a id="back-to-course-link" href="course-learning.html">Course Overview</a><a href="login.html">Logout</a></nav></header>
+<main class="module-learning-page">
+<section><p id="module-course-name">Course</p><h2 id="module-title">Module Lessons</h2><p id="module-description">Complete each lesson in order.</p><progress id="module-progress-bar" value="0" max="100"></progress><p id="module-progress-label">0% completed</p></section>
+<section class="module-learning-layout">
+<aside class="lesson-sidebar" aria-label="Module lessons"><h3>Lessons</h3><ol id="lesson-navigation"></ol></aside>
+<article class="lesson-reader"><p id="lesson-position"></p><h2 id="lesson-title">Select your first lesson</h2><div id="lesson-body" class="lesson-body">Your lesson content will appear here.</div><p id="lesson-status" role="status" aria-live="polite"></p>
+<div class="lesson-actions"><button id="complete-lesson-button" type="button" disabled>Mark Lesson as Completed</button><button id="next-lesson-button" type="button" disabled hidden>Next Lesson</button><a id="module-quiz-button" class="button-link" href="#" hidden>Take Module Quiz</a></div></article>
+</section><p><a id="module-back-link" href="course-learning.html">Back to Course Overview</a></p>
+</main><footer><p>&copy; 2026 LearnSpace. Keep growing.</p></footer><script type="module" src="/js/main.js"></script></body></html>
