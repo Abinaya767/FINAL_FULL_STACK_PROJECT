@@ -23,7 +23,7 @@
     <main>
         <section>
             <h1>Manage Course Modules</h1>
-            <p>Add modules to courses that already exist in LearnSpace. Each module should have its own lessons and a separate 5-question quiz.</p>
+            <p>Add and view the learning modules for courses that already exist in LearnSpace.</p>
         </section>
         <section>
             <h2>Add New Module</h2>
@@ -39,19 +39,14 @@
                 <button type="submit">Add Module</button>
                 <button type="reset">Clear Form</button>
             </form>
-            <div>
-                <h3>Next step: Add a quiz</h3>
-                <p>After saving a module, open the separate Quiz Management page. Select the same course and module, then add its five quiz questions.</p>
-                <a href="manage-quizzes.html">Go to Manage Module Quizzes</a>
-            </div>
         </section>
         <section>
             <h2>Existing Course Modules</h2>
             <label for="filter-course">Filter by Course</label>
             <select id="filter-course"><option value="">All saved courses</option></select>
             <table>
-                <thead><tr><th>Course</th><th>Module Number</th><th>Module Title</th><th>Quiz Status</th><th>Actions</th></tr></thead>
-                <tbody><tr><td colspan="5">Loading modules from the database...</td></tr></tbody>
+                <thead><tr><th>Course</th><th>Module Number</th><th>Module Title</th><th>Module Description</th></tr></thead>
+                <tbody><tr><td colspan="4">Loading modules from the database...</td></tr></tbody>
             </table>
         </section>
         <section>
@@ -60,8 +55,6 @@
                 <li>Each module belongs to a course created in LearnSpace.</li>
                 <li>Modules follow their course learning sequence.</li>
                 <li>Add lessons to each module using Manage Lessons.</li>
-                <li>Add one separate quiz with exactly five questions for every module using Manage Quizzes.</li>
-                <li>Students unlock the next module only after completing the current module and passing its quiz.</li>
             </ul>
         </section>
         <section><a href="admin-dashboard.html">Back to Admin Dashboard</a></section>
