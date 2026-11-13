@@ -8,6 +8,9 @@ const trustedVercelOrigins = new Set([
   "https://student-management-system-ill13wvdw-haskies.vercel.app",
 ]);
 
+const isTrustedLearnSpaceVercelOrigin = (origin) =>
+  /^https:\/\/student-management-system(?:-[a-z0-9-]+)?\.vercel\.app$/i.test(origin);
+
 const allowedOrigins = new Set([
   ...trustedVercelOrigins,
   ...configuredOrigins,
@@ -17,7 +20,9 @@ const allowedOrigins = new Set([
 
 export default {
   origin(origin, callback) {
-    if (!origin || allowedOrigins.has(origin)) return callback(null, true);
+    if (!origin || allowedOrigins.has(origin) || isTrustedLearnSpaceVercelOrigin(origin)) {
+      return callback(null, true);
+    }
     const error = new Error("Origin is not allowed by the LearnSpace API.");
     error.status = 403;
     return callback(error);
