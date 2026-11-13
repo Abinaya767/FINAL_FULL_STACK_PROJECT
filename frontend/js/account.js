@@ -5,7 +5,7 @@ const byId = (id) => document.getElementById(id);
 const displayValue = (value) => value === undefined || value === null || value === "" ? "—" : String(value);
 
 function initials(name = "Student") {
-  return name.trim().split(/\\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase() || "").join("") || "S";
+  return name.trim().split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase() || "").join("") || "S";
 }
 
 function renderProfileSummary(student) {

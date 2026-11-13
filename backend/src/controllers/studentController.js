@@ -81,7 +81,7 @@ function parseStudentBody(body, { partial = false } = {}) {
     }
   }
   if (body.avatarData !== undefined) {
-    if (typeof body.avatarData !== "string" || body.avatarData.length > 120000 || (body.avatarData !== "" && !/^data:image\\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(body.avatarData))) {
+    if (typeof body.avatarData !== "string" || body.avatarData.length > 120000 || (body.avatarData !== "" && !/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(body.avatarData))) {
       throw badRequest("Profile photo must be a valid JPEG, PNG or WEBP image under the allowed size.");
     }
     fields.avatarData = body.avatarData;
