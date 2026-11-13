@@ -1429,3 +1429,36 @@ main article:has(h2:first-child)::before {
 
 /* Keep assessment content hidden until the student explicitly starts it. */
 #final-assessment-stage[hidden] { display: none !important; }
+
+
+/* Consistent medium-sized controls and compact professional dashboard */
+button,
+input[type="submit"],
+input[type="button"] {
+  min-height: 42px;
+  padding: .58rem 1rem;
+  border-radius: 9px;
+}
+.button-link { min-height: 42px; padding: .58rem 1rem; border-radius: 9px; }
+.student-dashboard-page main { display: grid; gap: 1.25rem; }
+.student-dashboard-page main > section { margin: 0; }
+.dashboard-welcome { background: linear-gradient(135deg, #eaf2f9, #fff); }
+.dashboard-eyebrow { margin: 0 0 .5rem; color: #356b98; font-size: .78rem; font-weight: 800; letter-spacing: .12em; }
+.dashboard-welcome h2 { margin: 0 0 .5rem; font-family: inherit; font-size: clamp(1.8rem, 3vw, 2.5rem); }
+.dashboard-live-summary { margin: .8rem 0 1.1rem; color: var(--muted); }
+.dashboard-card-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.dashboard-link-card { display: flex; flex-direction: column; align-items: flex-start; gap: .5rem; }
+.dashboard-link-card h3 { margin: 0; font-family: inherit; font-size: 1.15rem; }
+.dashboard-link-card p { flex: 1; margin: 0; }
+.dashboard-link-card a { display: inline-flex; margin-top: .6rem; padding: .5rem .8rem; border-radius: 8px; background: #e8f0f7; color: #244f73; text-decoration: none; }
+.dashboard-profile > p { color: var(--muted); }
+.dashboard-profile form { max-width: 760px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.dashboard-profile form button { width: fit-content; }
+.course-completed-status { display: inline-flex; width: fit-content; padding: .25rem .65rem; border-radius: 7px; background: #e7f2ec; color: #287448 !important; font-size: .85rem; font-weight: 750; }
+.final-result-card { margin-top: 1rem; padding: 1.25rem; border: 1px solid var(--line); border-radius: 14px; background: #f7f9fc; text-align: center; }
+.final-result-score { margin: .4rem 0; color: var(--rose-deep); font-size: 2rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.quiz-continue-button { display: inline-flex; margin-top: .5rem; }
+@media (max-width: 760px) {
+  .dashboard-card-grid { grid-template-columns: 1fr; }
+  .dashboard-profile form { grid-template-columns: 1fr; }
+}
