@@ -61,138 +61,195 @@ function setNavigationCourse(link, courseId, moduleId) {
   link.href = `${link.pathname}?${params}`;
 }
 
-export async function initializeLearningProgress() {
-  const modulesSection = [...document.querySelectorAll("main section")]
-    .find((section) => section.querySelector("h2")?.textContent.trim() === "Course Modules");
-  if (!modulesSection) return;
+function renderLessonMarkdown(container, markdown) {
+  container.replaceChildren();
+  const lines = String(markdown || "").replace(/\r\n/g, "\n").split("\n");
+  let list = null;
+  let code = null;
+  const flush = () => { if (list) container.append(list); list = null; };
+  const inline = (element, value) => {
+    const safe = value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    element.innerHTML = safe.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\*(.+?)\*/g, "<em>$1</em>").replace(/\x60([^\x60]+)\x60/g, "<code>$1</code>");
+  };
+  for (const line of lines) {
+    if (line.trim().startsWith(String.fromCharCode(96).repeat(3))) {
+      flush();
+      if (!code) {
+        code = document.createElement("pre");
+        const child = document.createElement("code");
+        code.append(child);
+        container.append(code);
+      } else code = null;
+      continue;
+    }
+    if (code) { code.querySelector("code").textContent += line + "\n"; continue; }
+    const heading = line.match(/^(#{1,4})\s+(.+)$/);
+    const item = line.match(/^\s*[-*]\s+(.+)$/);
+    const numbered = line.match(/^\s*\d+[.)]\s+(.+)$/);
+    if (item || numbered) {
+      if (!list) list = document.createElement(numbered ? "ol" : "ul");
+      const li = document.createElement("li");
+      inline(li, (item || numbered)[1]);
+      list.append(li);
+      continue;
+    }
+    flush();
+    if (!line.trim()) continue;
+    const element = document.createElement(heading ? "h" + Math.min(5, heading[1].length + 1) : "p");
+    inline(element, heading ? heading[2] : line);
+    container.append(element);
+  }
+  flush();
+}
 
+export async function initializeLearningProgress() {
+  const lessonNav = document.querySelector("#lesson-navigation");
   const courseId = selectedCourseId();
-  const status = addStatus(modulesSection);
-  modulesSection.querySelectorAll(":scope > article").forEach((article) => article.remove());
-  const title = document.querySelector("main > section h2");
-  if (title) title.textContent = "Course";
-  const courseSummary = document.querySelector("main > section > p");
-  if (courseSummary) courseSummary.textContent = "Course information will load from LearnSpace.";
-  const progressSection = [...document.querySelectorAll("main section")]
-    .find((section) => section.querySelector("h2")?.textContent.trim() === "Course Progress");
-  const progressLabel = progressSection?.querySelector("p");
-  if (progressLabel) progressLabel.textContent = "Progress will load from LearnSpace.";
-  const lessonSection = document.querySelector("#lesson-content")
-    || [...document.querySelectorAll("main section")].find((section) => section.querySelector("h2")?.textContent.trim() === "Lesson Content");
-  const lessonHeading = lessonSection?.querySelector("h3");
-  if (lessonHeading) lessonHeading.textContent = "Lesson content";
-  const lessonDescription = lessonSection?.querySelector("p");
-  if (lessonDescription) lessonDescription.textContent = "Select a lesson loaded from LearnSpace.";
-  status.textContent = "Loading course modules and your saved progress...";
+  if (!courseId) return;
+  const status = addStatus(document.querySelector("main"), "learning-page-status");
+  status.textContent = "Loading your learning progress...";
   try {
-    const [modules, allProgress, course] = await Promise.all([
-      getCourseModules(courseId),
-      getProgress(),
-      getCourse(courseId),
-    ]);
-    const progressByModule = new Map(allProgress.map((record) => [record.moduleId, record]));
-    modulesSection.querySelectorAll(":scope > article").forEach((article) => article.remove());
+    const [modules, records, course] = await Promise.all([getCourseModules(courseId), getProgress(), getCourse(courseId)]);
+    const progressMap = new Map(records.map((record) => [record.moduleId, record]));
+    const title = document.querySelector("#course-title");
     if (title) title.textContent = course.title;
-    if (courseSummary) courseSummary.textContent = course.description;
+    const description = document.querySelector("#course-description");
+    if (description) description.textContent = course.description || "";
+    const bar = document.querySelector("#course-progress-bar");
+    const label = document.querySelector("#course-progress-label");
+    const pct = modules.length ? Math.round(modules.reduce((sum, module) => sum + ((progressMap.get(module.id) || module.progress)?.completionPercentage || 0), 0) / modules.length) : 0;
+    const passed = modules.filter((module) => (progressMap.get(module.id) || module.progress)?.quizPassed).length;
+    if (bar) bar.value = pct;
+    if (label) label.textContent = pct + "% completed (" + passed + " of " + modules.length + " modules passed).";
     status.textContent = "";
 
-    const progressBar = progressSection?.querySelector("progress");
-    const courseRecords = modules
-      .map((module) => progressByModule.get(module.id))
-      .filter(Boolean);
-    const completed = courseRecords.filter((record) => record.completionPercentage === 100).length;
-    const percentage = courseRecords.length
-      ? Math.round(courseRecords.reduce((sum, record) => sum + record.completionPercentage, 0) / courseRecords.length)
-      : 0;
-    if (progressBar) progressBar.value = percentage;
-    if (progressLabel) progressLabel.textContent = `${percentage}% completed (${completed} of ${courseRecords.length} modules complete).`;
-
-    let lessonContent = lessonSection?.querySelector(".api-lesson-content");
-    if (!lessonContent && lessonSection) {
-      lessonContent = document.createElement("p");
-      lessonContent.className = "api-lesson-content";
-      lessonSection.insertBefore(lessonContent, lessonSection.querySelector("button"));
-    }
-    let markButton = lessonSection?.querySelector("button");
-    if (markButton) markButton.disabled = true;
-
-    let selected;
-    const renderModules = () => {
-      modulesSection.querySelectorAll(":scope > article").forEach((article) => article.remove());
-      modules.forEach((module) => {
-        const progress = progressByModule.get(module.id) || module.progress;
-        const article = document.createElement("article");
-        const heading = document.createElement("h3");
-        const description = document.createElement("p");
-        const label = document.createElement("p");
-        const bar = document.createElement("progress");
-        const list = document.createElement("ul");
-        const state = document.createElement("p");
-        heading.textContent = `Module ${module.order}: ${module.title}`;
-        description.textContent = module.description || "";
-        label.textContent = `Completion: ${progress?.completionPercentage ?? 0}%`;
-        bar.max = 100;
-        bar.value = progress?.completionPercentage ?? 0;
-        state.textContent = module.unlocked ? "Unlocked" : "Locked — complete the previous module to unlock.";
-        for (const lesson of module.lessons) {
-          const item = document.createElement("li");
-          const link = document.createElement("button");
-          link.type = "button";
-          link.textContent = lesson.title;
-          link.disabled = !module.unlocked;
-          link.addEventListener("click", () => {
-            selected = { module, lesson, progress };
-            if (lessonHeading) lessonHeading.textContent = lesson.title;
-            if (lessonContent) lessonContent.textContent = lesson.content;
-            if (markButton) markButton.disabled = progress?.completedLessons?.includes(lesson.id) ?? true;
-            const lessonStatus = addStatus(lessonSection, "api-lesson-status");
-            lessonStatus.textContent = progress?.completedLessons?.includes(lesson.id)
-              ? "This lesson is already complete."
-              : "Lesson content loaded from LearnSpace.";
-            lessonStatus.dataset.state = "success";
-          });
-          item.append(link);
-          if (progress?.completedLessons?.includes(lesson.id)) item.append(document.createTextNode(" — Completed"));
-          list.append(item);
+    if (!lessonNav) {
+      const next = modules.find((module) => !(progressMap.get(module.id) || module.progress)?.quizPassed);
+      const startButton = document.querySelector("#start-module-button");
+      const finalButton = document.querySelector("#final-assessment-button");
+      const nextLabel = document.querySelector("#course-next-module");
+      if (next) {
+        const p = progressMap.get(next.id) || next.progress;
+        const lessonsDone = p?.completionPercentage === 100;
+        if (startButton) {
+          startButton.href = (lessonsDone ? "/module-quiz" : "/module-learning") + "?course=" + encodeURIComponent(courseId) + "&module=" + encodeURIComponent(next.id);
+          startButton.textContent = lessonsDone ? "Take Module " + next.order + " Quiz" : "Start Module " + next.order;
+          startButton.hidden = false;
         }
-        const quizLink = document.createElement("a");
-        quizLink.textContent = "Open Module Quiz";
-        quizLink.href = `module-quiz.html?course=${encodeURIComponent(courseId)}&module=${encodeURIComponent(module.id)}`;
-        quizLink.setAttribute("aria-disabled", String(!module.unlocked));
-        if (!module.unlocked) quizLink.addEventListener("click", (event) => event.preventDefault());
-        article.append(heading, description, label, bar, list, state, quizLink);
-        modulesSection.append(article);
+        if (nextLabel) nextLabel.textContent = "Your next step: Module " + next.order + " — " + next.title;
+      } else {
+        if (startButton) startButton.hidden = true;
+        if (nextLabel) nextLabel.textContent = "All modules and quizzes completed. Your final assessment is ready.";
+        if (finalButton) {
+          finalButton.href = "/final-assessment?course=" + encodeURIComponent(courseId);
+          finalButton.hidden = false;
+        }
+      }
+      return;
+    }
+
+    const moduleId = moduleIdFromLocation();
+    const module = modules.find((item) => item.id === moduleId);
+    if (!module || !module.unlocked) throw new Error("This module is locked. Pass the previous module quiz to unlock it.");
+    const progress = progressMap.get(module.id) || module.progress;
+    const lessons = (module.lessons || []).slice().sort((a, b) => a.order - b.order);
+    if (!lessons.length) throw new Error("No lessons have been added to this module yet.");
+    const set = (selector, value) => { const node = document.querySelector(selector); if (node) node.textContent = value; };
+    set("#module-title", "Module " + module.order + ": " + module.title);
+    set("#module-description", module.description || "Complete each lesson in order.");
+    set("#module-course-name", course.title);
+    const overview = "/course-learning?course=" + encodeURIComponent(courseId);
+    const back = document.querySelector("#module-back-link");
+    const backNav = document.querySelector("#back-to-course-link");
+    if (back) back.href = overview;
+    if (backNav) backNav.href = overview;
+
+    const moduleBar = document.querySelector("#module-progress-bar");
+    const moduleLabel = document.querySelector("#module-progress-label");
+    const lessonTitle = document.querySelector("#lesson-title");
+    const lessonBody = document.querySelector("#lesson-body");
+    const position = document.querySelector("#lesson-position");
+    const lessonStatus = document.querySelector("#lesson-status");
+    const completeButton = document.querySelector("#complete-lesson-button");
+    const nextButton = document.querySelector("#next-lesson-button");
+    const quizButton = document.querySelector("#module-quiz-button");
+    const completed = new Set(progress?.completedLessons || []);
+    if (moduleBar) moduleBar.value = progress?.completionPercentage || 0;
+    let active = Math.max(0, lessons.findIndex((lesson) => !completed.has(lesson.id)));
+    if (lessons.every((lesson) => completed.has(lesson.id))) active = lessons.length - 1;
+
+    const render = () => {
+      const lesson = lessons[active];
+      const done = completed.has(lesson.id);
+      if (position) position.textContent = "Lesson " + (active + 1) + " of " + lessons.length;
+      if (lessonTitle) lessonTitle.textContent = lesson.title;
+      if (lessonBody) renderLessonMarkdown(lessonBody, lesson.content);
+      if (completeButton) {
+        completeButton.hidden = done;
+        completeButton.disabled = done;
+        completeButton.textContent = done ? "Lesson Completed" : "Mark Lesson as Completed";
+      }
+      if (nextButton) {
+        nextButton.hidden = !done || active === lessons.length - 1;
+        nextButton.disabled = !done || active === lessons.length - 1;
+      }
+      const allDone = lessons.every((item) => completed.has(item.id));
+      if (quizButton) {
+        quizButton.hidden = !allDone;
+        quizButton.href = "/module-quiz?course=" + encodeURIComponent(courseId) + "&module=" + encodeURIComponent(module.id);
+      }
+      if (lessonStatus) {
+        lessonStatus.textContent = done ? "You have completed this lesson." : "Read the lesson and mark it as completed to continue.";
+        lessonStatus.dataset.state = done ? "success" : "notice";
+      }
+      if (moduleLabel) moduleLabel.textContent = completed.size / lessons.length * 100 + "% completed (" + completed.size + " of " + lessons.length + " lessons).";
+      moduleNavRender();
+    };
+    const moduleNavRender = () => {
+      lessonNav.replaceChildren();
+      lessons.forEach((item, index) => {
+        const li = document.createElement("li");
+        const button = document.createElement("button");
+        const done = completed.has(item.id);
+        const priorDone = lessons.slice(0, index).every((prior) => completed.has(prior.id));
+        button.type = "button";
+        button.className = "lesson-nav-item" + (index === active ? " is-active" : "") + (done ? " is-completed" : "");
+        button.textContent = (index + 1) + ". " + item.title + (done ? " ✓" : "");
+        button.disabled = !priorDone;
+        button.setAttribute("aria-current", index === active ? "step" : "false");
+        button.addEventListener("click", () => { active = index; render(); });
+        li.append(button);
+        lessonNav.append(li);
       });
     };
-    renderModules();
-
-    markButton?.addEventListener("click", async () => {
-      if (!selected?.progress || !selected.lesson) return;
-      markButton.disabled = true;
-      const lessonStatus = addStatus(lessonSection, "api-lesson-status");
-      lessonStatus.textContent = "Saving lesson completion...";
+    render();
+    completeButton.addEventListener("click", async () => {
+      const lesson = lessons[active];
+      if (!lesson || completed.has(lesson.id)) return;
+      completeButton.disabled = true;
+      if (lessonStatus) lessonStatus.textContent = "Saving lesson completion...";
       try {
-        const updated = await completeLesson(selected.progress.id, selected.lesson.id);
-        progressByModule.set(updated.moduleId, updated);
-        const [refreshedModules, refreshedProgress] = await Promise.all([
-          getCourseModules(courseId),
-          getProgress(),
-        ]);
-        modules.splice(0, modules.length, ...refreshedModules);
-        refreshedProgress.forEach((record) => progressByModule.set(record.moduleId, record));
-        renderModules();
-        lessonStatus.textContent = "Lesson completion saved.";
-        lessonStatus.dataset.state = "success";
+        const updated = await completeLesson(progress.id, lesson.id);
+        updated.completedLessons.forEach((id) => completed.add(id));
+        render();
+        if (lessonStatus) {
+          lessonStatus.textContent = "Lesson completion saved.";
+          lessonStatus.dataset.state = "success";
+        }
       } catch (error) {
-        lessonStatus.textContent = error.message;
-        lessonStatus.dataset.state = "error";
-        markButton.disabled = false;
+        if (lessonStatus) {
+          lessonStatus.textContent = error.message;
+          lessonStatus.dataset.state = "error";
+        }
+        completeButton.disabled = false;
       }
     });
-
-    const finalLink = [...document.querySelectorAll("a[href*='final-assessment.html']")]
-      .find((link) => link.textContent.toLowerCase().includes("final assessment"));
-    if (finalLink) setNavigationCourse(finalLink, courseId);
+    nextButton.addEventListener("click", () => {
+      if (active < lessons.length - 1 && completed.has(lessons[active].id)) {
+        active += 1;
+        render();
+      }
+    });
   } catch (error) {
     status.textContent = error.message;
     status.dataset.state = "error";
