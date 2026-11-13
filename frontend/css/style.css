@@ -1276,3 +1276,50 @@ main article:has(h2:first-child)::before {
     width: 100%;
   }
 }
+
+
+/* Keep module and overall course completion visible while reading lessons */
+.module-progress-sticky {
+  position: sticky;
+  top: 118px;
+  z-index: 15;
+  padding: 1rem clamp(1rem, 3vw, 1.5rem);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 254, 253, 0.97);
+  box-shadow: 0 8px 24px rgba(94, 65, 81, 0.12);
+  backdrop-filter: blur(12px);
+}
+.module-progress-sticky > p,
+.module-progress-sticky > h2 {
+  margin-bottom: 0.35rem;
+}
+.module-progress-sticky > h2 {
+  font-size: clamp(1.25rem, 2.5vw, 1.8rem);
+}
+.sticky-progress-item + .sticky-progress-item {
+  margin-top: 0.55rem;
+}
+.sticky-progress-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  color: var(--plum);
+  font-size: 0.88rem;
+}
+.sticky-progress-heading strong:last-child {
+  color: var(--rose-deep);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.module-progress-sticky progress {
+  height: 0.55rem;
+  margin: 0.2rem 0 0;
+}
+@media (max-width: 760px) {
+  .module-progress-sticky {
+    top: 105px;
+    padding: 0.8rem 1rem;
+  }
+}
