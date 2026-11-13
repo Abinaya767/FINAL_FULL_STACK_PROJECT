@@ -496,14 +496,48 @@ function createQuestionNavigation(form, questions) {
   const nav = document.createElement("nav");
   nav.className = "assessment-question-nav";
   nav.setAttribute("aria-label", "Assessment question navigation");
-  questions.forEach((_question, index) => {
-    const link = document.createElement("a");
-    link.href = `#final-question-${index + 1}`;
-    link.textContent = String(index + 1);
-    link.setAttribute("aria-label", `Go to question ${index + 1}`);
-    nav.append(link);
+  const questionPanels = [...form.querySelectorAll("fieldset")];
+  const buttons = questions.map((_question, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = String(index + 1);
+    button.setAttribute("aria-label", `Go to question ${index + 1}`);
+    button.addEventListener("click", () => showQuestion(index));
+    nav.append(button);
+    return button;
   });
+  const controls = document.createElement("div");
+  controls.className = "assessment-step-controls";
+  const previous = document.createElement("button");
+  previous.type = "button";
+  previous.textContent = "Previous";
+  const next = document.createElement("button");
+  next.type = "button";
+  next.textContent = "Next";
+  controls.append(previous, next);
+  form.insertBefore(controls, form.querySelector('button[type="submit"]'));
   form.before(nav);
+
+  let currentIndex = 0;
+  function showQuestion(index) {
+    currentIndex = Math.max(0, Math.min(index, questionPanels.length - 1));
+    questionPanels.forEach((panel, panelIndex) => {
+      panel.hidden = panelIndex !== currentIndex;
+    });
+    buttons.forEach((button, buttonIndex) => {
+      button.setAttribute("aria-current", buttonIndex === currentIndex ? "step" : "false");
+      button.classList.toggle("is-current", buttonIndex === currentIndex);
+    });
+    previous.disabled = currentIndex === 0;
+    next.hidden = currentIndex === questionPanels.length - 1;
+    form.querySelector('button[type="submit"]').hidden = currentIndex !== questionPanels.length - 1;
+    const active = questionPanels[currentIndex];
+    active?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }
+  previous.addEventListener("click", () => showQuestion(currentIndex - 1));
+  next.addEventListener("click", () => showQuestion(currentIndex + 1));
+  showQuestion(0);
+  return { showQuestion };
 }
 
 export async function initializeFinalAssessment() {
