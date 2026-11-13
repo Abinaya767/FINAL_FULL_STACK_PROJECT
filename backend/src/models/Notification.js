@@ -4,8 +4,27 @@ const notificationSchema = new mongoose.Schema({
   student: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Student",
-    required: true,
+    required: false,
     index: true,
+  },
+  recipientUser: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    index: true,
+  },
+  senderUser: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
+  type: {
+    type: String,
+    enum: ["general", "message"],
+    default: "general",
+  },
+  link: {
+    type: String,
+    trim: true,
+    maxlength: 300,
   },
   title: {
     type: String,
