@@ -388,7 +388,28 @@ export async function initializeModuleQuiz() {
       try {
         const result = await submitModuleQuiz(moduleId, answers);
         const history = (await getProgress()).find((record) => record.moduleId === moduleId);
-        status.textContent = `Score: ${result.scorePercentage}%. ${result.passed ? "Passed." : "Not passed."} ${result.attemptsRemaining} attempt(s) remain.${result.lockedUntil ? ` Locked until ${new Date(result.lockedUntil).toLocaleString()}.` : ""} History: ${history?.quizAttemptHistory?.length ?? attempts + 1} attempt(s) recorded.`;
+        const correctAnswers = result.correctAnswers ?? Math.round((result.scorePercentage / 100) * quiz.questions.length);
+        const totalQuestions = result.totalQuestions ?? quiz.questions.length;
+        const resultCard = document.createElement("section");
+        resultCard.className = "quiz-result-card";
+        resultCard.setAttribute("role", "status");
+        resultCard.setAttribute("aria-live", "polite");
+        const resultTitle = document.createElement("h2");
+        resultTitle.textContent = result.passed ? "Quiz Passed!" : "Quiz Result";
+        const marks = document.createElement("p");
+        marks.className = "quiz-result-score";
+        marks.textContent = correctAnswers + " / " + totalQuestions + " Marks";
+        const percentage = document.createElement("p");
+        percentage.className = "quiz-result-percentage";
+        percentage.textContent = result.scorePercentage + "%";
+        const outcome = document.createElement("p");
+        outcome.textContent = result.passed ? "Congratulations! You passed this module quiz." : "You did not reach the passing percentage. Review the lessons and try again.";
+        const attemptsInfo = document.createElement("p");
+        attemptsInfo.textContent = result.attemptsRemaining + " attempt(s) remaining." + (result.lockedUntil ? " Quiz locked until " + new Date(result.lockedUntil).toLocaleString() + "." : "");
+        resultCard.append(resultTitle, marks, percentage, outcome, attemptsInfo);
+        form.querySelector(".quiz-result-card")?.remove();
+        form.append(resultCard);
+        status.textContent = "Attempt " + (history?.quizAttemptHistory?.length ?? attempts + 1) + " recorded.";
         status.dataset.state = result.passed ? "success" : "notice";
         submitButton.disabled = result.passed || result.attemptsRemaining === 0;
         if (result.passed) {

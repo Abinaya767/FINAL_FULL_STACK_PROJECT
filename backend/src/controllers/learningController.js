@@ -725,90 +725,84 @@ export const submitModuleQuiz = asyncHandler(async (request, response) => {
     scorePercentage,
     passed,
   };
-  const session = await mongoose.startSession();
-  let updatedProgress;
-  try {
-    await session.withTransaction(async () => {
-      const currentAttempts = { $ifNull: ["$quizAttempts", []] };
-      const lockExpired = {
-        $and: [
-          { $ne: [{ $ifNull: ["$lockedUntil", null] }, null] },
-          { $lte: ["$lockedUntil", now] },
+  // The conditional update is atomic and enforces the two-attempt/cooldown
+  // rules. Avoid requiring a MongoDB replica-set transaction for quiz submits.
+  const currentAttempts = { $ifNull: ["$quizAttempts", []] };
+  const lockExpired = {
+    $and: [
+      { $ne: [{ $ifNull: ["$lockedUntil", null] }, null] },
+      { $lte: ["$lockedUntil", now] },
+    ],
+  };
+  const updatedProgress = await Progress.findOneAndUpdate(
+    {
+      _id: progress._id,
+      student: student._id,
+      course: module.course,
+      module: module._id,
+      unlockedAt: { $ne: null },
+      quizPassed: { $ne: true },
+      $or: [{ lockedUntil: null }, { lockedUntil: { $lte: now } }],
+      $expr: {
+        $or: [
+          { $lt: [{ $size: currentAttempts }, QUIZ_ATTEMPT_LIMIT] },
+          lockExpired,
         ],
-      };
-      updatedProgress = await Progress.findOneAndUpdate(
-        {
-          _id: progress._id,
-          student: student._id,
-          course: module.course,
-          module: module._id,
-          unlockedAt: { $ne: null },
-          quizPassed: { $ne: true },
-          $or: [{ lockedUntil: null }, { lockedUntil: { $lte: now } }],
-          $expr: {
-            $or: [
-              { $lt: [{ $size: currentAttempts }, QUIZ_ATTEMPT_LIMIT] },
-              lockExpired,
-            ],
+      },
+    },
+    [{
+      $set: {
+        quizAttempts: {
+          $let: {
+            vars: { currentAttempts, lockExpired },
+            in: {
+              $concatArrays: [
+                { $cond: ["$$lockExpired", [], "$$currentAttempts"] },
+                [{ $literal: {
+                  _id: attemptId,
+                  attemptedAt: now,
+                  scorePercentage,
+                  passed,
+                } }],
+              ],
+            },
           },
         },
-        [{
-          $set: {
-            quizAttempts: {
-              $let: {
-                vars: { currentAttempts, lockExpired },
-                in: {
-                  $concatArrays: [
-                    { $cond: ["$$lockExpired", [], "$$currentAttempts"] },
-                    [{ $literal: {
-                      _id: attemptId,
-                      attemptedAt: now,
-                      scorePercentage,
-                      passed,
-                    } }],
-                  ],
-                },
-              },
-            },
-            quizPassed: { $literal: passed },
-            lockedUntil: {
-              $let: {
-                vars: { currentAttempts, lockExpired },
-                in: {
+        quizPassed: { $literal: passed },
+        lockedUntil: {
+          $let: {
+            vars: { currentAttempts, lockExpired },
+            in: {
+              $cond: [
+                { $literal: passed },
+                null,
+                {
                   $cond: [
-                    { $literal: passed },
-                    null,
                     {
-                      $cond: [
+                      $gte: [
                         {
-                          $gte: [
-                            {
-                              $add: [
-                                { $cond: ["$$lockExpired", 0, { $size: "$$currentAttempts" }] },
-                                1,
-                              ],
-                            },
-                            QUIZ_ATTEMPT_LIMIT,
+                          $add: [
+                            { $cond: ["$$lockExpired", 0, { $size: "$$currentAttempts" }] },
+                            1,
                           ],
                         },
-                        new Date(now.getTime() + QUIZ_COOLDOWN_MS),
-                        null,
+                        QUIZ_ATTEMPT_LIMIT,
                       ],
                     },
+                    new Date(now.getTime() + QUIZ_COOLDOWN_MS),
+                    null,
                   ],
                 },
-              },
+              ],
             },
-            updatedAt: now,
           },
-        }],
-        { returnDocument: "after", session, timestamps: false },
-      );
-      if (updatedProgress) await QuizAttempt.create([attempt], { session });
-    });
-  } finally {
-    await session.endSession();
-  }
+        },
+        updatedAt: now,
+      },
+    }],
+    { returnDocument: "after", timestamps: false },
+  );
+  if (updatedProgress) await QuizAttempt.create(attempt);
 
   if (!updatedProgress) {
     const latestProgress = await Progress.findById(progress._id);
@@ -836,6 +830,8 @@ export const submitModuleQuiz = asyncHandler(async (request, response) => {
 
   response.status(200).json(apiResponse(passed ? "Quiz passed. The next module is now unlocked." : "Quiz attempt recorded.", {
     scorePercentage,
+    correctAnswers: Math.round((scorePercentage / 100) * quiz.questions.length),
+    totalQuestions: quiz.questions.length,
     passed,
     attemptsRemaining: passed ? 0 : Math.max(0, QUIZ_ATTEMPT_LIMIT - updatedProgress.quizAttempts.length),
     lockedUntil: updatedProgress.lockedUntil,
