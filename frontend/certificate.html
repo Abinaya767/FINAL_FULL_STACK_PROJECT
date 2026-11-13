@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,12 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Course Certificate | LearnSpace</title>
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+      @media print {
+        body { background: #fff !important; }
+        body > header, body > footer, main > section:not(#sample-certificate) { display: none !important; }
+        main { width: 100% !important; margin: 0 !important; padding: 0 !important; }
+        #sample-certificate { display: block !important; margin: 0 !important; padding: 0 !important; border: 0 !important; box-shadow: none !important; }
+        #sample-certificate > h2, #sample-certificate > p:first-of-type { display: none !important; }
+        #sample-certificate .sample-certificate-card { width: 100% !important; min-height: 180mm !important; border-radius: 0 !important; box-shadow: none !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      }
+    </style>
 </head>
 <body>
-
     <header>
         <h1>LearnSpace</h1>
-
         <nav>
             <a href="student-dashboard.html">Dashboard</a>
             <a href="courses.html">Courses</a>
@@ -22,65 +29,37 @@
     </header>
 
     <main>
-
         <section>
             <h1>My Course Certificate</h1>
             <p>Congratulations on completing your course!</p>
-            <p>Your certificate will be available after successfully passing the final assessment.</p>
+            <p>Your official certificate is available after successfully passing the final assessment.</p>
         </section>
 
-        <section>
+        <section id="sample-certificate">
             <h2>Certificate Preview</h2>
-
-            <article>
-
-                <h1>LearnSpace</h1>
-
-                <h2>Certificate of Completion</h2>
-
-                <p>This certificate is proudly presented to</p>
-
-                <h2>[Student Full Name]</h2>
-
-                <p>
-                    for successfully completing the course
-                </p>
-
-                <h2>[Course Name]</h2>
-
-                <p>
-                    and meeting the required course completion
-                    and final assessment criteria.
-                </p>
-
+            <p>Your official LearnSpace certificate.</p>
+            <article class="sample-certificate-card">
+                <p class="sample-certificate-brand">LEARNSPACE</p>
+                <h3>Certificate of Completion</h3>
+                <p class="sample-certificate-intro">This certificate is proudly presented to</p>
+                <h2 class="sample-certificate-student">[Student Full Name]</h2>
+                <p>for successfully completing the course</p>
+                <h2 class="sample-certificate-course">[Course Name]</h2>
+                <p>and meeting the required course completion and final assessment criteria.</p>
                 <p><strong>Successfully Completed</strong></p>
-
-                <hr>
-
-                <p>
-                    <strong>Completion Date:</strong>
-                    [Completion Date]
-                </p>
-
-                <p>
-                    <strong>Certificate ID:</strong>
-                    [Unique Certificate ID]
-                </p>
-
-                <p>LearnSpace – Student Course Management & Online Learning Platform</p>
-
+                <p class="sample-certificate-date"><strong>Completion Date:</strong> [Completion Date]</p>
+                <p><strong>Certificate ID:</strong> [Unique Certificate ID]</p>
+                <p class="sample-certificate-watermark" aria-hidden="true">LEARNSPACE</p>
             </article>
         </section>
 
         <section>
             <h2>Certificate Details</h2>
-
             <p><strong>Student Name:</strong> [Student Full Name]</p>
             <p><strong>Course Name:</strong> [Course Name]</p>
             <p><strong>Assessment Status:</strong> [Pass Status]</p>
             <p><strong>Completion Date:</strong> [Completion Date]</p>
             <p><strong>Certificate ID:</strong> [Unique Certificate ID]</p>
-
         </section>
 
         <section>
@@ -90,7 +69,6 @@
             <br><br>
             <a href="student-dashboard.html">Go to Dashboard</a>
         </section>
-
     </main>
 
     <footer>
