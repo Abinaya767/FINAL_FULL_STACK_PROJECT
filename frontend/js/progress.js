@@ -187,11 +187,10 @@ export async function initializeLearningProgress() {
       if (position) position.textContent = "Lesson " + (active + 1) + " of " + lessons.length;
       if (lessonTitle) lessonTitle.textContent = lesson.title;
       if (lessonBody) renderLessonMarkdown(lessonBody, lesson.content);
-      if (completeButton) {
-        completeButton.hidden = done;
-        completeButton.disabled = done;
-        completeButton.textContent = done ? "Lesson Completed" : "Mark Lesson as Completed";
-      }
+      const readingBar = document.querySelector("#lesson-reading-progress");
+      const readingLabel = document.querySelector("#lesson-reading-progress-label");
+      if (readingBar) readingBar.value = done ? 100 : 0;
+      if (readingLabel) readingLabel.textContent = (done ? 100 : 0) + "%";
       if (nextButton) {
         nextButton.hidden = !done || active === lessons.length - 1;
         nextButton.disabled = !done || active === lessons.length - 1;
@@ -202,7 +201,7 @@ export async function initializeLearningProgress() {
         quizButton.href = "module-quiz.html?course=" + encodeURIComponent(courseId) + "&module=" + encodeURIComponent(module.id);
       }
       if (lessonStatus) {
-        lessonStatus.textContent = done ? "You have completed this lesson." : "Read the lesson and mark it as completed to continue.";
+        lessonStatus.textContent = done ? "You have completed this lesson. Continue to the next lesson below." : "Scroll through the lesson. Your reading progress will update automatically.";
         lessonStatus.dataset.state = done ? "success" : "notice";
       }
       if (moduleLabel) moduleLabel.textContent = completed.size / lessons.length * 100 + "% completed (" + completed.size + " of " + lessons.length + " lessons).";
@@ -235,27 +234,54 @@ export async function initializeLearningProgress() {
       });
     };
     render();
-    completeButton.addEventListener("click", async () => {
+    let saveInProgress = false;
+    let scrollFrame = 0;
+    const updateReadingProgress = () => {
+      scrollFrame = 0;
       const lesson = lessons[active];
-      if (!lesson || completed.has(lesson.id)) return;
-      completeButton.disabled = true;
-      if (lessonStatus) lessonStatus.textContent = "Saving lesson completion...";
-      try {
-        const updated = await completeLesson(progress.id, lesson.id);
-        updated.completedLessons.forEach((id) => completed.add(id));
-        render();
-        if (lessonStatus) {
-          lessonStatus.textContent = "Lesson completion saved.";
-          lessonStatus.dataset.state = "success";
-        }
-      } catch (error) {
-        if (lessonStatus) {
-          lessonStatus.textContent = error.message;
-          lessonStatus.dataset.state = "error";
-        }
-        completeButton.disabled = false;
+      const reader = document.querySelector(".lesson-reader");
+      const body = document.querySelector("#lesson-body");
+      const bar = document.querySelector("#lesson-reading-progress");
+      const label = document.querySelector("#lesson-reading-progress-label");
+      if (!reader || !body || !bar || !label || !lesson) return;
+      if (completed.has(lesson.id)) {
+        bar.value = 100;
+        label.textContent = "100%";
+        return;
       }
-    });
+      const rect = body.getBoundingClientRect();
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+      const startY = Math.max(0, rect.top + window.scrollY - viewportHeight * 0.35);
+      const endY = Math.max(startY + 1, rect.bottom + window.scrollY - viewportHeight * 0.65);
+      const distance = Math.max(0, window.scrollY - startY);
+      const percent = Math.min(100, Math.max(0, Math.round(distance / (endY - startY) * 100)));
+      bar.value = percent;
+      label.textContent = percent + "%";
+      if (percent >= 100 && !saveInProgress) {
+        saveInProgress = true;
+        if (lessonStatus) lessonStatus.textContent = "Lesson fully read. Saving your completion...";
+        completeLesson(progress.id, lesson.id).then((updated) => {
+          updated.completedLessons.forEach((id) => completed.add(id));
+          render();
+          if (lessonStatus) {
+            lessonStatus.textContent = "Lesson completed! You can continue to the next lesson.";
+            lessonStatus.dataset.state = "success";
+          }
+        }).catch((error) => {
+          saveInProgress = false;
+          if (lessonStatus) {
+            lessonStatus.textContent = "Could not save lesson completion: " + error.message + ". Keep scrolling or refresh to retry.";
+            lessonStatus.dataset.state = "error";
+          }
+        });
+      }
+    };
+    const scheduleReadingProgress = () => {
+      if (!scrollFrame) scrollFrame = window.requestAnimationFrame(updateReadingProgress);
+    };
+    window.addEventListener("scroll", scheduleReadingProgress, { passive: true });
+    window.addEventListener("resize", scheduleReadingProgress);
+    updateReadingProgress();
     nextButton.addEventListener("click", () => {
       if (active < lessons.length - 1 && completed.has(lessons[active].id)) {
         active += 1;
