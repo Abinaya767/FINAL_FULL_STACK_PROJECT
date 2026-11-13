@@ -814,15 +814,15 @@ export async function initializeFinalAssessment() {
           history.className = "api-assessment-history";
           resultPanel.append(history);
         }
-        if (!result.passed && result.attemptsRemaining > 0) {
-          startButton.hidden = false;
-          startButton.disabled = false;
-          startButton.textContent = "Start Second Attempt";
-        } else if (!result.passed && result.lockUntil) {
+        if (!result.passed && result.lockUntil) {
           startButton.hidden = false;
           startButton.disabled = true;
           startButton.textContent = "Assessment Locked";
-          status.textContent = `Score: ${result.scorePercentage}%. Both attempts are used. Try again after ${new Date(result.lockUntil).toLocaleString()}.`;
+          status.textContent = `Assessment access is locked until ${new Date(result.lockUntil).toLocaleString()} after two terminations.`;
+        } else if (!result.passed) {
+          startButton.hidden = false;
+          startButton.disabled = false;
+          startButton.textContent = result.terminated ? "Restart Assessment" : "Try Again";
         }
         if (result.passed && result.certificate) {
           showFinalAssessmentCertificate(main, course, result);
@@ -843,8 +843,10 @@ export async function initializeFinalAssessment() {
           message.textContent = result.passed
             ? "You passed the final assessment. Your certificate is ready."
             : result.lockUntil
-              ? "Both attempts are used. You can try again after " + new Date(result.lockUntil).toLocaleString() + "."
-              : "You did not reach the passing score. " + result.attemptsRemaining + " attempt remaining.";
+              ? "The assessment is locked after two terminations. You can try again after " + new Date(result.lockUntil).toLocaleString() + "."
+              : result.terminated
+                ? "The assessment was ended because its focus rules were interrupted. You have one more monitored attempt."
+                : "You did not reach the passing score. You can try the assessment again.";
           finalResult.append(resultHeading, score, message);
           resultPanel?.append(finalResult);
         }
