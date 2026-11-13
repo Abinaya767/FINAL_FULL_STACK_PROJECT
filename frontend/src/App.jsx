@@ -68,7 +68,7 @@ export default function App() {
       <Route path="/module-quiz" element={protectedStudentPage(<ModuleQuizPage />)} />
       <Route path="/final-assessment" element={protectedStudentPage(<FinalAssessmentPage />)} />
       <Route path="/certificate" element={protectedStudentPage(<CertificatePage />)} />
-      <Route path="/notifications" element={protectedStudentPage(<RealtimeNotificationsPage />)} />
+      <Route path="/notifications" element={<ProtectedRoute><RealtimeNotificationsPage /></ProtectedRoute>} />
       <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
       <Route path="/admin/login" element={<AdminLoginPage />} />
       <Route path="/admin/dashboard" element={protectedAdminPage("Admin Dashboard")} />
