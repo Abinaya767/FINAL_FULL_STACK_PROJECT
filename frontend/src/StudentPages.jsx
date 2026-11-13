@@ -31,12 +31,13 @@ function AuthenticationForm({ admin = false, registration = false }) {
         throw new Error(admin ? "Use an administrator account to sign in here." : "Use the student login page for this account.");
       }
       login(result.token, result.user);
-      const returnPath = location.state?.from?.pathname;
+      const returnLocation = location.state?.from;
+      const returnPath = returnLocation?.pathname;
       const safeReturnPath = typeof returnPath === "string"
         && returnPath.startsWith("/")
         && !returnPath.startsWith("//")
         && !returnPath.includes("\\")
-        ? returnPath
+        ? `${returnPath}${typeof returnLocation.search === "string" ? returnLocation.search : ""}${typeof returnLocation.hash === "string" ? returnLocation.hash : ""}`
         : null;
       navigate(safeReturnPath || (admin ? "/admin/dashboard" : "/student-dashboard"), { replace: true });
     } catch (requestError) {

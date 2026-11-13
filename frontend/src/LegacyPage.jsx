@@ -57,11 +57,28 @@ export default function LegacyPage({ title }) {
     }
 
     const handleApiUnauthorized = (event) => {
-      if (event.origin !== window.location.origin || event.source !== frame.contentWindow
-        || event.data?.type !== "learnspace:unauthorized") {
+      if (event.origin !== window.location.origin || event.source !== frame.contentWindow) return;
+
+      if (event.data?.type === "learnspace:unauthorized") {
+        clearAuthSession();
+        navigate("/login", {
+          state: {
+            from: { pathname: location.pathname, search: location.search, hash: location.hash },
+            message: "Your session has expired. Please sign in again.",
+          },
+          replace: true,
+        });
         return;
       }
-      clearAuthSession();
+
+      if (event.data?.type === "learnspace:auth-required") {
+        navigate("/login", {
+          state: {
+            from: { pathname: location.pathname, search: location.search, hash: location.hash },
+          },
+          replace: true,
+        });
+      }
     };
     window.addEventListener("message", handleApiUnauthorized);
 
@@ -110,7 +127,7 @@ export default function LegacyPage({ title }) {
         frame.contentDocument.removeEventListener("click", frame.__learnSpaceLinkHandler);
       }
     };
-  }, [legacyPath, location.search, navigate]);
+  }, [legacyPath, location.pathname, location.search, location.hash, navigate]);
 
   return (
     <iframe

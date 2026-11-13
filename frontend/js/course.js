@@ -23,6 +23,19 @@ function courseLink(path, courseId) {
   return `${path}?course=${encodeURIComponent(courseId)}`;
 }
 
+function requireStudentLogin() {
+  const session = getAuthSession();
+  if (session?.token && session.user?.role === "student") return true;
+
+  const returnTo = window.location.pathname + window.location.search;
+  if (window.parent !== window) {
+    window.parent.postMessage({ type: "learnspace:auth-required", returnTo }, window.location.origin);
+  } else {
+    window.location.href = `/login?returnTo=${encodeURIComponent(returnTo)}`;
+  }
+  return false;
+}
+
 function renderCourseCard(course, enrolled = false) {
   const article = document.createElement("article");
   const heading = document.createElement("h3");
@@ -45,6 +58,12 @@ function renderCourseCard(course, enrolled = false) {
     enrollButton.type = "button";
     enrollButton.textContent = "Enroll Now";
     enrollButton.addEventListener("click", async () => {
+      if (!requireStudentLogin()) {
+        const status = addStatus(article);
+        status.textContent = "Please sign in with your student account to enroll.";
+        status.dataset.state = "error";
+        return;
+      }
       const status = addStatus(article);
       enrollButton.disabled = true;
       status.textContent = "Enrolling...";
@@ -137,6 +156,11 @@ export async function initializeCoursePage() {
     status.textContent = "";
     if (button) {
       button.addEventListener("click", async () => {
+        if (!requireStudentLogin()) {
+          status.textContent = "Please sign in with your student account to enroll.";
+          status.dataset.state = "error";
+          return;
+        }
         button.disabled = true;
         status.textContent = "Enrolling...";
         try {
