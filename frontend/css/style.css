@@ -1359,3 +1359,10 @@ main article:has(h2:first-child)::before {
   min-height: 58px;
   justify-content: flex-end;
 }
+
+
+/* Immediate module quiz marks and percentage */
+.quiz-result-card { margin-top:1.25rem; padding:1.25rem; border:1px solid var(--line); border-radius:16px; background:var(--surface,#fff); text-align:center; }
+.quiz-result-card h2 { margin:0 0 .65rem; }
+.quiz-result-card .quiz-result-score { margin:.25rem 0; font-size:1.35rem; font-weight:750; color:var(--plum); }
+.quiz-result-card .quiz-result-percentage { margin:.1rem 0 .75rem; font-size:2rem; font-weight:800; color:var(--rose-deep); font-variant-numeric:tabular-nums; }
