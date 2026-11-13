@@ -53,7 +53,7 @@ function renderCourseCard(course, enrollment = null) {
     completed.className = "course-completed-status";
     completed.textContent = "Completed";
     const certificateLink = document.createElement("a");
-    certificateLink.href = "certificate.html?course=" + encodeURIComponent(course.id);
+    certificateLink.href = "certificate.html?course=" + encodeURIComponent(course.databaseId || course.id);
     certificateLink.textContent = "View Certificate";
     article.append(completed, certificateLink);
   } else if (enrollment && enrollment.status !== "cancelled") {
