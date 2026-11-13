@@ -33,7 +33,7 @@ function renderModules() {
   if (!rows.length) {
     const row = tableBody.insertRow();
     const cell = row.insertCell();
-    cell.colSpan = 5;
+    cell.colSpan = 4;
     cell.textContent = "No saved modules found for this course.";
     return;
   }
@@ -43,13 +43,8 @@ function renderModules() {
       course.title,
       module.order,
       module.title,
-      module.quiz ? "Quiz added" : "Quiz not added",
+      module.description || "No description provided",
     ]) row.insertCell().textContent = String(value);
-    const actions = row.insertCell();
-    const quizLink = document.createElement("a");
-    quizLink.href = "manage-quizzes.html";
-    quizLink.textContent = module.quiz ? "Manage Quiz" : "Add Quiz";
-    actions.append(quizLink);
   }
 }
 
@@ -69,7 +64,7 @@ async function loadData() {
     setCourseOptions(filterSelect, "All saved courses");
     courseSelect.disabled = courses.length === 0;
     renderModules();
-    showStatus(courses.length ? "Saved courses loaded. Add a module, then use Add Quiz for that module." : "Create a course first in Manage Courses.", courses.length ? "success" : "empty");
+    showStatus(courses.length ? "Saved courses and modules loaded." : "Create a course first in Manage Courses.", courses.length ? "success" : "empty");
     if (courses.some((course) => course.moduleLoadError)) showStatus("Some course modules could not be loaded. Check your admin session and API.", "error");
   } catch (error) {
     setCourseOptions(courseSelect, "Unable to load courses");
@@ -105,7 +100,7 @@ form.addEventListener("submit", async (event) => {
     renderModules();
     form.reset();
     courseSelect.value = course.id;
-    showStatus(`Module ${order} saved for ${course.title}. Next, click Add Quiz in the module list.`, "success");
+    showStatus(`Module ${order} saved for ${course.title}.`, "success");
   } catch (error) {
     showStatus(error.message, "error");
   } finally {
