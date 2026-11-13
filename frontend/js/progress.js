@@ -844,8 +844,8 @@ async function getEnrollmentsForAssessment() {
 }
 
 export async function initializeCertificate() {
-  const card = document.querySelector("main section article");
-  if (!card || !document.querySelector("main h1")?.textContent.includes("Certificate")) return;
+  const card = document.querySelector("#sample-certificate .sample-certificate-card");
+  if (!card || !document.querySelector("#sample-certificate")) return;
   const status = addStatus(card.parentElement);
   card.hidden = true;
   status.textContent = "Loading your certificates...";
