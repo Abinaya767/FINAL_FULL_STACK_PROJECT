@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import Message from "../models/Message.js";
 import User from "../models/User.js";
+import Notification from "../models/Notification.js";
+import Student from "../models/Student.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiResponse } from "../utils/apiResponse.js";
 import { badRequest, notFound, requireObjectId } from "../utils/mongo.js";
@@ -62,8 +64,30 @@ export const sendMessage = asyncHandler(async (request, response) => {
   await message.populate("sender", "name");
   await message.populate("recipient", "name");
   const dto = messageDto(message);
+  const recipientStudent = recipient.role === "student"
+    ? await Student.findOne({ user: recipientId }).select("_id").lean()
+    : null;
+  const notification = await Notification.create({
+    ...(recipientStudent ? { student: recipientStudent._id } : {}),
+    recipientUser: recipientId,
+    senderUser: new mongoose.Types.ObjectId(request.user.id),
+    title: `New message from ${message.sender.name}`,
+    message: content.trim(),
+    type: "message",
+    link: "/chat",
+  });
+  const notificationDto = {
+    _id: notification._id.toString(),
+    title: notification.title,
+    message: notification.message,
+    type: notification.type,
+    link: notification.link,
+    isRead: notification.isRead,
+    createdAt: notification.createdAt,
+  };
   const io = request.app.get("io");
   io?.to(`user:${recipientId.toString()}`).emit("message:new", dto);
+  io?.to(`user:${recipientId.toString()}`).emit("notification:new", notificationDto);
   io?.to(`user:${request.user.id}`).emit("message:new", dto);
-  response.status(201).json(apiResponse("Message sent successfully.", { message: dto }));
+  response.status(201).json(apiResponse("Message sent successfully.", { message: dto, notification: notificationDto }));
 });
