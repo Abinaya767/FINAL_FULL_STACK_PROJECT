@@ -585,7 +585,7 @@ function showFinalAssessmentCertificate(main, course, result) {
   const watermark = document.createElement("p");
   watermark.className = "sample-certificate-watermark";
   watermark.setAttribute("aria-hidden", "true");
-  watermark.textContent = "LEARNSPACE";
+  watermark.textContent = "SAMPLE";
   const brand = document.createElement("p");
   brand.className = "sample-certificate-brand";
   brand.textContent = "LearnSpace";
@@ -593,18 +593,18 @@ function showFinalAssessmentCertificate(main, course, result) {
   title.textContent = "Certificate of Completion";
   const presented = document.createElement("p");
   presented.className = "sample-certificate-intro";
-  presented.textContent = "This certificate is proudly presented to";
+  presented.textContent = "This sample certificate is presented to";
   const student = document.createElement("p");
   student.className = "sample-certificate-student";
   student.textContent = studentName;
   const completed = document.createElement("p");
-  completed.textContent = "for successfully completing the course";
+  completed.textContent = "for completing the course";
   const courseName = document.createElement("p");
   courseName.className = "sample-certificate-course";
   courseName.textContent = course.title;
   const date = document.createElement("p");
   date.className = "sample-certificate-date";
-  date.textContent = "Completion date: " + new Date(result.certificate.issuedAt || Date.now()).toLocaleDateString();
+  date.textContent = "Sample completion date: " + new Date(result.certificate.issuedAt || Date.now()).toLocaleDateString();
   card.append(watermark, brand, title, presented, student, completed, courseName, date);
 
   const actions = document.createElement("div");
