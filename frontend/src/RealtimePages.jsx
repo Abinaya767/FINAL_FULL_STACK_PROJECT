@@ -135,7 +135,7 @@ export function ChatPage() {
         <div><p className="eyebrow">LEARNSPACE MESSAGES</p><h1>Chat</h1><p>Talk with your LearnSpace {user?.role === "admin" ? "students" : "administrator"}.</p></div>
         <span className={`connection-state ${connected ? "online" : ""}`}>{connected ? "Live connection" : "Connecting…"}</span>
       </header>
-      <nav className="realtime-nav"><Link to={user?.role === "admin" ? "/admin/dashboard" : "/student-dashboard"}>Dashboard</Link>{user?.role === "student" && <Link to="/notifications">Notifications</Link>}</nav>
+      <nav className="realtime-nav"><Link to={user?.role === "admin" ? "/admin/dashboard" : "/student-dashboard"}>Dashboard</Link><Link to="/notifications">Notifications</Link></nav>
       {error && <p className="realtime-error" role="alert">{error}</p>}
       <section className="chat-layout">
         <aside className="contact-panel"><h2>Contacts</h2>{contacts.length === 0 ? <p>No contacts are available yet.</p> : contacts.map((contact) => (
