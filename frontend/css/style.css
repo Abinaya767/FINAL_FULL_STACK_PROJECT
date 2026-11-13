@@ -1462,3 +1462,42 @@ input[type="button"] {
   .dashboard-card-grid { grid-template-columns: 1fr; }
   .dashboard-profile form { grid-template-columns: 1fr; }
 }
+
+
+
+/* LearnSpace professional visual system: cool gray + light blue */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+:root {
+  --cream:#f4f6f8; --cream-deep:#e9eef3; --peach:#e7f0f8; --peach-light:#f2f6fa;
+  --lavender:#dce8f2; --lavender-light:#edf4f9; --rose:#477fa8; --rose-deep:#315f82;
+  --rose-light:#e4eff7; --plum:#263746; --plum-soft:#536879; --charcoal:#344554;
+  --muted:#687b8b; --white:#fff; --line:#d9e2e9;
+  --shadow:0 18px 45px rgba(35,57,75,.09); --shadow-soft:0 8px 24px rgba(35,57,75,.06);
+  --radius:18px; --radius-small:10px;
+  font-family:'Inter', 'Segoe UI', Arial, sans-serif;
+}
+html,body,button,input,select,textarea {font-family:'Inter','Segoe UI',Arial,sans-serif;}
+body {background:#f4f6f8;color:#344554;line-height:1.65;}
+h1,h2,h3,h4,legend {font-family:'Inter','Segoe UI',Arial,sans-serif;color:#263746;letter-spacing:-.025em;}
+h1 {font-weight:800;line-height:1.12;}
+h2,h3,h4 {font-weight:700;line-height:1.25;}
+body > header,.react-home > header {background:rgba(255,255,255,.96);border-color:#dce5ec;box-shadow:0 4px 18px rgba(35,57,75,.05);}
+nav a {color:#304b60;}
+nav a:hover {background:#eaf2f8;color:#315f82;}
+main > section,article,fieldset {border-color:#dce5ec;background:#fff;box-shadow:var(--shadow-soft);}
+button,input[type=submit],input[type=button],#home > a {background:#477fa8;border-color:#477fa8;border-radius:10px;}
+button:hover,input[type=submit]:hover,input[type=button]:hover,#home > a:hover {background:#315f82;border-color:#315f82;}
+input:not([type=radio]):not([type=checkbox]):not([type=submit]):not([type=button]),select,textarea {border-color:#d5e0e9;border-radius:10px;background:#fff;}
+input:focus,select:focus,textarea:focus {border-color:#6c9abd;box-shadow:0 0 0 3px rgba(71,127,168,.14);}
+body > footer {background:#eaf0f5;border-color:#d9e2e9;color:#30485b;}
+#home {background:linear-gradient(135deg,#f5f7f9 0%,#e8f1f8 55%,#f4f7fa 100%);}
+#home > div {border-color:#dce7ef;background:rgba(255,255,255,.94);box-shadow:0 20px 48px rgba(38,64,84,.1);transform:none;}
+#home > div h3:first-child,#home > div h3:last-child {color:#477fa8;}
+#home > div h3:not(:first-child) {background:#edf4f9;}
+#about,#contact,#sample-certificate {background:linear-gradient(145deg,#fff,#f1f5f8);}
+#sample-certificate .sample-certificate-card {border-color:#cbdbe7;background:linear-gradient(145deg,#fff,#f4f8fb);box-shadow:0 18px 42px rgba(35,57,75,.09);}
+#sample-certificate .sample-certificate-brand,#sample-certificate .sample-certificate-course {color:#315f82;}
+table th {background:#eaf2f8;color:#263746;}
+tbody tr:nth-child(even) {background:#f7f9fb;}
+progress::-webkit-progress-value,progress::-moz-progress-bar {background:linear-gradient(90deg,#477fa8,#8db5d2);}
+:focus-visible {outline-color:rgba(71,127,168,.55);}
