@@ -3,17 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Certificate | LearnSpace</title>
+    <title>LearnSpace Certificate</title>
     <link rel="stylesheet" href="/css/style.css">
     <style>
-      .certificate-page { max-width: 1040px; margin: 0 auto; padding: 2rem 1.25rem 3rem; text-align: center; }
-      .certificate-actions { display: flex; justify-content: center; gap: 0.8rem; flex-wrap: wrap; margin-top: 1.5rem; }
+      .certificate-page {
+        width: min(1120px, calc(100% - 2rem));
+        max-width: none;
+        margin: 0 auto;
+        padding: 2rem 0 3rem;
+      }
+      #sample-certificate {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        box-shadow: none;
+      }
+      #sample-certificate .sample-certificate-card {
+        width: 100%;
+        max-width: 1040px;
+        min-height: 560px;
+        margin: 0 auto;
+      }
+      .certificate-actions {
+        display: flex;
+        justify-content: center;
+        gap: 0.8rem;
+        flex-wrap: wrap;
+        margin-top: 1.5rem;
+      }
       @media print {
-        @page { size: landscape; margin: 10mm; }
-        body { background: #fff !important; }
-        body > header, body > footer, .certificate-page > h1, .certificate-page > p, .certificate-actions, .api-status { display: none !important; }
-        main, .certificate-page, #sample-certificate { display: block !important; width: 100% !important; max-width: none !important; margin: 0 !important; padding: 0 !important; border: 0 !important; box-shadow: none !important; background: #fff !important; }
-        #sample-certificate .sample-certificate-card { width: 100% !important; min-height: 175mm !important; border-radius: 0 !important; box-shadow: none !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+        @page { size: A4 landscape; margin: 8mm; }
+        html, body {
+          display: block !important;
+          width: 100% !important;
+          min-width: 0 !important;
+          min-height: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          overflow: visible !important;
+          background: #fff !important;
+        }
+        body > header, body > footer, .certificate-actions, .api-status {
+          display: none !important;
+        }
+        main.certificate-page {
+          display: block !important;
+          width: 100% !important;
+          max-width: none !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+        #sample-certificate {
+          display: block !important;
+          width: 100% !important;
+          height: auto !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          border: 0 !important;
+          background: #fff !important;
+          box-shadow: none !important;
+          break-inside: avoid !important;
+          page-break-inside: avoid !important;
+        }
+        #sample-certificate .sample-certificate-card {
+          display: flex !important;
+          width: 100% !important;
+          max-width: none !important;
+          height: 190mm !important;
+          min-height: 190mm !important;
+          max-height: 190mm !important;
+          margin: 0 !important;
+          padding: 18mm 22mm !important;
+          border: 2px solid #d5bdc8 !important;
+          border-radius: 14px !important;
+          box-shadow: none !important;
+          overflow: hidden !important;
+          print-color-adjust: exact !important;
+          -webkit-print-color-adjust: exact !important;
+          break-inside: avoid !important;
+          page-break-inside: avoid !important;
+        }
+        #sample-certificate .sample-certificate-card h3 {
+          font-size: 30pt !important;
+        }
+        #sample-certificate .sample-certificate-student {
+          font-size: 27pt !important;
+        }
+        #sample-certificate .sample-certificate-course {
+          font-size: 19pt !important;
+        }
+      }
+      @media (max-width: 760px) {
+        .certificate-page { width: min(100% - 1.5rem, 1120px); }
+        #sample-certificate .sample-certificate-card { min-height: 440px; }
       }
     </style>
 </head>
@@ -30,10 +114,7 @@
     </header>
 
     <main class="certificate-page">
-        <h1>Congratulations!</h1>
-        <p>Your LearnSpace course certificate is ready.</p>
-
-        <section id="sample-certificate">
+        <section id="sample-certificate" aria-label="Course completion certificate">
             <article class="sample-certificate-card">
                 <p class="sample-certificate-brand">LearnSpace</p>
                 <h3>Certificate of Completion</h3>
@@ -49,7 +130,7 @@
         </section>
 
         <div class="certificate-actions">
-            <button type="button" id="download-certificate">Download Certificate</button>
+            <button type="button" id="download-certificate">Download Certificate PDF</button>
             <a class="button-link" href="my-courses.html">Back to My Courses</a>
         </div>
     </main>
