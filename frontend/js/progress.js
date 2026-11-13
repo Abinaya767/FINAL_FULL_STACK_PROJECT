@@ -579,7 +579,7 @@ export async function initializeFinalAssessment() {
       label.textContent = "Course: ";
       courseTitle.append(label, document.createTextNode(course.title));
     }
-    const eligibility = [...info].find((paragraph) => paragraph.textContent.includes("Eligibility"));
+    const eligibility = [...header.querySelectorAll("p")].find((paragraph) => paragraph.textContent.includes("Eligibility"));
     if (eligibility) eligibility.textContent = "Eligibility: Course modules are complete.";
     form.querySelectorAll("fieldset").forEach((fieldset) => fieldset.remove());
     assessment.questions.forEach((question, index) => {
